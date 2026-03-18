@@ -1,1 +1,1648 @@
-<h1>test</h1>
+import React, { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { createClient } from "@supabase/supabase-js";
+import {
+  ArrowRight,
+  Bell,
+  BookOpen,
+  Check,
+  ChevronRight,
+  Clock3,
+  ExternalLink,
+  FileText,
+  Lock,
+  LogIn,
+  Mail,
+  Menu,
+  Search,
+  Shield,
+  Sparkles,
+  Star,
+  UserPlus,
+  Users,
+  X,
+} from "lucide-react";
+
+const SUPABASE_URL = "https://vbomuwdabjtcnvvwfxtt.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_qMSROQdi856dh55hmv3lKg_DDeiY6Ib";
+const WAITLIST_WEBHOOK_URL = "https://vbomuwdabjtcnvvwfxtt.supabase.co/functions/v1/hyper-task";
+const OWNER_NOTIFICATION_EMAIL = "mikhsan@yandex.ru";
+
+const seller = {
+  name: "Дмитриев Михаил Александрович",
+  status: "Самозанятый",
+  inn: "772453231807",
+  supportEmail: OWNER_NOTIFICATION_EMAIL,
+};
+
+const DB_SETUP_SQL = `
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text not null unique,
+  name text not null,
+  phone text default '',
+  city text default '',
+  occupation text default '',
+  role text not null default 'student',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.waitlist_entries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  course_id text not null,
+  course_title text not null,
+  name text not null,
+  email text not null,
+  phone text default '',
+  note text default '',
+  source text not null default 'site',
+  status text not null default 'new',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.user_favorites (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  course_id text not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, course_id)
+);
+
+create table if not exists public.platform_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  event_name text not null,
+  payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+`;
+
+const coursesSeed = [
+  {
+    id: "architectors-reality",
+    title: "Архитекторы реальности",
+    subtitle: "Практический курс по нейросетям для жизни и работы",
+    level: "Beginner",
+    format: "Онлайн",
+    lessons: 16,
+    modules: 5,
+    priceFrom: 990,
+    badge: "Скоро релиз",
+    shortDescription:
+      "Стартовая система по нейросетям: понимание, инструменты, промпты, практика и ежедневное применение.",
+    waitlistLabel: "Встать в лист ожидания",
+  },
+  {
+    id: "workflow-ai",
+    title: "AI-система для продуктивности",
+    subtitle: "Как встроить AI в рабочий день, встречи, документы и задачи",
+    level: "Intermediate",
+    format: "Онлайн",
+    lessons: 12,
+    modules: 4,
+    priceFrom: 3490,
+    badge: "Скоро релиз",
+    shortDescription:
+      "Практический продукт для тех, кто хочет превратить AI в рабочую систему, а не в разовый эксперимент.",
+    waitlistLabel: "Жду запуск",
+  },
+  {
+    id: "visual-ai",
+    title: "Визуал и обложки с AI",
+    subtitle: "Быстрый визуальный продакшн для контента, идей и креативов",
+    level: "Beginner",
+    format: "Онлайн",
+    lessons: 10,
+    modules: 4,
+    priceFrom: 1990,
+    badge: "Скоро релиз",
+    shortDescription:
+      "Курс про визуальные сценарии: референсы, обложки, промо-материалы и креативные концепты.",
+    waitlistLabel: "Хочу первым",
+  },
+  {
+    id: "prompts-pro",
+    title: "Промпты для бизнеса",
+    subtitle: "Сильные запросы для команд, продукта, продаж и коммуникаций",
+    level: "Advanced",
+    format: "Онлайн",
+    lessons: 14,
+    modules: 5,
+    priceFrom: 4990,
+    badge: "Скоро релиз",
+    shortDescription:
+      "Продвинутый курс про постановку задач нейросетям на уровне бизнес-результата.",
+    waitlistLabel: "Записаться в waitlist",
+  },
+];
+
+const legalPagesSeed = [
+  {
+    id: "offer",
+    title: "Пользовательское соглашение",
+    text: `Настоящий сайт lectaro.ru является информационной платформой проекта «Архитекторы реальности». Сайт используется для регистрации пользователей, ведения личных кабинетов, сбора заявок в лист ожидания и информирования о будущих образовательных продуктах. Владельцем и оператором сайта является ${seller.name}, статус — ${seller.status}. Контактный email: ${seller.supportEmail}. Пользователь обязуется указывать достоверные сведения, не нарушать работу сайта и не использовать материалы сайта вне разрешённых законом пределов. Оператор вправе обновлять содержание сайта, статус продуктов, правовые документы и интерфейсы без предварительного уведомления, публикуя актуальную редакцию на сайте.`,
+  },
+  {
+    id: "privacy",
+    title: "Политика конфиденциальности",
+    text: `Оператор обрабатывает персональные данные пользователей в объёме, необходимом для регистрации, ведения личного кабинета, ведения листа ожидания, обратной связи, уведомлений о релизе и повышения качества сайта. Могут обрабатываться имя, email, телефон, город, род занятий, сведения о действиях на сайте, выбранных курсах, избранном и заявках в лист ожидания. Пользователь вправе запросить уточнение, удаление или прекращение обработки данных, написав на ${seller.supportEmail}. Данные хранятся не дольше, чем это необходимо для достижения целей обработки, если иной срок не предусмотрен законом.`,
+  },
+  {
+    id: "consent",
+    title: "Согласие на обработку персональных данных",
+    text: `Оставляя данные на сайте, пользователь свободно, своей волей и в своём интересе соглашается на обработку персональных данных: имени, email, телефона, города, рода занятий, истории действий на сайте и сведений о заявках в лист ожидания. Допускаются сбор, запись, систематизация, хранение, уточнение, использование, передача техническим подрядчикам, удаление и уничтожение данных в пределах целей работы сайта. Согласие действует до достижения целей обработки либо до его отзыва пользователем по адресу ${seller.supportEmail}.`,
+  },
+  {
+    id: "cookies",
+    title: "Политика использования cookie",
+    text: `Сайт может использовать cookie, local storage и иные аналогичные технологии для сохранения сессии пользователя, работы личного кабинета, аналитики, безопасности и удобства использования. Пользователь вправе ограничить использование cookie в браузере, но это может повлиять на работу авторизации, сохранение предпочтений и отдельных разделов сайта. Продолжая пользоваться сайтом после уведомления о cookie, пользователь соглашается с их использованием в описанных целях.`,
+  },
+  {
+    id: "marketing-consent",
+    title: "Согласие на информационные сообщения",
+    text: `Пользователь может получать информационные сообщения о запуске курсов, старте продаж, обновлениях платформы и связанных организационных событиях. Для отдельной рекламной рассылки о специальных предложениях, акциях и маркетинговых материалах рекомендуется использовать самостоятельное согласие пользователя через отдельный чекбокс на форме. Пользователь вправе отказаться от получения сообщений, направив запрос на ${seller.supportEmail}.`,
+  },
+  {
+    id: "seller",
+    title: "Сведения о продавце",
+    text: `Продавец и оператор сайта: ${seller.name}. Статус: ${seller.status}. ИНН: ${seller.inn}. Контактный email: ${seller.supportEmail}. Сайт действует в pre-launch режиме и предназначен для подготовки к запуску образовательных продуктов.`,
+  },
+  {
+    id: "payment-terms",
+    title: "Условия оплаты",
+    text: `На текущем этапе сайт преимущественно используется для сбора заявок и информирования пользователей. При запуске продаж на сайте должны быть размещены окончательные условия оплаты, способы оплаты, состав продукта, стоимость и порядок предоставления чеков. До запуска продаж сведения о цене на сайте имеют информационный характер.`,
+  },
+  {
+    id: "refund-policy",
+    title: "Условия возврата",
+    text: `До запуска продаж и приёма оплаты настоящий сайт не создаёт для пользователя обязанности по оплате образовательного продукта. После запуска продаж на сайте должны быть опубликованы отдельные условия возврата денежных средств, сроки рассмотрения обращений и порядок взаимодействия сторон.`,
+  },
+  {
+    id: "access-policy",
+    title: "Порядок предоставления доступа",
+    text: `В текущем режиме пользователю предоставляется доступ к витрине, правовым документам и личному кабинету. Доступ к самим образовательным материалам, урокам, бонусам и цифровым продуктам предоставляется только после официального запуска соответствующего курса и, при необходимости, выполнения условий оплаты.`,
+  },
+  {
+    id: "support",
+    title: "Контакты поддержки",
+    text: `По вопросам работы сайта, регистрации, изменения или удаления персональных данных, заявок в лист ожидания и правовых документов пользователь может обратиться по адресу ${seller.supportEmail}. В письме рекомендуется указать имя, email и краткое описание вопроса.`,
+  },
+];
+
+const faqSeed = [
+  {
+    q: "Когда откроется доступ к курсам?",
+    a: "Сейчас курсы собирают лист ожидания. После релиза участники waitlist получат письмо первыми.",
+  },
+  {
+    q: "Какие документы размещены на сайте?",
+    a: "На сайте размещены пользовательское соглашение, политика конфиденциальности, согласие на обработку персональных данных, политика cookie, сведения о продавце и иные правовые документы.",
+  },
+  {
+    q: "Что работает уже сейчас?",
+    a: "Работают витрина, каталог, регистрация, логин, личный кабинет, лист ожидания, сбор заявок и lead center.",
+  },
+  {
+    q: "Будут ли мне писать после релиза?",
+    a: "Технические и организационные уведомления о выбранном курсе возможны в рамках работы с листом ожидания. Для отдельных рекламных рассылок лучше использовать самостоятельное согласие пользователя.",
+  },
+];
+
+function uid(prefix) {
+  return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString().slice(-5)}`;
+}
+
+function formatPrice(value) {
+  return `${new Intl.NumberFormat("ru-RU").format(value)} ₽`;
+}
+
+function formatDate(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  return new Intl.DateTimeFormat("ru-RU").format(date);
+}
+
+function cn(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function runSelfChecks() {
+  console.assert(formatPrice(990) === "990 ₽", "formatPrice failed");
+  console.assert(cn("a", false, "b") === "a b", "cn failed");
+  console.assert(uid("x").startsWith("x-"), "uid failed");
+}
+
+function Card({ className, children }) {
+  return (
+    <div
+      className={cn(
+        "rounded-[28px] border border-black/10 bg-white/80 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.06)] backdrop-blur",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Pill({ children, dark = false }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
+        dark ? "bg-black text-white" : "border border-black/10 bg-white/80 text-black/70"
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function PrimaryButton({ children, onClick, className, disabled, type = "button" }) {
+  return (
+    <button
+      type={type}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SecondaryButton({ children, onClick, className, disabled, type = "button" }) {
+  return (
+    <button
+      type={type}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center justify-center gap-2 rounded-2xl border border-black/10 bg-white/80 px-5 py-3 text-sm font-medium text-black transition hover:-translate-y-0.5 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Section({ eyebrow, title, description, children, right }) {
+  return (
+    <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
+      <div className="grid gap-8 lg:grid-cols-[1.15fr,.85fr] lg:gap-10">
+        <div>
+          {eyebrow ? (
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.24em] text-black/60 backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5" />
+              {eyebrow}
+            </div>
+          ) : null}
+          <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[#111111] sm:text-4xl lg:text-5xl">
+            {title}
+          </h2>
+          {description ? <p className="mt-4 max-w-2xl text-base leading-7 text-black/65 sm:text-lg">{description}</p> : null}
+        </div>
+        <div>{right}</div>
+      </div>
+      <div className="mt-8">{children}</div>
+    </section>
+  );
+}
+
+function Drawer({ open, onClose, title, children }) {
+  return (
+    <AnimatePresence>
+      {open ? (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[70] bg-black/30 backdrop-blur-sm"
+          />
+          <motion.div
+            initial={{ x: 440 }}
+            animate={{ x: 0 }}
+            exit={{ x: 440 }}
+            transition={{ type: "spring", stiffness: 260, damping: 28 }}
+            className="fixed right-0 top-0 z-[71] h-full w-full max-w-xl overflow-y-auto border-l border-black/10 bg-[#f7f4ee] p-5 shadow-2xl"
+          >
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <div className="text-2xl font-semibold tracking-[-0.04em]">{title}</div>
+              <button onClick={onClose} className="rounded-2xl border border-black/10 bg-white p-2">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {children}
+          </motion.div>
+        </>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
+function NavPill({ active, children, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "rounded-2xl px-4 py-2 text-sm font-medium transition",
+        active ? "bg-black text-white" : "bg-white/80 text-black/65 hover:bg-white"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+export default function ArchitectorsRealityLive() {
+  const supabase = useMemo(() => {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+    return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true },
+    });
+  }, []);
+
+  const configReady = Boolean(supabase);
+  const webhookReady = Boolean(WAITLIST_WEBHOOK_URL);
+
+  const [view, setView] = useState("home");
+  const [cabinetSection, setCabinetSection] = useState("overview");
+  const [drawer, setDrawer] = useState(null);
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const [selectedLegalId, setSelectedLegalId] = useState("offer");
+  const [selectedCourseId, setSelectedCourseId] = useState(coursesSeed[0].id);
+  const [authMode, setAuthMode] = useState("login");
+  const [authMessage, setAuthMessage] = useState("");
+  const [waitlistMessage, setWaitlistMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sessionUser, setSessionUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [myWaitlistEntries, setMyWaitlistEntries] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState([]);
+  const [adminLeads, setAdminLeads] = useState([]);
+  const [adminEvents, setAdminEvents] = useState([]);
+  const [stats, setStats] = useState({ registrations: 0, waitlistLeads: 0, favorites: 0, logins: 0 });
+
+  const [authForm, setAuthForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    city: "",
+    occupation: "",
+  });
+
+  const [waitlistForm, setWaitlistForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    note: "",
+    source: "site",
+  });
+
+  useEffect(() => {
+    runSelfChecks();
+  }, []);
+
+  const selectedCourse = coursesSeed.find((course) => course.id === selectedCourseId) || coursesSeed[0];
+
+  const catalogCourses = useMemo(() => {
+    const q = catalogSearch.trim().toLowerCase();
+    return coursesSeed.filter(
+      (course) => !q || `${course.title} ${course.subtitle} ${course.shortDescription}`.toLowerCase().includes(q)
+    );
+  }, [catalogSearch]);
+
+  const activeLegalPage = useMemo(
+    () => legalPagesSeed.find((item) => item.id === selectedLegalId) || legalPagesSeed[0],
+    [selectedLegalId]
+  );
+
+  const selectedCourseLeadsCount = useMemo(
+    () => adminLeads.filter((item) => item.course_id === selectedCourseId).length,
+    [adminLeads, selectedCourseId]
+  );
+
+  async function safeTrackEvent(eventName, payload = {}, userId = null) {
+    if (!supabase) return;
+    await supabase.from("platform_events").insert({
+      user_id: userId,
+      event_name: eventName,
+      payload,
+    });
+  }
+
+  async function createDbNotification(userId, title, body) {
+    if (!supabase) return;
+    await supabase.from("notifications").insert({ user_id: userId, title, body });
+  }
+
+  async function notifyOwnerAboutWaitlist(entry) {
+    if (!WAITLIST_WEBHOOK_URL) return { sent: false, reason: "webhook_not_configured" };
+    try {
+      const response = await fetch(WAITLIST_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "waitlist_joined",
+          ownerEmail: OWNER_NOTIFICATION_EMAIL,
+          entry,
+        }),
+      });
+      return { sent: response.ok };
+    } catch (error) {
+      console.error("waitlist webhook failed", error);
+      return { sent: false, reason: "request_failed" };
+    }
+  }
+
+  async function loadAdminData() {
+    if (!supabase) return;
+
+    const [{ data: leads }, { data: events }, registrationsRes, favoritesRes] = await Promise.all([
+      supabase.from("waitlist_entries").select("*").order("created_at", { ascending: false }),
+      supabase.from("platform_events").select("*").order("created_at", { ascending: false }).limit(12),
+      supabase.from("profiles").select("id", { count: "exact", head: true }),
+      supabase.from("user_favorites").select("id", { count: "exact", head: true }),
+    ]);
+
+    setAdminLeads(leads || []);
+    setAdminEvents(events || []);
+    setStats({
+      registrations: registrationsRes.count || 0,
+      waitlistLeads: (leads || []).length,
+      favorites: favoritesRes.count || 0,
+      logins: (events || []).filter((item) => item.event_name === "login_completed").length,
+    });
+  }
+
+  async function loadUserData(user) {
+    if (!supabase || !user) return;
+
+    const [{ data: profileRow }, { data: waitlistRows }, { data: notificationRows }, { data: favoriteRows }] =
+      await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        supabase.from("waitlist_entries").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("user_favorites").select("course_id").eq("user_id", user.id),
+      ]);
+
+    setProfile(profileRow || null);
+    setMyWaitlistEntries(waitlistRows || []);
+    setNotifications(notificationRows || []);
+    setFavoriteIds((favoriteRows || []).map((item) => item.course_id));
+
+    setWaitlistForm((prev) => ({
+      ...prev,
+      name: prev.name || profileRow?.name || user.user_metadata?.name || "",
+      email: prev.email || profileRow?.email || user.email || "",
+      phone: prev.phone || profileRow?.phone || "",
+    }));
+
+    if (profileRow?.role === "admin") {
+      await loadAdminData();
+    } else {
+      setAdminLeads([]);
+      setAdminEvents([]);
+      setStats({ registrations: 0, waitlistLeads: 0, favorites: 0, logins: 0 });
+    }
+  }
+
+  useEffect(() => {
+    if (!supabase) return;
+
+    let isMounted = true;
+
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!isMounted) return;
+      const user = data.session?.user || null;
+      setSessionUser(user);
+      if (user) await loadUserData(user);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const user = session?.user || null;
+      setSessionUser(user);
+      if (user) {
+        await loadUserData(user);
+      } else {
+        setProfile(null);
+        setMyWaitlistEntries([]);
+        setNotifications([]);
+        setFavoriteIds([]);
+        setAdminLeads([]);
+        setAdminEvents([]);
+        setStats({ registrations: 0, waitlistLeads: 0, favorites: 0, logins: 0 });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const isAdmin = profile?.role === "admin";
+
+  const handleRegister = async () => {
+    if (!supabase) {
+      setAuthMessage("Сначала заполни SUPABASE_URL и SUPABASE_ANON_KEY.");
+      return;
+    }
+
+    setAuthMessage("");
+    const email = authForm.email.trim().toLowerCase();
+    if (!authForm.name.trim() || !email || !authForm.password.trim()) {
+      setAuthMessage("Заполни имя, email и пароль.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: authForm.password,
+      });
+      if (error) throw error;
+      const authUser = data.user;
+      if (!authUser) throw new Error("Не удалось создать пользователя.");
+
+      await supabase.from("profiles").upsert({
+        id: authUser.id,
+        email,
+        name: authForm.name.trim(),
+        phone: authForm.phone || "",
+        city: authForm.city || "",
+        occupation: authForm.occupation || "",
+        role: "student",
+      });
+
+      if (!data.session) {
+        await supabase.auth.signInWithPassword({ email, password: authForm.password });
+      }
+
+      await createDbNotification(
+        authUser.id,
+        "Аккаунт создан",
+        "Кабинет активирован. Можно вставать в лист ожидания."
+      );
+      await safeTrackEvent("signup_completed", { email }, authUser.id);
+      setAuthMessage("Аккаунт создан.");
+      setView("cabinet");
+      setCabinetSection("overview");
+    } catch (error) {
+      setAuthMessage(error.message || "Не удалось создать аккаунт.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!supabase) {
+      setAuthMessage("Сначала заполни SUPABASE_URL и SUPABASE_ANON_KEY.");
+      return;
+    }
+
+    setAuthMessage("");
+    const email = authForm.email.trim().toLowerCase();
+
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: authForm.password,
+      });
+      if (error) throw error;
+      await safeTrackEvent("login_completed", { email }, data.user.id);
+      setView("cabinet");
+    } catch (error) {
+      setAuthMessage(error.message || "Неверный email или пароль.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    setView("home");
+  };
+
+  const toggleFavorite = async (courseId) => {
+    if (!supabase) return;
+    if (!sessionUser) {
+      setView("auth");
+      setAuthMode("login");
+      return;
+    }
+
+    const exists = favoriteIds.includes(courseId);
+    if (exists) {
+      await supabase.from("user_favorites").delete().eq("user_id", sessionUser.id).eq("course_id", courseId);
+      setFavoriteIds((prev) => prev.filter((id) => id !== courseId));
+      await safeTrackEvent("favorite_removed", { courseId }, sessionUser.id);
+    } else {
+      await supabase.from("user_favorites").upsert({ user_id: sessionUser.id, course_id: courseId });
+      setFavoriteIds((prev) => [...prev, courseId]);
+      await safeTrackEvent("favorite_added", { courseId }, sessionUser.id);
+    }
+
+    if (isAdmin) {
+      await loadAdminData();
+    }
+  };
+
+  const handleJoinWaitlist = async (courseId) => {
+    if (!supabase) {
+      setWaitlistMessage("Сначала заполни конфиг Supabase.");
+      return;
+    }
+
+    if (!sessionUser || !profile) {
+      setWaitlistMessage("Сначала войди или зарегистрируйся, чтобы встать в лист ожидания.");
+      return;
+    }
+
+    setWaitlistMessage("");
+    const course = coursesSeed.find((item) => item.id === courseId);
+    if (!course) return;
+
+    const alreadyExists = myWaitlistEntries.some((entry) => entry.course_id === courseId);
+    if (alreadyExists) {
+      setWaitlistMessage("Ты уже в листе ожидания по этому курсу.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const payload = {
+        user_id: sessionUser.id,
+        course_id: courseId,
+        course_title: course.title,
+        name: profile.name,
+        email: profile.email,
+        phone: waitlistForm.phone || profile.phone || "",
+        note: waitlistForm.note || "",
+        source: waitlistForm.source || "site",
+        status: "new",
+      };
+
+      const { data, error } = await supabase.from("waitlist_entries").insert(payload).select("*").single();
+      if (error) throw error;
+
+      await createDbNotification(
+        sessionUser.id,
+        "Ты в листе ожидания",
+        `Мы сохранили заявку на курс «${course.title}».`
+      );
+      await safeTrackEvent("waitlist_joined", { courseId, courseTitle: course.title }, sessionUser.id);
+      const ownerDelivery = await notifyOwnerAboutWaitlist(data);
+
+      setMyWaitlistEntries((prev) => [data, ...prev]);
+      setNotifications((prev) => [
+        {
+          id: uid("local-note"),
+          user_id: sessionUser.id,
+          title: "Ты в листе ожидания",
+          body: `Мы сохранили заявку на курс «${course.title}».`,
+          created_at: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+
+      if (isAdmin) {
+        await loadAdminData();
+      }
+
+      setWaitlistMessage(
+        ownerDelivery.sent
+          ? "Заявка сохранена и отправлена владельцу по webhook."
+          : "Заявка сохранена в базе. Для автоматической почты владельцу подключи WAITLIST_WEBHOOK_URL."
+      );
+    } catch (error) {
+      setWaitlistMessage(error.message || "Не удалось записать в лист ожидания.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderHero = () => (
+    <section className="relative overflow-hidden border-b border-black/10">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.9),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(0,0,0,0.06),transparent_34%)]" />
+      <div className="relative mx-auto grid min-h-[calc(100vh-84px)] max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr,.9fr] lg:px-8 lg:py-20">
+        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+          <div className="mb-6 flex flex-wrap gap-2">
+            <Pill>Live DB mode</Pill>
+            <Pill>Email webhook ready</Pill>
+            <Pill>Личные кабинеты работают</Pill>
+          </div>
+          <h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.07em] text-[#111111] sm:text-6xl lg:text-8xl">
+            Архитекторы
+            <br />
+            реальности
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-black/70 lg:text-xl">
+            Источник истины теперь база данных: регистрация, waitlist, профиль, избранное и lead center работают через Supabase, а заявки можно отправлять владельцу через webhook.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <PrimaryButton onClick={() => setView("catalog")}>
+              Открыть каталог <ArrowRight className="h-4 w-4" />
+            </PrimaryButton>
+            <SecondaryButton
+              onClick={() => {
+                setView("auth");
+                setAuthMode(sessionUser ? "login" : "register");
+              }}
+            >
+              {sessionUser ? "Открыть кабинет" : "Регистрация"}
+            </SecondaryButton>
+          </div>
+          <div className="mt-10 grid max-w-3xl gap-3 sm:grid-cols-3">
+            {[
+              { value: coursesSeed.length, label: "курса на витрине" },
+              { value: stats.waitlistLeads, label: "заявок в базе" },
+              { value: stats.registrations, label: "профилей в БД" },
+            ].map((item) => (
+              <Card key={item.label} className="rounded-[22px] p-4">
+                <div className="text-3xl font-semibold tracking-[-0.05em]">{item.value}</div>
+                <div className="mt-1 text-sm text-black/60">{item.label}</div>
+              </Card>
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.55 }}>
+          <Card className="overflow-hidden rounded-[36px] bg-[#101113] p-0 text-white">
+            <div className="border-b border-white/10 px-6 py-5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs uppercase tracking-[0.28em] text-white/50">Infra status</div>
+                  <div className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Подключение live-слоя</div>
+                </div>
+                <Pill dark>{configReady ? "DB ready" : "Config needed"}</Pill>
+              </div>
+            </div>
+            <div className="grid gap-3 p-6 text-sm leading-6 text-white/80">
+              {[
+                configReady ? "Supabase client и auth активны" : "Нужно заполнить SUPABASE_URL и SUPABASE_ANON_KEY",
+                webhookReady ? "Webhook/email gateway активен" : "Нужно заполнить WAITLIST_WEBHOOK_URL",
+                "Waitlist и профили живут в базе, а не в localStorage",
+                "Lead center читает данные напрямую из таблиц",
+              ].map((item) => (
+                <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <Check className="mb-2 h-4 w-4" />
+                  {item}
+                </div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      </div>
+    </section>
+  );
+
+  const renderHome = () => (
+    <>
+      {renderHero()}
+      <Section
+        eyebrow="Как это работает"
+        title="Трафик идёт на витрину, лиды сразу пишутся в БД"
+        description="Эта версия не хранит пользовательские данные локально. Регистрация, избранное, waitlist и уведомления живут в таблицах и могут использоваться для реальных запусков и CRM-процессов."
+        right={
+          <Card className="bg-black text-white">
+            <div className="text-xs uppercase tracking-[0.24em] text-white/50">Owner result</div>
+            <div className="mt-4 grid gap-3">
+              {[
+                "Собираешь email и профиль пользователя в БД",
+                "Получаешь лиды по каждому курсу",
+                "Можешь подключить email gateway без переписывания фронта",
+                "Получаешь lead center для запуска релиза",
+              ].map((item) => (
+                <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </Card>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            { title: "База данных", text: "Profiles, waitlist, favorites и notifications больше не теряются между устройствами.", icon: Shield },
+            { title: "Webhook", text: "Каждая waitlist-заявка может сразу уходить в email provider или automation flow.", icon: Mail },
+            { title: "Кабинет", text: "Пользователь видит свои реальные данные и заявки, подгруженные из БД.", icon: Users },
+            { title: "Lead center", text: "Владелец видит актуальную базу лидов и сигналы запуска прямо из таблиц.", icon: Bell },
+          ].map((item) => (
+            <Card key={item.title}>
+              <item.icon className="h-5 w-5" />
+              <div className="mt-4 text-xl font-semibold tracking-[-0.04em]">{item.title}</div>
+              <p className="mt-2 text-sm leading-6 text-black/65">{item.text}</p>
+            </Card>
+          ))}
+        </div>
+      </Section>
+    </>
+  );
+
+  const renderCatalog = () => (
+    <Section
+      eyebrow="Каталог"
+      title="Все курсы стоят на витрине как будущие релизы"
+      description="Люди могут зарегистрироваться, сохранить профиль, добавить курс в избранное и встать в лист ожидания."
+    >
+      <div className="mb-6 grid gap-4 lg:grid-cols-[1fr,.75fr]">
+        <Card>
+          <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3">
+            <Search className="h-4 w-4 text-black/45" />
+            <input
+              value={catalogSearch}
+              onChange={(e) => setCatalogSearch(e.target.value)}
+              placeholder="Поиск по курсам"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-black/35"
+            />
+          </div>
+        </Card>
+        <Card>
+          <div className="text-sm text-black/55">Курс в фокусе</div>
+          <div className="mt-3 text-2xl font-semibold tracking-[-0.04em]">{selectedCourse.title}</div>
+          <div className="mt-2 text-sm leading-6 text-black/65">Заявок по этому курсу: {selectedCourseLeadsCount}</div>
+        </Card>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        {catalogCourses.map((course) => (
+          <Card key={course.id} className={cn(selectedCourseId === course.id && "ring-2 ring-black")}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Pill dark>{course.badge}</Pill>
+                <div className="mt-4 text-2xl font-semibold tracking-[-0.04em]">{course.title}</div>
+              </div>
+              <Lock className="h-5 w-5 text-black/35" />
+            </div>
+            <div className="mt-3 text-sm text-black/55">{course.subtitle}</div>
+            <div className="mt-4 text-sm leading-6 text-black/70">{course.shortDescription}</div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Pill>{course.level}</Pill>
+              <Pill>{course.format}</Pill>
+              <Pill>{course.lessons} уроков</Pill>
+              {favoriteIds.includes(course.id) ? <Pill>В избранном</Pill> : null}
+            </div>
+            <div className="mt-6 flex items-end justify-between gap-3">
+              <div>
+                <div className="text-xs uppercase tracking-[0.2em] text-black/40">Цена от</div>
+                <div className="mt-1 text-3xl font-semibold tracking-[-0.05em]">{formatPrice(course.priceFrom)}</div>
+              </div>
+              <div className="flex gap-2">
+                <SecondaryButton onClick={() => toggleFavorite(course.id)} disabled={!configReady || loading}>
+                  {favoriteIds.includes(course.id) ? "Убрать" : "В избранное"}
+                </SecondaryButton>
+                <PrimaryButton
+                  onClick={() => {
+                    setSelectedCourseId(course.id);
+                    setDrawer("waitlist");
+                  }}
+                >
+                  {course.waitlistLabel}
+                </PrimaryButton>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </Section>
+  );
+
+  const renderAuth = () => (
+    <Section
+      eyebrow={authMode === "register" ? "Регистрация" : "Вход"}
+      title={authMode === "register" ? "Создать кабинет и сохранить профиль в БД" : "Войти в кабинет"}
+      description="Регистрация использует Supabase Auth, а профиль пишется в таблицу profiles."
+    >
+      <div className="grid gap-4 lg:grid-cols-[1fr,.9fr]">
+        <Card>
+          <div className="grid gap-4">
+            {authMode === "register" ? (
+              <>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-black/65">Имя</label>
+                  <input
+                    value={authForm.name}
+                    onChange={(e) => setAuthForm((prev) => ({ ...prev, name: e.target.value }))}
+                    className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
+                  />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-black/65">Телефон</label>
+                    <input
+                      value={authForm.phone}
+                      onChange={(e) => setAuthForm((prev) => ({ ...prev, phone: e.target.value }))}
+                      className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-black/65">Город</label>
+                    <input
+                      value={authForm.city}
+                      onChange={(e) => setAuthForm((prev) => ({ ...prev, city: e.target.value }))}
+                      className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-black/65">Чем занимаешься</label>
+                  <input
+                    value={authForm.occupation}
+                    onChange={(e) => setAuthForm((prev) => ({ ...prev, occupation: e.target.value }))}
+                    className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
+                  />
+                </div>
+              </>
+            ) : null}
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black/65">Email</label>
+              <input
+                value={authForm.email}
+                onChange={(e) => setAuthForm((prev) => ({ ...prev, email: e.target.value }))}
+                className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-black/65">Пароль</label>
+              <input
+                type="password"
+                value={authForm.password}
+                onChange={(e) => setAuthForm((prev) => ({ ...prev, password: e.target.value }))}
+                className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
+              />
+            </div>
+
+            {authMode === "register" ? (
+              <PrimaryButton onClick={handleRegister} disabled={loading || !configReady}>
+                <UserPlus className="h-4 w-4" />Создать кабинет
+              </PrimaryButton>
+            ) : (
+              <PrimaryButton onClick={handleLogin} disabled={loading || !configReady}>
+                <LogIn className="h-4 w-4" />Войти
+              </PrimaryButton>
+            )}
+
+            {authMessage ? (
+              <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-sm text-black/65">{authMessage}</div>
+            ) : null}
+            <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-xs leading-6 text-black/55">
+              Продолжая регистрацию или вход, пользователь подтверждает ознакомление с политикой конфиденциальности, согласием на обработку персональных данных и иными документами правового контура сайта.
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <SecondaryButton onClick={() => setAuthMode(authMode === "register" ? "login" : "register")}>
+                {authMode === "register" ? "Уже есть аккаунт" : "Создать аккаунт"}
+              </SecondaryButton>
+              <SecondaryButton onClick={() => setView("catalog")}>К каталогу</SecondaryButton>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="bg-black text-white">
+          <div className="text-xs uppercase tracking-[0.22em] text-white/55">Что пишет в базу</div>
+          <div className="mt-4 grid gap-3 text-sm leading-6 text-white/80">
+            {[
+              "Supabase Auth хранит email и пароль",
+              "profiles хранит имя, телефон, город и род занятий",
+              "waitlist_entries хранит заявки по курсам",
+              "notifications хранит события кабинета",
+              "user_favorites хранит избранные курсы",
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4">{item}</div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </Section>
+  );
+
+  const cabinetNav = [
+    { id: "overview", label: "Обзор" },
+    { id: "profile", label: "Профиль" },
+    { id: "waitlist", label: "Лист ожидания" },
+    { id: "favorites", label: "Избранное" },
+    { id: "notifications", label: "Уведомления" },
+  ];
+
+  const renderCabinetContent = () => {
+    switch (cabinetSection) {
+      case "profile":
+        return (
+          <Card>
+            <div className="text-sm text-black/55">Данные профиля</div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {[
+                ["Имя", profile?.name || "—"],
+                ["Email", profile?.email || sessionUser?.email || "—"],
+                ["Телефон", profile?.phone || "—"],
+                ["Город", profile?.city || "—"],
+                ["Род занятий", profile?.occupation || "—"],
+                ["Дата регистрации", profile?.created_at ? formatDate(profile.created_at) : "—"],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-black/10 p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-black/45">{label}</div>
+                  <div className="mt-2 text-sm text-black/75">{value}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        );
+      case "waitlist":
+        return (
+          <Card>
+            <div className="text-sm text-black/55">Мои заявки в лист ожидания</div>
+            <div className="mt-4 grid gap-3">
+              {myWaitlistEntries.length === 0 ? (
+                <div className="rounded-2xl border border-black/10 px-4 py-3 text-sm text-black/60">Пока заявок нет.</div>
+              ) : (
+                myWaitlistEntries.map((entry) => (
+                  <div key={entry.id} className="rounded-2xl border border-black/10 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="font-medium">{entry.course_title}</div>
+                        <div className="mt-1 text-sm text-black/55">{formatDate(entry.created_at)}</div>
+                      </div>
+                      <Pill>{entry.status}</Pill>
+                    </div>
+                    <div className="mt-3 text-sm text-black/65">{entry.note || "Без комментария"}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+        );
+      case "favorites":
+        return (
+          <Card>
+            <div className="text-sm text-black/55">Избранные курсы</div>
+            <div className="mt-4 grid gap-3">
+              {favoriteIds.length === 0 ? (
+                <div className="rounded-2xl border border-black/10 px-4 py-3 text-sm text-black/60">Пока ничего не добавлено.</div>
+              ) : (
+                favoriteIds.map((id) => {
+                  const course = coursesSeed.find((item) => item.id === id);
+                  if (!course) return null;
+                  return (
+                    <div key={course.id} className="rounded-2xl border border-black/10 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="font-medium">{course.title}</div>
+                          <div className="mt-1 text-sm text-black/55">{course.subtitle}</div>
+                        </div>
+                        <div className="flex gap-2">
+                          <SecondaryButton onClick={() => toggleFavorite(course.id)} disabled={loading}>
+                            Убрать
+                          </SecondaryButton>
+                          <PrimaryButton
+                            onClick={() => {
+                              setSelectedCourseId(course.id);
+                              setDrawer("waitlist");
+                            }}
+                          >
+                            В waitlist
+                          </PrimaryButton>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </Card>
+        );
+      case "notifications":
+        return (
+          <Card>
+            <div className="text-sm text-black/55">Уведомления</div>
+            <div className="mt-4 grid gap-3">
+              {notifications.length === 0 ? (
+                <div className="rounded-2xl border border-black/10 px-4 py-3 text-sm text-black/60">Пока уведомлений нет.</div>
+              ) : (
+                notifications.map((note) => (
+                  <div key={note.id} className="rounded-2xl border border-black/10 p-4">
+                    <div className="font-medium">{note.title}</div>
+                    <div className="mt-2 text-sm leading-6 text-black/65">{note.body}</div>
+                    <div className="mt-2 text-xs text-black/45">{formatDate(note.created_at)}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+        );
+      default:
+        return (
+          <Card className="bg-black text-white">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-xs uppercase tracking-[0.22em] text-white/55">Личный кабинет</div>
+                <div className="mt-2 text-3xl font-semibold tracking-[-0.05em]">{profile?.name || sessionUser?.email}</div>
+                <div className="mt-2 text-sm text-white/70">
+                  Профиль, избранные курсы и заявки в лист ожидания теперь подгружаются из базы данных.
+                </div>
+              </div>
+              <Pill dark>{myWaitlistEntries.length} заявок</Pill>
+            </div>
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs uppercase tracking-[0.18em] text-white/50">Курсов в избранном</div>
+                <div className="mt-2 text-2xl font-semibold">{favoriteIds.length}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs uppercase tracking-[0.18em] text-white/50">Моих waitlist-заявок</div>
+                <div className="mt-2 text-2xl font-semibold">{myWaitlistEntries.length}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs uppercase tracking-[0.18em] text-white/50">Источник истины</div>
+                <div className="mt-2 text-sm text-white/80">Supabase DB</div>
+              </div>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <PrimaryButton className="bg-white text-black hover:bg-white/90" onClick={() => setView("catalog")}>
+                В каталог
+              </PrimaryButton>
+              <SecondaryButton className="border-white/10 bg-white/5 text-white hover:bg-white/10" onClick={() => setCabinetSection("profile")}>
+                Мой профиль
+              </SecondaryButton>
+            </div>
+          </Card>
+        );
+    }
+  };
+
+  const renderCabinet = () => (
+    <Section
+      eyebrow="Личный кабинет"
+      title="Рабочий кабинет пользователя"
+      description="Профиль, избранное и waitlist читаются из базы, а не из localStorage."
+    >
+      <div className="mb-5 flex flex-wrap gap-2">
+        {cabinetNav.map((item) => (
+          <NavPill key={item.id} active={cabinetSection === item.id} onClick={() => setCabinetSection(item.id)}>
+            {item.label}
+          </NavPill>
+        ))}
+      </div>
+      {renderCabinetContent()}
+    </Section>
+  );
+
+  const renderAdmin = () => {
+    if (!isAdmin) {
+      return (
+        <Section eyebrow="Admin" title="Доступ только для владельца" description="Эта зона предназначена для операционного управления базой и заявками.">
+          <Card>
+            <div className="text-sm text-black/65">Войди под admin-аккаунтом, чтобы увидеть lead center.</div>
+          </Card>
+        </Section>
+      );
+    }
+
+    return (
+      <Section
+        eyebrow="Lead center"
+        title="Рабочая панель владельца"
+        description="Здесь видны регистрации, заявки в лист ожидания и сигналы подключённой инфраструктуры."
+      >
+        <div className="grid gap-4 xl:grid-cols-4">
+          {[
+            { label: "Регистрации", value: stats.registrations, icon: Users },
+            { label: "Waitlist-заявки", value: stats.waitlistLeads, icon: Mail },
+            { label: "Логины", value: stats.logins, icon: LogIn },
+            { label: "Избранное", value: stats.favorites, icon: Star },
+          ].map((item) => (
+            <Card key={item.label}>
+              <item.icon className="h-5 w-5" />
+              <div className="mt-4 text-3xl font-semibold tracking-[-0.05em]">{item.value}</div>
+              <div className="mt-1 text-sm text-black/60">{item.label}</div>
+            </Card>
+          ))}
+        </div>
+
+        <div className="mt-8 grid gap-4 xl:grid-cols-[1.1fr,.9fr]">
+          <Card>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm text-black/55">Waitlist leads</div>
+                <div className="mt-1 text-2xl font-semibold tracking-[-0.04em]">Все заявки из БД</div>
+              </div>
+              <Pill>{adminLeads.length} leads</Pill>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-black/10">
+              <div className="grid grid-cols-[1fr,1fr,1fr,.8fr] gap-3 border-b border-black/10 bg-black/[0.03] px-4 py-3 text-xs uppercase tracking-[0.18em] text-black/45">
+                <div>Имя / Email</div>
+                <div>Курс</div>
+                <div>Телефон / note</div>
+                <div>Дата</div>
+              </div>
+              {adminLeads.length === 0 ? (
+                <div className="px-4 py-4 text-sm text-black/55">Пока заявок нет.</div>
+              ) : (
+                adminLeads.map((entry) => (
+                  <div key={entry.id} className="grid grid-cols-[1fr,1fr,1fr,.8fr] gap-3 border-t border-black/10 px-4 py-3 text-sm text-black/70">
+                    <div>
+                      <div className="font-medium">{entry.name}</div>
+                      <div className="text-black/55">{entry.email}</div>
+                    </div>
+                    <div>{entry.course_title}</div>
+                    <div>
+                      <div>{entry.phone || "—"}</div>
+                      <div className="text-black/55">{entry.note || "—"}</div>
+                    </div>
+                    <div>{formatDate(entry.created_at)}</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
+          <div className="grid gap-4">
+            <Card>
+              <div className="text-sm text-black/55">Infra setup</div>
+              <div className="mt-4 grid gap-3 text-sm text-black/70">
+                <div className="rounded-2xl border border-black/10 p-4">
+                  <div className="font-medium">Supabase</div>
+                  <div className="mt-2">{configReady ? "Подключён" : "Нужно заполнить URL и anon key"}</div>
+                </div>
+                <div className="rounded-2xl border border-black/10 p-4">
+                  <div className="font-medium">Webhook / email gateway</div>
+                  <div className="mt-2">{webhookReady ? "Подключён" : "Нужно заполнить WAITLIST_WEBHOOK_URL"}</div>
+                </div>
+                <div className="rounded-2xl border border-black/10 p-4">
+                  <div className="font-medium">Owner email</div>
+                  <div className="mt-2">{OWNER_NOTIFICATION_EMAIL}</div>
+                </div>
+              </div>
+            </Card>
+            <Card>
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-sm text-black/55">DB schema</div>
+                <a
+                  href="https://supabase.com/docs/guides/database"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-black/55"
+                >
+                  docs <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+              <pre className="mt-4 max-h-[320px] overflow-auto rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-xs leading-6 text-black/70 whitespace-pre-wrap">
+                {DB_SETUP_SQL}
+              </pre>
+            </Card>
+            <Card>
+              <div className="text-sm text-black/55">Последние события</div>
+              <div className="mt-4 grid gap-2">
+                {adminEvents.length === 0 ? (
+                  <div className="rounded-2xl border border-black/10 px-4 py-3 text-sm text-black/55">Пока событий нет.</div>
+                ) : (
+                  adminEvents.map((item) => (
+                    <div key={item.id} className="rounded-2xl border border-black/10 p-4">
+                      <div className="font-medium">{item.event_name}</div>
+                      <div className="mt-2 text-sm text-black/65 break-all">{JSON.stringify(item.payload)}</div>
+                      <div className="mt-2 text-xs text-black/45">{formatDate(item.created_at)}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+      </Section>
+    );
+  };
+
+  const renderLegal = () => (
+    <Section eyebrow="Legal" title="Юридический контур" description="Все ключевые документы доступны из footer и в любой момент могут быть открыты пользователем.">
+      <div className="grid gap-4 lg:grid-cols-[.9fr,1.1fr]">
+        <Card>
+          <div className="grid gap-2">
+            {legalPagesSeed.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setSelectedLegalId(item.id)}
+                className={cn(
+                  "flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition",
+                  selectedLegalId === item.id ? "border-black bg-black text-white" : "border-black/10 bg-white text-black hover:bg-black/5"
+                )}
+              >
+                <span>{item.title}</span>
+                <ChevronRight className={cn("h-4 w-4", selectedLegalId === item.id ? "text-white/60" : "text-black/35")} />
+              </button>
+            ))}
+          </div>
+        </Card>
+        <Card>
+          <div className="text-xs uppercase tracking-[0.22em] text-black/45">{activeLegalPage.title}</div>
+          <div className="mt-4 whitespace-pre-wrap text-sm leading-7 text-black/70">{activeLegalPage.text}</div>
+        </Card>
+      </div>
+    </Section>
+  );
+
+  const renderFaq = () => (
+    <Section eyebrow="FAQ" title="Что работает уже сейчас" description="Эта версия рассчитана на живой pre-launch с реальной БД и webhook-уведомлениями владельцу.">
+      <div className="grid gap-4 lg:grid-cols-[1fr,.9fr]">
+        <Card>
+          <div className="grid gap-3">
+            {faqSeed.map((item) => (
+              <div key={item.q} className="rounded-2xl border border-black/10 p-4">
+                <div className="font-medium">{item.q}</div>
+                <div className="mt-2 text-sm leading-6 text-black/65">{item.a}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card>
+          <div className="text-sm text-black/55">Статус live-архитектуры</div>
+          <div className="mt-4 grid gap-2 text-sm text-black/70">
+            {[
+              "localStorage больше не источник истины",
+              "Профиль и waitlist лежат в таблицах",
+              "Курсы остаются в статусе «Скоро релиз»",
+              "Webhook может отправлять письмо владельцу по каждой заявке",
+              "Lead center читает актуальные данные из БД",
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-black/10 px-4 py-3">{item}</div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </Section>
+  );
+
+  const renderWaitlistDrawer = () => (
+    <Drawer open={drawer === "waitlist"} onClose={() => setDrawer(null)} title={`Лист ожидания · ${selectedCourse.title}`}>
+      <Card>
+        {!sessionUser || !profile ? (
+          <>
+            <div className="text-sm leading-6 text-black/65">
+              Чтобы встать в лист ожидания и сохранить заявку в базе, сначала войди или зарегистрируйся.
+            </div>
+            <div className="mt-5 flex gap-3">
+              <PrimaryButton
+                onClick={() => {
+                  setDrawer(null);
+                  setView("auth");
+                  setAuthMode("register");
+                }}
+              >
+                Регистрация
+              </PrimaryButton>
+              <SecondaryButton
+                onClick={() => {
+                  setDrawer(null);
+                  setView("auth");
+                  setAuthMode("login");
+                }}
+              >
+                Войти
+              </SecondaryButton>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-sm text-black/55">
+              Оставь комментарий, и заявка уйдёт в базу. При подключённом webhook владелец также получит письмо.
+            </div>
+            <div className="mt-4 grid gap-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-black/65">Имя</label>
+                <input value={profile.name || waitlistForm.name} readOnly className="w-full rounded-2xl border border-black/10 bg-black/[0.02] px-4 py-3 outline-none" />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-black/65">Email</label>
+                <input value={profile.email || sessionUser.email || waitlistForm.email} readOnly className="w-full rounded-2xl border border-black/10 bg-black/[0.02] px-4 py-3 outline-none" />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-black/65">Телефон</label>
+                <input
+                  value={waitlistForm.phone}
+                  onChange={(e) => setWaitlistForm((prev) => ({ ...prev, phone: e.target.value }))}
+                  className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-black/65">Комментарий</label>
+                <textarea
+                  rows={4}
+                  value={waitlistForm.note}
+                  onChange={(e) => setWaitlistForm((prev) => ({ ...prev, note: e.target.value }))}
+                  className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
+                  placeholder="Например: хочу первым, нужен корпоративный тариф"
+                />
+              </div>
+              <PrimaryButton onClick={() => handleJoinWaitlist(selectedCourse.id)} disabled={loading}>
+                Встать в лист ожидания
+              </PrimaryButton>
+              {waitlistMessage ? (
+                <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-sm text-black/65">{waitlistMessage}</div>
+              ) : null}
+              <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-xs leading-6 text-black/55">
+                Отправляя заявку, пользователь подтверждает ознакомление с политикой конфиденциальности, согласием на обработку персональных данных и правилами работы с листом ожидания.
+              </div>
+            </div>
+          </>
+        )}
+      </Card>
+    </Drawer>
+  );
+
+  const renderConfigBanner = () => {
+    if (configReady && webhookReady) return null;
+    return (
+      <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+        <div className="rounded-3xl border border-black/10 bg-[#fff7e8] p-4 text-sm text-black/75">
+          {!configReady ? "Заполни SUPABASE_URL и SUPABASE_ANON_KEY. " : "Supabase подключён. "}
+          {!webhookReady ? "Заполни WAITLIST_WEBHOOK_URL, чтобы владельцу приходили письма по новым waitlist-заявкам." : "Webhook подключён."}
+        </div>
+      </div>
+    );
+  };
+
+  const renderView = () => {
+    switch (view) {
+      case "catalog":
+        return renderCatalog();
+      case "auth":
+        return renderAuth();
+      case "cabinet":
+        return renderCabinet();
+      case "admin":
+        return renderAdmin();
+      case "legal":
+        return renderLegal();
+      case "faq":
+        return renderFaq();
+      default:
+        return renderHome();
+    }
+  };
+
+  const navItems = [
+    { id: "home", label: "Платформа" },
+    { id: "catalog", label: "Каталог" },
+    { id: sessionUser ? "cabinet" : "auth", label: sessionUser ? "Кабинет" : "Регистрация" },
+    ...(isAdmin ? [{ id: "admin", label: "Lead center" }] : []),
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#f3f1ec] text-[#111111]">
+      <header className="sticky top-0 z-50 border-b border-black/10 bg-[#f3f1ec]/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <button onClick={() => setView("home")} className="text-left">
+            <div className="text-[11px] uppercase tracking-[0.28em] text-black/45">Live DB version</div>
+            <div className="mt-1 text-lg font-semibold tracking-[-0.05em]">Архитекторы реальности</div>
+          </button>
+
+          <nav className="hidden flex-wrap items-center gap-2 lg:flex">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setView(item.id)}
+                className={cn(
+                  "rounded-2xl px-4 py-2 text-sm font-medium transition",
+                  view === item.id ? "bg-black text-white" : "bg-white/80 text-black/65 hover:bg-white"
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            {profile ? <div className="hidden rounded-2xl border border-black/10 bg-white/80 px-4 py-2 text-sm text-black/65 sm:block">{profile.name}</div> : null}
+            <div className="hidden gap-2 sm:flex">
+              {sessionUser ? (
+                <SecondaryButton onClick={handleLogout}>Выйти</SecondaryButton>
+              ) : (
+                <SecondaryButton onClick={() => { setView("auth"); setAuthMode("login"); }}>Войти</SecondaryButton>
+              )}
+              <PrimaryButton onClick={() => { setSelectedCourseId(coursesSeed[0].id); setDrawer("waitlist"); }}>
+                Лист ожидания
+              </PrimaryButton>
+            </div>
+            <button onClick={() => setMobileMenu(true)} className="rounded-2xl border border-black/10 bg-white p-2 lg:hidden">
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {renderConfigBanner()}
+      <main>{renderView()}</main>
+
+      <footer className="border-t border-black/10 bg-white/70">
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1fr,.9fr] lg:px-8">
+          <div>
+            <div className="text-sm uppercase tracking-[0.22em] text-black/45">Seller transparency</div>
+            <div className="mt-4 text-2xl font-semibold tracking-[-0.04em]">{seller.name}</div>
+            <div className="mt-2 text-sm text-black/60">{seller.status}</div>
+            <div className="mt-4 max-w-2xl text-sm leading-6 text-black/65">
+              Эта версия уже переведена на живую архитектуру: профили, waitlist и сигналы запуска живут в базе, а владельцу можно подключить реальные письма через webhook.
+            </div>
+          </div>
+          <div>
+            <div className="text-sm uppercase tracking-[0.22em] text-black/45">Legal / support</div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              {legalPagesSeed.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setSelectedLegalId(item.id);
+                    setView("legal");
+                  }}
+                  className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm text-black/70 transition hover:bg-black/5"
+                >
+                  {item.title}
+                </button>
+              ))}
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2 text-sm text-black/55">
+              <button onClick={() => setView("faq")} className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-2">
+                <FileText className="h-4 w-4" />FAQ
+              </button>
+              <span className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-2">
+                <Clock3 className="h-4 w-4" />Все курсы «Скоро релиз»
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-2">
+                <Shield className="h-4 w-4" />Данные в базе
+              </span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {renderWaitlistDrawer()}
+
+      <Drawer open={mobileMenu} onClose={() => setMobileMenu(false)} title="Навигация">
+        <div className="grid gap-2">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                setView(item.id);
+                setMobileMenu(false);
+              }}
+              className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm text-black/70"
+            >
+              {item.label}
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              setSelectedCourseId(coursesSeed[0].id);
+              setDrawer("waitlist");
+              setMobileMenu(false);
+            }}
+            className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm text-black/70"
+          >
+            Лист ожидания
+          </button>
+          {sessionUser ? (
+            <button
+              onClick={() => {
+                handleLogout();
+                setMobileMenu(false);
+              }}
+              className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm text-black/70"
+            >
+              Выйти
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setView("auth");
+                setAuthMode("login");
+                setMobileMenu(false);
+              }}
+              className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm text-black/70"
+            >
+              Войти
+            </button>
+          )}
+        </div>
+      </Drawer>
+    </div>
+  );
+}
