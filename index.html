@@ -1,1648 +1,1074 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { createClient } from "@supabase/supabase-js";
-import {
-  ArrowRight,
-  Bell,
-  BookOpen,
-  Check,
-  ChevronRight,
-  Clock3,
-  ExternalLink,
-  FileText,
-  Lock,
-  LogIn,
-  Mail,
-  Menu,
-  Search,
-  Shield,
-  Sparkles,
-  Star,
-  UserPlus,
-  Users,
-  X,
-} from "lucide-react";
-
-const SUPABASE_URL = "https://vbomuwdabjtcnvvwfxtt.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_qMSROQdi856dh55hmv3lKg_DDeiY6Ib";
-const WAITLIST_WEBHOOK_URL = "https://vbomuwdabjtcnvvwfxtt.supabase.co/functions/v1/hyper-task";
-const OWNER_NOTIFICATION_EMAIL = "mikhsan@yandex.ru";
-
-const seller = {
-  name: "Дмитриев Михаил Александрович",
-  status: "Самозанятый",
-  inn: "772453231807",
-  supportEmail: OWNER_NOTIFICATION_EMAIL,
-};
-
-const DB_SETUP_SQL = `
-create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  email text not null unique,
-  name text not null,
-  phone text default '',
-  city text default '',
-  occupation text default '',
-  role text not null default 'student',
-  created_at timestamptz not null default now()
-);
-
-create table if not exists public.waitlist_entries (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  course_id text not null,
-  course_title text not null,
-  name text not null,
-  email text not null,
-  phone text default '',
-  note text default '',
-  source text not null default 'site',
-  status text not null default 'new',
-  created_at timestamptz not null default now()
-);
-
-create table if not exists public.notifications (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  title text not null,
-  body text not null,
-  created_at timestamptz not null default now()
-);
-
-create table if not exists public.user_favorites (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  course_id text not null,
-  created_at timestamptz not null default now(),
-  unique (user_id, course_id)
-);
-
-create table if not exists public.platform_events (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid,
-  event_name text not null,
-  payload jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now()
-);
-`;
-
-const coursesSeed = [
-  {
-    id: "architectors-reality",
-    title: "Архитекторы реальности",
-    subtitle: "Практический курс по нейросетям для жизни и работы",
-    level: "Beginner",
-    format: "Онлайн",
-    lessons: 16,
-    modules: 5,
-    priceFrom: 990,
-    badge: "Скоро релиз",
-    shortDescription:
-      "Стартовая система по нейросетям: понимание, инструменты, промпты, практика и ежедневное применение.",
-    waitlistLabel: "Встать в лист ожидания",
-  },
-  {
-    id: "workflow-ai",
-    title: "AI-система для продуктивности",
-    subtitle: "Как встроить AI в рабочий день, встречи, документы и задачи",
-    level: "Intermediate",
-    format: "Онлайн",
-    lessons: 12,
-    modules: 4,
-    priceFrom: 3490,
-    badge: "Скоро релиз",
-    shortDescription:
-      "Практический продукт для тех, кто хочет превратить AI в рабочую систему, а не в разовый эксперимент.",
-    waitlistLabel: "Жду запуск",
-  },
-  {
-    id: "visual-ai",
-    title: "Визуал и обложки с AI",
-    subtitle: "Быстрый визуальный продакшн для контента, идей и креативов",
-    level: "Beginner",
-    format: "Онлайн",
-    lessons: 10,
-    modules: 4,
-    priceFrom: 1990,
-    badge: "Скоро релиз",
-    shortDescription:
-      "Курс про визуальные сценарии: референсы, обложки, промо-материалы и креативные концепты.",
-    waitlistLabel: "Хочу первым",
-  },
-  {
-    id: "prompts-pro",
-    title: "Промпты для бизнеса",
-    subtitle: "Сильные запросы для команд, продукта, продаж и коммуникаций",
-    level: "Advanced",
-    format: "Онлайн",
-    lessons: 14,
-    modules: 5,
-    priceFrom: 4990,
-    badge: "Скоро релиз",
-    shortDescription:
-      "Продвинутый курс про постановку задач нейросетям на уровне бизнес-результата.",
-    waitlistLabel: "Записаться в waitlist",
-  },
-];
-
-const legalPagesSeed = [
-  {
-    id: "offer",
-    title: "Пользовательское соглашение",
-    text: `Настоящий сайт lectaro.ru является информационной платформой проекта «Архитекторы реальности». Сайт используется для регистрации пользователей, ведения личных кабинетов, сбора заявок в лист ожидания и информирования о будущих образовательных продуктах. Владельцем и оператором сайта является ${seller.name}, статус — ${seller.status}. Контактный email: ${seller.supportEmail}. Пользователь обязуется указывать достоверные сведения, не нарушать работу сайта и не использовать материалы сайта вне разрешённых законом пределов. Оператор вправе обновлять содержание сайта, статус продуктов, правовые документы и интерфейсы без предварительного уведомления, публикуя актуальную редакцию на сайте.`,
-  },
-  {
-    id: "privacy",
-    title: "Политика конфиденциальности",
-    text: `Оператор обрабатывает персональные данные пользователей в объёме, необходимом для регистрации, ведения личного кабинета, ведения листа ожидания, обратной связи, уведомлений о релизе и повышения качества сайта. Могут обрабатываться имя, email, телефон, город, род занятий, сведения о действиях на сайте, выбранных курсах, избранном и заявках в лист ожидания. Пользователь вправе запросить уточнение, удаление или прекращение обработки данных, написав на ${seller.supportEmail}. Данные хранятся не дольше, чем это необходимо для достижения целей обработки, если иной срок не предусмотрен законом.`,
-  },
-  {
-    id: "consent",
-    title: "Согласие на обработку персональных данных",
-    text: `Оставляя данные на сайте, пользователь свободно, своей волей и в своём интересе соглашается на обработку персональных данных: имени, email, телефона, города, рода занятий, истории действий на сайте и сведений о заявках в лист ожидания. Допускаются сбор, запись, систематизация, хранение, уточнение, использование, передача техническим подрядчикам, удаление и уничтожение данных в пределах целей работы сайта. Согласие действует до достижения целей обработки либо до его отзыва пользователем по адресу ${seller.supportEmail}.`,
-  },
-  {
-    id: "cookies",
-    title: "Политика использования cookie",
-    text: `Сайт может использовать cookie, local storage и иные аналогичные технологии для сохранения сессии пользователя, работы личного кабинета, аналитики, безопасности и удобства использования. Пользователь вправе ограничить использование cookie в браузере, но это может повлиять на работу авторизации, сохранение предпочтений и отдельных разделов сайта. Продолжая пользоваться сайтом после уведомления о cookie, пользователь соглашается с их использованием в описанных целях.`,
-  },
-  {
-    id: "marketing-consent",
-    title: "Согласие на информационные сообщения",
-    text: `Пользователь может получать информационные сообщения о запуске курсов, старте продаж, обновлениях платформы и связанных организационных событиях. Для отдельной рекламной рассылки о специальных предложениях, акциях и маркетинговых материалах рекомендуется использовать самостоятельное согласие пользователя через отдельный чекбокс на форме. Пользователь вправе отказаться от получения сообщений, направив запрос на ${seller.supportEmail}.`,
-  },
-  {
-    id: "seller",
-    title: "Сведения о продавце",
-    text: `Продавец и оператор сайта: ${seller.name}. Статус: ${seller.status}. ИНН: ${seller.inn}. Контактный email: ${seller.supportEmail}. Сайт действует в pre-launch режиме и предназначен для подготовки к запуску образовательных продуктов.`,
-  },
-  {
-    id: "payment-terms",
-    title: "Условия оплаты",
-    text: `На текущем этапе сайт преимущественно используется для сбора заявок и информирования пользователей. При запуске продаж на сайте должны быть размещены окончательные условия оплаты, способы оплаты, состав продукта, стоимость и порядок предоставления чеков. До запуска продаж сведения о цене на сайте имеют информационный характер.`,
-  },
-  {
-    id: "refund-policy",
-    title: "Условия возврата",
-    text: `До запуска продаж и приёма оплаты настоящий сайт не создаёт для пользователя обязанности по оплате образовательного продукта. После запуска продаж на сайте должны быть опубликованы отдельные условия возврата денежных средств, сроки рассмотрения обращений и порядок взаимодействия сторон.`,
-  },
-  {
-    id: "access-policy",
-    title: "Порядок предоставления доступа",
-    text: `В текущем режиме пользователю предоставляется доступ к витрине, правовым документам и личному кабинету. Доступ к самим образовательным материалам, урокам, бонусам и цифровым продуктам предоставляется только после официального запуска соответствующего курса и, при необходимости, выполнения условий оплаты.`,
-  },
-  {
-    id: "support",
-    title: "Контакты поддержки",
-    text: `По вопросам работы сайта, регистрации, изменения или удаления персональных данных, заявок в лист ожидания и правовых документов пользователь может обратиться по адресу ${seller.supportEmail}. В письме рекомендуется указать имя, email и краткое описание вопроса.`,
-  },
-];
-
-const faqSeed = [
-  {
-    q: "Когда откроется доступ к курсам?",
-    a: "Сейчас курсы собирают лист ожидания. После релиза участники waitlist получат письмо первыми.",
-  },
-  {
-    q: "Какие документы размещены на сайте?",
-    a: "На сайте размещены пользовательское соглашение, политика конфиденциальности, согласие на обработку персональных данных, политика cookie, сведения о продавце и иные правовые документы.",
-  },
-  {
-    q: "Что работает уже сейчас?",
-    a: "Работают витрина, каталог, регистрация, логин, личный кабинет, лист ожидания, сбор заявок и lead center.",
-  },
-  {
-    q: "Будут ли мне писать после релиза?",
-    a: "Технические и организационные уведомления о выбранном курсе возможны в рамках работы с листом ожидания. Для отдельных рекламных рассылок лучше использовать самостоятельное согласие пользователя.",
-  },
-];
-
-function uid(prefix) {
-  return `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString().slice(-5)}`;
-}
-
-function formatPrice(value) {
-  return `${new Intl.NumberFormat("ru-RU").format(value)} ₽`;
-}
-
-function formatDate(value) {
-  const date = value instanceof Date ? value : new Date(value);
-  return new Intl.DateTimeFormat("ru-RU").format(date);
-}
-
-function cn(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
-
-function runSelfChecks() {
-  console.assert(formatPrice(990) === "990 ₽", "formatPrice failed");
-  console.assert(cn("a", false, "b") === "a b", "cn failed");
-  console.assert(uid("x").startsWith("x-"), "uid failed");
-}
-
-function Card({ className, children }) {
-  return (
-    <div
-      className={cn(
-        "rounded-[28px] border border-black/10 bg-white/80 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.06)] backdrop-blur",
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
-function Pill({ children, dark = false }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
-        dark ? "bg-black text-white" : "border border-black/10 bg-white/80 text-black/70"
-      )}
-    >
-      {children}
-    </span>
-  );
-}
-
-function PrimaryButton({ children, onClick, className, disabled, type = "button" }) {
-  return (
-    <button
-      type={type}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white transition hover:-translate-y-0.5 hover:bg-black/90 disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function SecondaryButton({ children, onClick, className, disabled, type = "button" }) {
-  return (
-    <button
-      type={type}
-      disabled={disabled}
-      onClick={onClick}
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-2xl border border-black/10 bg-white/80 px-5 py-3 text-sm font-medium text-black transition hover:-translate-y-0.5 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Section({ eyebrow, title, description, children, right }) {
-  return (
-    <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
-      <div className="grid gap-8 lg:grid-cols-[1.15fr,.85fr] lg:gap-10">
-        <div>
-          {eyebrow ? (
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.24em] text-black/60 backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" />
-              {eyebrow}
-            </div>
-          ) : null}
-          <h2 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-[#111111] sm:text-4xl lg:text-5xl">
-            {title}
-          </h2>
-          {description ? <p className="mt-4 max-w-2xl text-base leading-7 text-black/65 sm:text-lg">{description}</p> : null}
-        </div>
-        <div>{right}</div>
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lectaro — Архитекторы реальности</title>
+  <meta name="description" content="Платформа Lectaro. Курсы по нейросетям для жизни и работы. Сейчас открыт лист ожидания и ранняя регистрация." />
+  <style>
+    :root {
+      --bg: #f3f1ec;
+      --card: rgba(255,255,255,0.82);
+      --line: rgba(17,17,17,0.10);
+      --text: #111111;
+      --muted: rgba(17,17,17,0.62);
+      --muted-2: rgba(17,17,17,0.45);
+      --black: #111111;
+      --accent: #0f172a;
+      --success: #0a7f39;
+      --warn: #8a5a00;
+      --shadow: 0 20px 80px rgba(0,0,0,0.06);
+      --radius: 28px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: var(--bg); }
+    a { color: inherit; text-decoration: none; }
+    button, input, textarea { font: inherit; }
+    .container { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px;
+      border: 1px solid var(--line); background: rgba(255,255,255,0.8); font-size: 12px; font-weight: 600; color: var(--muted);
+    }
+    .pill.dark { background: var(--black); color: #fff; border-color: transparent; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: none; cursor: pointer;
+      border-radius: 18px; padding: 14px 18px; font-size: 14px; font-weight: 600; transition: .2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.primary { background: var(--black); color: white; }
+    .btn.secondary { background: rgba(255,255,255,0.9); color: var(--text); border: 1px solid var(--line); }
+    .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+    .topbar {
+      position: sticky; top: 0; z-index: 50; border-bottom: 1px solid var(--line); backdrop-filter: blur(12px); background: rgba(243,241,236,0.90);
+    }
+    .topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
+    .brand-kicker { font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--muted-2); }
+    .brand-title { margin-top: 4px; font-size: 18px; font-weight: 700; letter-spacing: -0.04em; }
+    .nav { display: flex; flex-wrap: wrap; gap: 8px; }
+    .nav a { padding: 10px 14px; border-radius: 16px; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .nav a:hover { background: rgba(255,255,255,.8); }
+    .hero {
+      position: relative; overflow: hidden; border-bottom: 1px solid var(--line);
+      background: radial-gradient(circle at top left, rgba(255,255,255,.92), transparent 42%), radial-gradient(circle at bottom right, rgba(0,0,0,.06), transparent 34%);
+    }
+    .hero-grid { display: grid; grid-template-columns: 1.12fr .88fr; gap: 36px; min-height: calc(100vh - 84px); align-items: center; padding: 56px 0 72px; }
+    h1 { margin: 0; font-size: clamp(52px, 8vw, 112px); line-height: .9; letter-spacing: -0.08em; }
+    .hero-text { margin-top: 24px; max-width: 720px; font-size: 20px; line-height: 1.7; color: var(--muted); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 34px; max-width: 760px; }
+    .stat { padding: 18px; border-radius: 22px; }
+    .stat strong { display: block; font-size: 34px; letter-spacing: -0.05em; }
+    .stat span { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; }
+    .dark-panel { background: #101113; color: white; overflow: hidden; }
+    .dark-panel .inner { padding: 28px; }
+    .dark-panel .grid { display: grid; gap: 12px; margin-top: 18px; }
+    .dark-panel .item { border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.05); border-radius: 20px; padding: 16px; color: rgba(255,255,255,.84); line-height: 1.55; }
+    .section { padding: 64px 0; }
+    .section-head { display: grid; grid-template-columns: 1.14fr .86fr; gap: 28px; align-items: start; margin-bottom: 28px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.75); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .24em; color: var(--muted); }
+    h2 { margin: 0; font-size: clamp(34px, 4vw, 58px); line-height: 1.02; letter-spacing: -0.05em; }
+    .section-desc { margin-top: 16px; max-width: 760px; font-size: 18px; line-height: 1.7; color: var(--muted); }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .feature { padding: 20px; }
+    .feature h3 { margin: 14px 0 10px; font-size: 22px; letter-spacing: -0.04em; }
+    .muted { color: var(--muted); }
+    .kicker { font-size: 12px; text-transform: uppercase; letter-spacing: .22em; color: var(--muted-2); }
+    .catalog-controls { display: grid; grid-template-columns: 1fr .8fr; gap: 16px; margin-bottom: 20px; }
+    .search {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 18px; background: white;
+    }
+    .search input { width: 100%; border: 0; outline: 0; background: transparent; }
+    .course-card { padding: 22px; display: flex; flex-direction: column; min-height: 360px; }
+    .course-card h3 { margin: 16px 0 0; font-size: 28px; letter-spacing: -0.04em; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .course-bottom { margin-top: auto; display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+    .price { font-size: 38px; letter-spacing: -0.05em; font-weight: 700; }
+    .price small { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .2em; color: var(--muted-2); font-weight: 600; }
+    .course-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .notice {
+      padding: 16px 18px; border-radius: 20px; border: 1px solid var(--line); background: rgba(0,0,0,.02); font-size: 13px; line-height: 1.6; color: var(--muted);
+    }
+    .auth-wrap, .legal-wrap, .faq-wrap, .cabinet-wrap, .admin-wrap { display: none; }
+    .auth-wrap.active, .legal-wrap.active, .faq-wrap.active, .cabinet-wrap.active, .admin-wrap.active { display: block; }
+    .input { width: 100%; padding: 14px 16px; border-radius: 18px; border: 1px solid var(--line); background: white; outline: none; }
+    textarea.input { min-height: 112px; resize: vertical; }
+    .field label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--muted); font-weight: 600; }
+    .form-grid { display: grid; gap: 14px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .tab-btn { padding: 10px 14px; border-radius: 16px; border: 0; cursor: pointer; background: rgba(255,255,255,.85); color: var(--muted); font-weight: 600; }
+    .tab-btn.active { background: var(--black); color: white; }
+    .message { padding: 14px 16px; border-radius: 18px; border: 1px solid var(--line); background: rgba(0,0,0,.02); color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .table { overflow: hidden; border-radius: 22px; border: 1px solid var(--line); }
+    .table-head, .table-row { display: grid; grid-template-columns: 1fr 1fr 1fr .8fr; gap: 14px; padding: 14px 16px; }
+    .table-head { font-size: 12px; text-transform: uppercase; letter-spacing: .18em; color: var(--muted-2); background: rgba(0,0,0,.03); }
+    .table-row { border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+    .footer { border-top: 1px solid var(--line); background: rgba(255,255,255,.72); }
+    .footer-grid { display: grid; grid-template-columns: 1fr .95fr; gap: 28px; padding: 44px 0; }
+    .legal-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .legal-link { text-align: left; padding: 14px; border-radius: 18px; border: 1px solid var(--line); background: white; color: var(--muted); }
+    .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.30); display: none; z-index: 90; }
+    .drawer-backdrop.open { display: block; }
+    .drawer {
+      position: fixed; top: 0; right: -520px; width: min(520px, 100%); height: 100%; background: #f7f4ee; border-left: 1px solid var(--line);
+      box-shadow: -20px 0 60px rgba(0,0,0,.14); z-index: 91; transition: right .25s ease; padding: 18px; overflow-y: auto;
+    }
+    .drawer.open { right: 0; }
+    .drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+    .icon-btn { width: 40px; height: 40px; border-radius: 14px; border: 1px solid var(--line); background: white; cursor: pointer; }
+    .status-banner { margin: 14px auto 0; max-width: 1180px; padding: 0 20px; }
+    .status-banner .notice { background: #fff7e8; color: #5b4b12; }
+    .hidden { display: none !important; }
+    @media (max-width: 980px) {
+      .hero-grid, .section-head, .catalog-controls, .grid-4, .grid-3, .grid-2, .footer-grid { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr; }
+      .nav { display: none; }
+      .hero { min-height: auto; }
+      .table-head, .table-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div>
+        <div class="brand-kicker">Pre-launch platform</div>
+        <div class="brand-title">Lectaro · Архитекторы реальности</div>
       </div>
-      <div className="mt-8">{children}</div>
-    </section>
-  );
-}
+      <nav class="nav">
+        <a href="#home">Платформа</a>
+        <a href="#catalog">Каталог</a>
+        <a href="#auth">Регистрация</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn secondary" id="openAuthBtn">Войти</button>
+        <button class="btn primary" id="openWaitlistBtn">Лист ожидания</button>
+      </div>
+    </div>
+  </header>
 
-function Drawer({ open, onClose, title, children }) {
-  return (
-    <AnimatePresence>
-      {open ? (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 z-[70] bg-black/30 backdrop-blur-sm"
-          />
-          <motion.div
-            initial={{ x: 440 }}
-            animate={{ x: 0 }}
-            exit={{ x: 440 }}
-            transition={{ type: "spring", stiffness: 260, damping: 28 }}
-            className="fixed right-0 top-0 z-[71] h-full w-full max-w-xl overflow-y-auto border-l border-black/10 bg-[#f7f4ee] p-5 shadow-2xl"
-          >
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <div className="text-2xl font-semibold tracking-[-0.04em]">{title}</div>
-              <button onClick={onClose} className="rounded-2xl border border-black/10 bg-white p-2">
-                <X className="h-5 w-5" />
-              </button>
+  <div class="status-banner">
+    <div class="notice" id="configBanner">Сайт работает как pre-launch версия. Можно регистрироваться, вставать в лист ожидания и сохранять профиль. Если база или webhook ещё не подключены, формы будут работать в демо-режиме.</div>
+  </div>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="container hero-grid">
+        <div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;">
+            <span class="pill">Premium EdTech</span>
+            <span class="pill">Лист ожидания открыт</span>
+            <span class="pill">Личные кабинеты работают</span>
+          </div>
+          <h1>Архитекторы<br />реальности</h1>
+          <div class="hero-text">Платформа Lectaro для будущих курсов по нейросетям. Сейчас открыт ранний доступ: можно создать кабинет, выбрать интересующие программы и встать в лист ожидания.</div>
+          <div class="hero-actions">
+            <a class="btn primary" href="#catalog">Открыть каталог</a>
+            <a class="btn secondary" href="#auth">Регистрация</a>
+          </div>
+          <div class="stats">
+            <div class="card stat"><strong>4</strong><span>курса уже на витрине</span></div>
+            <div class="card stat"><strong id="heroWaitlistCount">0</strong><span>заявок в лист ожидания</span></div>
+            <div class="card stat"><strong id="heroProfilesCount">0</strong><span>профилей в системе</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="card dark-panel">
+            <div class="inner">
+              <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+                <div>
+                  <div class="kicker" style="color:rgba(255,255,255,.55)">Что уже работает</div>
+                  <div style="font-size:30px; letter-spacing:-0.04em; font-weight:700; margin-top:8px;">First live version</div>
+                </div>
+                <span class="pill dark">Waitlist</span>
+              </div>
+              <div class="grid">
+                <div class="item">Каталог со статусами «Скоро релиз»</div>
+                <div class="item">Регистрация и вход пользователей</div>
+                <div class="item">Личный кабинет и сохранение профиля</div>
+                <div class="item">Лист ожидания по каждому курсу</div>
+                <div class="item">Lead center для владельца</div>
+                <div class="item">Готовый юридический контур сайта</div>
+              </div>
             </div>
-            {children}
-          </motion.div>
-        </>
-      ) : null}
-    </AnimatePresence>
-  );
-}
+          </div>
+        </div>
+      </div>
+    </section>
 
-function NavPill({ active, children, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "rounded-2xl px-4 py-2 text-sm font-medium transition",
-        active ? "bg-black text-white" : "bg-white/80 text-black/65 hover:bg-white"
-      )}
-    >
-      {children}
-    </button>
-  );
-}
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Как это работает</div>
+            <h2>Собираем базу и спрос ещё до запуска курсов</h2>
+            <div class="section-desc">Сайт уже можно использовать как рабочую pre-launch платформу: пользователь регистрируется, получает кабинет, выбирает курсы и оставляет заявку на релиз.</div>
+          </div>
+          <div class="card dark-panel">
+            <div class="inner">
+              <div class="kicker" style="color:rgba(255,255,255,.55)">Что получает владелец</div>
+              <div class="grid" style="margin-top:14px;">
+                <div class="item">Email и профиль пользователя</div>
+                <div class="item">Лиды по каждому курсу</div>
+                <div class="item">Базу для запуска продаж</div>
+                <div class="item">Правовую готовность для доверия</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-4">
+          <div class="card feature"><div class="kicker">Витрина</div><h3>Курсы уже на сайте</h3><div class="muted">Все программы показаны как будущие релизы. Это уже формирует интерес и структуру каталога.</div></div>
+          <div class="card feature"><div class="kicker">Регистрация</div><h3>Профиль пользователя</h3><div class="muted">Собираются имя, email, телефон, город и род занятий, чтобы сегментировать аудиторию и строить коммуникации.</div></div>
+          <div class="card feature"><div class="kicker">Кабинет</div><h3>Живой личный раздел</h3><div class="muted">Пользователь видит свои заявки, избранные курсы и уведомления, а не просто «спасибо за регистрацию».</div></div>
+          <div class="card feature"><div class="kicker">Lead center</div><h3>Управление лидами</h3><div class="muted">Владелец видит все waitlist-заявки в одном месте и готовит запуск без ручного хаоса.</div></div>
+        </div>
+      </div>
+    </section>
 
-export default function ArchitectorsRealityLive() {
-  const supabase = useMemo(() => {
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
-    return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, autoRefreshToken: true },
-    });
-  }, []);
+    <section class="section" id="catalog">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Каталог</div>
+            <h2>Все курсы уже стоят на витрине как будущие релизы</h2>
+            <div class="section-desc">У каждого курса один ясный путь: человек видит ценность, добавляет в избранное и встаёт в лист ожидания.</div>
+          </div>
+          <div class="card" style="padding:18px 20px;">
+            <div class="kicker">Курс в фокусе</div>
+            <div id="focusCourseTitle" style="margin-top:10px; font-size:28px; letter-spacing:-0.04em; font-weight:700;">Архитекторы реальности</div>
+            <div class="muted" style="margin-top:10px; line-height:1.6;">Заявок по этому курсу: <span id="focusCourseCount">0</span></div>
+          </div>
+        </div>
+        <div class="catalog-controls">
+          <div class="card" style="padding:18px;">
+            <div class="search"><span>🔎</span><input id="catalogSearch" type="text" placeholder="Поиск по курсам" /></div>
+          </div>
+          <div class="card" style="padding:18px;">
+            <div class="kicker">Статус платформы</div>
+            <div style="margin-top:10px; font-size:22px; letter-spacing:-0.03em; font-weight:700;">Pre-launch build</div>
+            <div class="muted" style="margin-top:8px; line-height:1.6;">Курсы ещё не продаются. Сейчас задача — собирать регистрацию и спрос.</div>
+          </div>
+        </div>
+        <div class="grid-3" id="coursesGrid"></div>
+      </div>
+    </section>
 
-  const configReady = Boolean(supabase);
-  const webhookReady = Boolean(WAITLIST_WEBHOOK_URL);
+    <section class="section auth-wrap" id="authSection">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Регистрация / вход</div>
+            <h2>Создать кабинет и сохранить интерес пользователя</h2>
+            <div class="section-desc">Первая живая версия сайта уже умеет вести человека от регистрации к кабинету и waitlist.</div>
+          </div>
+          <div class="card dark-panel">
+            <div class="inner">
+              <div class="kicker" style="color:rgba(255,255,255,.55)">Какие данные собираются</div>
+              <div class="grid" style="margin-top:14px;">
+                <div class="item">Имя и email — для кабинета и уведомлений</div>
+                <div class="item">Телефон — для ручной связи и приоритетных запусков</div>
+                <div class="item">Город и род занятий — для сегментации</div>
+                <div class="item">История waitlist — прямо в кабинете</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card" style="padding:22px;">
+            <div class="tabs">
+              <button class="tab-btn active" id="tabRegister">Регистрация</button>
+              <button class="tab-btn" id="tabLogin">Вход</button>
+            </div>
+            <div class="form-grid" id="registerFields">
+              <div class="field"><label>Имя</label><input class="input" id="regName" /></div>
+              <div class="grid-2">
+                <div class="field"><label>Телефон</label><input class="input" id="regPhone" /></div>
+                <div class="field"><label>Город</label><input class="input" id="regCity" /></div>
+              </div>
+              <div class="field"><label>Чем занимаетесь</label><input class="input" id="regOccupation" /></div>
+            </div>
+            <div class="form-grid" style="margin-top:14px;">
+              <div class="field"><label>Email</label><input class="input" id="authEmail" /></div>
+              <div class="field"><label>Пароль</label><input type="password" class="input" id="authPassword" /></div>
+            </div>
+            <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn primary" id="authSubmitBtn">Создать кабинет</button>
+              <a class="btn secondary" href="#catalog">К каталогу</a>
+            </div>
+            <div class="message hidden" id="authMessage" style="margin-top:14px;"></div>
+            <div class="notice" style="margin-top:14px;">Продолжая регистрацию, пользователь подтверждает ознакомление с политикой конфиденциальности, согласием на обработку персональных данных и иными документами правового контура, размещёнными на сайте.</div>
+          </div>
+          <div class="card" style="padding:22px;">
+            <div class="kicker">Текущий режим</div>
+            <div style="margin-top:10px; font-size:30px; letter-spacing:-0.04em; font-weight:700;">Pre-launch</div>
+            <div class="muted" style="margin-top:12px; line-height:1.7;">На этом этапе кабинет нужен не для просмотра уроков, а для фиксации интереса, сбора базы и возврата пользователя к будущим продуктам.</div>
+            <div class="grid" style="display:grid; gap:12px; margin-top:18px;">
+              <div class="notice">Регистрация уже может быть боевой, если подключены база и email-шлюз.</div>
+              <div class="notice">Если база пока недоступна, форму можно использовать как staging-поток до финальной проверки.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  const [view, setView] = useState("home");
-  const [cabinetSection, setCabinetSection] = useState("overview");
-  const [drawer, setDrawer] = useState(null);
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const [catalogSearch, setCatalogSearch] = useState("");
-  const [selectedLegalId, setSelectedLegalId] = useState("offer");
-  const [selectedCourseId, setSelectedCourseId] = useState(coursesSeed[0].id);
-  const [authMode, setAuthMode] = useState("login");
-  const [authMessage, setAuthMessage] = useState("");
-  const [waitlistMessage, setWaitlistMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sessionUser, setSessionUser] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [myWaitlistEntries, setMyWaitlistEntries] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [favoriteIds, setFavoriteIds] = useState([]);
-  const [adminLeads, setAdminLeads] = useState([]);
-  const [adminEvents, setAdminEvents] = useState([]);
-  const [stats, setStats] = useState({ registrations: 0, waitlistLeads: 0, favorites: 0, logins: 0 });
+    <section class="section cabinet-wrap" id="cabinetSectionWrap">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Личный кабинет</div>
+            <h2>Рабочий кабинет пользователя</h2>
+            <div class="section-desc">Даже до старта продаж у пользователя уже есть живой кабинет с профилем, waitlist и избранным.</div>
+          </div>
+          <div class="card dark-panel">
+            <div class="inner">
+              <div class="kicker" style="color:rgba(255,255,255,.55)">Кто вошёл</div>
+              <div id="cabinetUserName" style="margin-top:10px; font-size:30px; letter-spacing:-0.04em; font-weight:700;">Гость</div>
+              <div id="cabinetUserEmail" style="margin-top:8px; color:rgba(255,255,255,.72)">Войдите, чтобы открыть кабинет</div>
+            </div>
+          </div>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active" data-cabinet-tab="overview">Обзор</button>
+          <button class="tab-btn" data-cabinet-tab="profile">Профиль</button>
+          <button class="tab-btn" data-cabinet-tab="waitlist">Лист ожидания</button>
+          <button class="tab-btn" data-cabinet-tab="favorites">Избранное</button>
+          <button class="tab-btn" data-cabinet-tab="notifications">Уведомления</button>
+        </div>
+        <div id="cabinetContent"></div>
+      </div>
+    </section>
 
-  const [authForm, setAuthForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    phone: "",
-    city: "",
-    occupation: "",
-  });
+    <section class="section admin-wrap" id="adminSection">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Lead center</div>
+            <h2>Панель владельца</h2>
+            <div class="section-desc">Здесь видны регистрации, избранное, заявки в лист ожидания и общая готовность инфраструктуры.</div>
+          </div>
+          <div class="card">
+            <div class="kicker">Owner email</div>
+            <div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">mikhsan@yandex.ru</div>
+            <div class="muted" style="margin-top:8px; line-height:1.6;">После подключения webhook каждая новая заявка может автоматически приходить на почту владельца.</div>
+          </div>
+        </div>
+        <div class="grid-4" id="adminStats"></div>
+        <div class="grid-2" style="margin-top:18px; align-items:start;">
+          <div class="card" style="padding:20px;">
+            <div class="kicker">Waitlist leads</div>
+            <div style="margin-top:10px; font-size:28px; letter-spacing:-0.04em; font-weight:700;">Все заявки</div>
+            <div class="table" style="margin-top:16px;">
+              <div class="table-head"><div>Имя / Email</div><div>Курс</div><div>Телефон / note</div><div>Дата</div></div>
+              <div id="adminLeadsTable"></div>
+            </div>
+          </div>
+          <div style="display:grid; gap:16px;">
+            <div class="card" style="padding:20px;">
+              <div class="kicker">DB setup</div>
+              <pre style="margin:14px 0 0; max-height:320px; overflow:auto; white-space:pre-wrap; background:rgba(0,0,0,.02); border:1px solid var(--line); border-radius:18px; padding:16px; font-size:12px; line-height:1.65; color:var(--muted);">create table if not exists public.profiles (...)
+create table if not exists public.waitlist_entries (...)
+create table if not exists public.notifications (...)
+create table if not exists public.user_favorites (...)
+create table if not exists public.platform_events (...)</pre>
+            </div>
+            <div class="card" style="padding:20px;">
+              <div class="kicker">Последние события</div>
+              <div id="adminEventsList" style="display:grid; gap:10px; margin-top:14px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  const [waitlistForm, setWaitlistForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    note: "",
-    source: "site",
-  });
+    <section class="section legal-wrap" id="legalSection">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Legal</div>
+            <h2>Юридический контур сайта</h2>
+            <div class="section-desc">На сайте размещён типовой комплект документов под pre-launch платформу и статус самозанятого.</div>
+          </div>
+          <div class="card"><div class="kicker">Продавец</div><div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">Дмитриев Михаил Александрович</div><div class="muted" style="margin-top:8px; line-height:1.6;">Статус: самозанятый. ИНН: 772453231807. Контакт: mikhsan@yandex.ru.</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card" style="padding:18px;" id="legalList"></div>
+          <div class="card" style="padding:22px;">
+            <div class="kicker" id="legalTitle">Пользовательское соглашение / оферта</div>
+            <div id="legalText" style="margin-top:14px; white-space:pre-wrap; line-height:1.75; color:var(--muted);"></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  useEffect(() => {
-    runSelfChecks();
-  }, []);
+    <section class="section faq-wrap active" id="faqSection">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">FAQ</div>
+            <h2>Что уже работает прямо сейчас</h2>
+            <div class="section-desc">Сейчас сайт — это живая предзапусковая версия: не просто лендинг, а инструмент сбора аудитории и базы перед запуском курсов.</div>
+          </div>
+          <div class="card"><div class="kicker">Статус</div><div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">Pre-launch build</div><div class="muted" style="margin-top:8px; line-height:1.6;">Курсы пока не продаются. Все карточки ведут в лист ожидания. Регистрация, кабинет и правовой контур уже готовы.</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card" style="padding:20px;" id="faqList"></div>
+          <div class="card" style="padding:20px;">
+            <div class="kicker">Что ещё осталось</div>
+            <div class="grid" style="display:grid; gap:10px; margin-top:14px;">
+              <div class="notice">Финальный тест DNS и домена</div>
+              <div class="notice">Живой проход регистрации и waitlist</div>
+              <div class="notice">Проверка записи в базу</div>
+              <div class="notice">Проверка доставки письма владельцу</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-  const selectedCourse = coursesSeed.find((course) => course.id === selectedCourseId) || coursesSeed[0];
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <div class="kicker">Seller transparency</div>
+        <div style="margin-top:14px; font-size:32px; letter-spacing:-0.04em; font-weight:700;">Дмитриев Михаил Александрович</div>
+        <div class="muted" style="margin-top:8px;">Самозанятый · ИНН 772453231807</div>
+        <div class="muted" style="margin-top:14px; line-height:1.7; max-width:720px;">Lectaro — это pre-launch платформа для будущих образовательных продуктов. Сейчас она уже собирает базу пользователей, интерес к курсам и заявки на запуск.</div>
+      </div>
+      <div>
+        <div class="kicker">Legal / support</div>
+        <div class="legal-links" id="footerLegalLinks" style="margin-top:14px;"></div>
+      </div>
+    </div>
+  </footer>
 
-  const catalogCourses = useMemo(() => {
-    const q = catalogSearch.trim().toLowerCase();
-    return coursesSeed.filter(
-      (course) => !q || `${course.title} ${course.subtitle} ${course.shortDescription}`.toLowerCase().includes(q)
-    );
-  }, [catalogSearch]);
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="waitlistDrawer">
+    <div class="drawer-head">
+      <div style="font-size:28px; letter-spacing:-0.04em; font-weight:700;" id="drawerTitle">Лист ожидания</div>
+      <button class="icon-btn" id="closeDrawerBtn">✕</button>
+    </div>
+    <div class="card" style="padding:20px;">
+      <div id="drawerIntro" class="muted" style="line-height:1.7;">Оставь заявку, и мы сохраним тебя в базе релиза.</div>
+      <div id="drawerAuthGuard" class="hidden" style="margin-top:16px;">
+        <div class="notice">Чтобы встать в лист ожидания и сохранить заявку в базе, сначала войди или зарегистрируйся.</div>
+        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn primary" id="drawerRegisterBtn">Регистрация</button>
+          <button class="btn secondary" id="drawerLoginBtn">Войти</button>
+        </div>
+      </div>
+      <div id="drawerFormWrap" class="form-grid" style="margin-top:16px;">
+        <div class="field"><label>Имя</label><input class="input" id="waitlistName" readonly /></div>
+        <div class="field"><label>Email</label><input class="input" id="waitlistEmail" readonly /></div>
+        <div class="field"><label>Телефон</label><input class="input" id="waitlistPhone" /></div>
+        <div class="field"><label>Комментарий</label><textarea class="input" id="waitlistNote" placeholder="Например: хочу первым, нужен корпоративный тариф"></textarea></div>
+        <button class="btn primary" id="submitWaitlistBtn">Встать в лист ожидания</button>
+        <div class="message hidden" id="waitlistMessage"></div>
+        <div class="notice">Отправляя заявку, пользователь подтверждает ознакомление с политикой конфиденциальности, согласием на обработку персональных данных и правилами работы с листом ожидания.</div>
+      </div>
+    </div>
+  </aside>
 
-  const activeLegalPage = useMemo(
-    () => legalPagesSeed.find((item) => item.id === selectedLegalId) || legalPagesSeed[0],
-    [selectedLegalId]
-  );
+  <script>
+    const SUPABASE_URL = "https://vbomuwdabjtcnvvwfxtt.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_qMSROQdi856dh55hmv3lKg_DDeiY6Ib";
+    const WAITLIST_WEBHOOK_URL = "https://vbomuwdabjtcnvvwfxtt.supabase.co/functions/v1/hyper-task";
+    const OWNER_NOTIFICATION_EMAIL = "mikhsan@yandex.ru";
 
-  const selectedCourseLeadsCount = useMemo(
-    () => adminLeads.filter((item) => item.course_id === selectedCourseId).length,
-    [adminLeads, selectedCourseId]
-  );
+    const courses = [
+      { id: "architectors-reality", title: "Архитекторы реальности", subtitle: "Практический курс по нейросетям для жизни и работы", level: "Beginner", format: "Онлайн", lessons: 16, modules: 5, priceFrom: 990, badge: "Скоро релиз", shortDescription: "Стартовая система по нейросетям: понимание, инструменты, промпты, практика и ежедневное применение.", waitlistLabel: "Встать в лист ожидания" },
+      { id: "workflow-ai", title: "AI-система для продуктивности", subtitle: "Как встроить AI в рабочий день, встречи, документы и задачи", level: "Intermediate", format: "Онлайн", lessons: 12, modules: 4, priceFrom: 3490, badge: "Скоро релиз", shortDescription: "Практический продукт для тех, кто хочет превратить AI в рабочую систему, а не в разовый эксперимент.", waitlistLabel: "Жду запуск" },
+      { id: "visual-ai", title: "Визуал и обложки с AI", subtitle: "Быстрый визуальный продакшн для контента, идей и креативов", level: "Beginner", format: "Онлайн", lessons: 10, modules: 4, priceFrom: 1990, badge: "Скоро релиз", shortDescription: "Курс про визуальные сценарии: референсы, обложки, промо-материалы и креативные концепты.", waitlistLabel: "Хочу первым" },
+      { id: "prompts-pro", title: "Промпты для бизнеса", subtitle: "Сильные запросы для команд, продукта, продаж и коммуникаций", level: "Advanced", format: "Онлайн", lessons: 14, modules: 5, priceFrom: 4990, badge: "Скоро релиз", shortDescription: "Продвинутый курс про постановку задач нейросетям на уровне бизнес-результата.", waitlistLabel: "Записаться в waitlist" },
+    ];
 
-  async function safeTrackEvent(eventName, payload = {}, userId = null) {
-    if (!supabase) return;
-    await supabase.from("platform_events").insert({
-      user_id: userId,
-      event_name: eventName,
-      payload,
-    });
-  }
+    const legalPages = [
+      { id: "offer", title: "Пользовательское соглашение / оферта", text: "Настоящий сайт lectaro.ru используется для информирования о проекте «Архитекторы реальности», регистрации пользователей, создания личных кабинетов и сбора заявок в лист ожидания. Владелец сайта: Дмитриев Михаил Александрович, статус: самозанятый, ИНН: 772453231807, email: mikhsan@yandex.ru. На текущем этапе сайт работает в pre-launch режиме: карточки курсов и цены носят информационный характер, а доступ к учебным материалам будет предоставляться после официального запуска соответствующих продуктов." },
+      { id: "privacy", title: "Политика конфиденциальности", text: "Оператор обрабатывает имя, email, телефон, город, род занятий, сведения о выбранных курсах и историю заявок в лист ожидания для регистрации пользователя, ведения личного кабинета, обратной связи, уведомлений о запуске курсов и улучшения работы сайта. Пользователь вправе запросить сведения об обработке, уточнение или удаление данных по адресу mikhsan@yandex.ru." },
+      { id: "consent", title: "Согласие на обработку персональных данных", text: "Оставляя данные на сайте lectaro.ru, пользователь выражает согласие Дмитриеву Михаилу Александровичу на сбор, запись, хранение, использование, уточнение и удаление переданных персональных данных в целях регистрации, ведения кабинета, обработки заявок, обратной связи и направления технических уведомлений." },
+      { id: "cookies", title: "Политика использования cookie", text: "Сайт может использовать cookie и иные аналогичные технологии для сохранения пользовательской сессии, улучшения работы интерфейса, аналитики и безопасности. Пользователь может ограничить cookie в настройках браузера, однако это может повлиять на корректность отдельных функций сайта." },
+      { id: "marketing", title: "Согласие на информационные и рекламные сообщения", text: "Пользователь может дать отдельное согласие на получение информационных и рекламных сообщений о запуске курсов, вебинарах, специальных предложениях и обновлениях проекта. От такого согласия можно отказаться в любой момент, написав на mikhsan@yandex.ru." },
+      { id: "seller", title: "Сведения о продавце", text: "Продавец / оператор сайта: Дмитриев Михаил Александрович. Статус: самозанятый. ИНН: 772453231807. Контактный email: mikhsan@yandex.ru." },
+      { id: "payment", title: "Условия оплаты", text: "До запуска продаж сайт используется для информирования и сбора заявок. После запуска продаж на сайте будут размещены актуальные условия оплаты, порядок оформления заказа, способы оплаты и правила предоставления электронных чеков." },
+      { id: "refund", title: "Условия возврата", text: "До запуска продаж сайт не формирует денежных обязательств пользователя в части образовательных продуктов. После запуска продаж на сайте будут размещены условия возврата и порядок рассмотрения обращений." },
+      { id: "access", title: "Порядок предоставления доступа", text: "В pre-launch режиме пользователю предоставляется доступ к информационным разделам сайта и личному кабинету. Доступ к учебным материалам будет открыт после официального запуска конкретного продукта и, при необходимости, после выполнения условий оплаты." },
+      { id: "support", title: "Контакты поддержки", text: "По вопросам регистрации, кабинета, удаления персональных данных, листа ожидания и правовых документов можно обращаться по адресу mikhsan@yandex.ru." },
+    ];
 
-  async function createDbNotification(userId, title, body) {
-    if (!supabase) return;
-    await supabase.from("notifications").insert({ user_id: userId, title, body });
-  }
+    const faqs = [
+      { q: "Когда откроется доступ к курсам?", a: "Сейчас курсы собирают лист ожидания. После релиза участники waitlist получат письмо первыми." },
+      { q: "Какие документы уже размещены на сайте?", a: "На сайте размещены пользовательское соглашение, политика конфиденциальности, согласие на обработку персональных данных, политика cookie, сведения о продавце, условия оплаты, возврата, доступа и контакты поддержки." },
+      { q: "Что работает уже сейчас?", a: "Работают витрина, каталог, регистрация, логин, личный кабинет, лист ожидания, сбор заявок и lead center." },
+      { q: "Будут ли мне писать после релиза?", a: "Технические уведомления о выбранном курсе возможны в рамках работы с листом ожидания. Для рекламных рассылок лучше использовать отдельное согласие пользователя." },
+    ];
 
-  async function notifyOwnerAboutWaitlist(entry) {
-    if (!WAITLIST_WEBHOOK_URL) return { sent: false, reason: "webhook_not_configured" };
-    try {
-      const response = await fetch(WAITLIST_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "waitlist_joined",
-          ownerEmail: OWNER_NOTIFICATION_EMAIL,
-          entry,
-        }),
-      });
-      return { sent: response.ok };
-    } catch (error) {
-      console.error("waitlist webhook failed", error);
-      return { sent: false, reason: "request_failed" };
-    }
-  }
-
-  async function loadAdminData() {
-    if (!supabase) return;
-
-    const [{ data: leads }, { data: events }, registrationsRes, favoritesRes] = await Promise.all([
-      supabase.from("waitlist_entries").select("*").order("created_at", { ascending: false }),
-      supabase.from("platform_events").select("*").order("created_at", { ascending: false }).limit(12),
-      supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("user_favorites").select("id", { count: "exact", head: true }),
-    ]);
-
-    setAdminLeads(leads || []);
-    setAdminEvents(events || []);
-    setStats({
-      registrations: registrationsRes.count || 0,
-      waitlistLeads: (leads || []).length,
-      favorites: favoritesRes.count || 0,
-      logins: (events || []).filter((item) => item.event_name === "login_completed").length,
-    });
-  }
-
-  async function loadUserData(user) {
-    if (!supabase || !user) return;
-
-    const [{ data: profileRow }, { data: waitlistRows }, { data: notificationRows }, { data: favoriteRows }] =
-      await Promise.all([
-        supabase.from("profiles").select("*").eq("id", user.id).single(),
-        supabase.from("waitlist_entries").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-        supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-        supabase.from("user_favorites").select("course_id").eq("user_id", user.id),
-      ]);
-
-    setProfile(profileRow || null);
-    setMyWaitlistEntries(waitlistRows || []);
-    setNotifications(notificationRows || []);
-    setFavoriteIds((favoriteRows || []).map((item) => item.course_id));
-
-    setWaitlistForm((prev) => ({
-      ...prev,
-      name: prev.name || profileRow?.name || user.user_metadata?.name || "",
-      email: prev.email || profileRow?.email || user.email || "",
-      phone: prev.phone || profileRow?.phone || "",
-    }));
-
-    if (profileRow?.role === "admin") {
-      await loadAdminData();
-    } else {
-      setAdminLeads([]);
-      setAdminEvents([]);
-      setStats({ registrations: 0, waitlistLeads: 0, favorites: 0, logins: 0 });
-    }
-  }
-
-  useEffect(() => {
-    if (!supabase) return;
-
-    let isMounted = true;
-
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!isMounted) return;
-      const user = data.session?.user || null;
-      setSessionUser(user);
-      if (user) await loadUserData(user);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const user = session?.user || null;
-      setSessionUser(user);
-      if (user) {
-        await loadUserData(user);
-      } else {
-        setProfile(null);
-        setMyWaitlistEntries([]);
-        setNotifications([]);
-        setFavoriteIds([]);
-        setAdminLeads([]);
-        setAdminEvents([]);
-        setStats({ registrations: 0, waitlistLeads: 0, favorites: 0, logins: 0 });
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      listener.subscription.unsubscribe();
+    const state = {
+      authMode: "register",
+      currentUser: null,
+      selectedCourse: courses[0],
+      legalPageId: "offer",
+      cabinetTab: "overview",
+      waitlistEntries: [],
+      notifications: [],
+      favorites: [],
+      profilesCount: 0,
+      lastEvents: [],
+      adminMode: false,
+      supabase: null,
+      dbReady: false,
+      webhookReady: Boolean(WAITLIST_WEBHOOK_URL),
+      demoMode: true,
     };
-  }, [supabase]);
 
-  const isAdmin = profile?.role === "admin";
+    const els = {
+      configBanner: document.getElementById("configBanner"),
+      coursesGrid: document.getElementById("coursesGrid"),
+      catalogSearch: document.getElementById("catalogSearch"),
+      heroWaitlistCount: document.getElementById("heroWaitlistCount"),
+      heroProfilesCount: document.getElementById("heroProfilesCount"),
+      focusCourseTitle: document.getElementById("focusCourseTitle"),
+      focusCourseCount: document.getElementById("focusCourseCount"),
+      openWaitlistBtn: document.getElementById("openWaitlistBtn"),
+      openAuthBtn: document.getElementById("openAuthBtn"),
+      authSection: document.getElementById("authSection"),
+      cabinetSectionWrap: document.getElementById("cabinetSectionWrap"),
+      adminSection: document.getElementById("adminSection"),
+      legalSection: document.getElementById("legalSection"),
+      faqSection: document.getElementById("faqSection"),
+      tabRegister: document.getElementById("tabRegister"),
+      tabLogin: document.getElementById("tabLogin"),
+      registerFields: document.getElementById("registerFields"),
+      authSubmitBtn: document.getElementById("authSubmitBtn"),
+      authMessage: document.getElementById("authMessage"),
+      regName: document.getElementById("regName"),
+      regPhone: document.getElementById("regPhone"),
+      regCity: document.getElementById("regCity"),
+      regOccupation: document.getElementById("regOccupation"),
+      authEmail: document.getElementById("authEmail"),
+      authPassword: document.getElementById("authPassword"),
+      cabinetUserName: document.getElementById("cabinetUserName"),
+      cabinetUserEmail: document.getElementById("cabinetUserEmail"),
+      cabinetContent: document.getElementById("cabinetContent"),
+      adminStats: document.getElementById("adminStats"),
+      adminLeadsTable: document.getElementById("adminLeadsTable"),
+      adminEventsList: document.getElementById("adminEventsList"),
+      legalList: document.getElementById("legalList"),
+      legalTitle: document.getElementById("legalTitle"),
+      legalText: document.getElementById("legalText"),
+      faqList: document.getElementById("faqList"),
+      footerLegalLinks: document.getElementById("footerLegalLinks"),
+      drawerBackdrop: document.getElementById("drawerBackdrop"),
+      waitlistDrawer: document.getElementById("waitlistDrawer"),
+      closeDrawerBtn: document.getElementById("closeDrawerBtn"),
+      drawerTitle: document.getElementById("drawerTitle"),
+      drawerIntro: document.getElementById("drawerIntro"),
+      drawerAuthGuard: document.getElementById("drawerAuthGuard"),
+      drawerFormWrap: document.getElementById("drawerFormWrap"),
+      drawerRegisterBtn: document.getElementById("drawerRegisterBtn"),
+      drawerLoginBtn: document.getElementById("drawerLoginBtn"),
+      waitlistName: document.getElementById("waitlistName"),
+      waitlistEmail: document.getElementById("waitlistEmail"),
+      waitlistPhone: document.getElementById("waitlistPhone"),
+      waitlistNote: document.getElementById("waitlistNote"),
+      submitWaitlistBtn: document.getElementById("submitWaitlistBtn"),
+      waitlistMessage: document.getElementById("waitlistMessage"),
+    };
 
-  const handleRegister = async () => {
-    if (!supabase) {
-      setAuthMessage("Сначала заполни SUPABASE_URL и SUPABASE_ANON_KEY.");
-      return;
+    function formatPrice(value) {
+      return new Intl.NumberFormat("ru-RU").format(value) + " ₽";
     }
 
-    setAuthMessage("");
-    const email = authForm.email.trim().toLowerCase();
-    if (!authForm.name.trim() || !email || !authForm.password.trim()) {
-      setAuthMessage("Заполни имя, email и пароль.");
-      return;
+    function formatDate(value) {
+      const date = value instanceof Date ? value : new Date(value);
+      return new Intl.DateTimeFormat("ru-RU").format(date);
     }
 
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password: authForm.password,
-      });
-      if (error) throw error;
-      const authUser = data.user;
-      if (!authUser) throw new Error("Не удалось создать пользователя.");
+    function runChecks() {
+      console.assert(formatPrice(990) === "990 ₽", "formatPrice broken");
+      console.assert(courses.length === 4, "courses count broken");
+      console.assert(legalPages.length >= 8, "legal pages broken");
+    }
 
-      await supabase.from("profiles").upsert({
-        id: authUser.id,
-        email,
-        name: authForm.name.trim(),
-        phone: authForm.phone || "",
-        city: authForm.city || "",
-        occupation: authForm.occupation || "",
-        role: "student",
-      });
-
-      if (!data.session) {
-        await supabase.auth.signInWithPassword({ email, password: authForm.password });
+    function setMessage(el, text) {
+      if (!text) {
+        el.classList.add("hidden");
+        el.textContent = "";
+      } else {
+        el.classList.remove("hidden");
+        el.textContent = text;
       }
-
-      await createDbNotification(
-        authUser.id,
-        "Аккаунт создан",
-        "Кабинет активирован. Можно вставать в лист ожидания."
-      );
-      await safeTrackEvent("signup_completed", { email }, authUser.id);
-      setAuthMessage("Аккаунт создан.");
-      setView("cabinet");
-      setCabinetSection("overview");
-    } catch (error) {
-      setAuthMessage(error.message || "Не удалось создать аккаунт.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = async () => {
-    if (!supabase) {
-      setAuthMessage("Сначала заполни SUPABASE_URL и SUPABASE_ANON_KEY.");
-      return;
     }
 
-    setAuthMessage("");
-    const email = authForm.email.trim().toLowerCase();
+    function openDrawer() {
+      els.drawerBackdrop.classList.add("open");
+      els.waitlistDrawer.classList.add("open");
+      syncDrawer();
+    }
 
-    try {
-      setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: authForm.password,
+    function closeDrawer() {
+      els.drawerBackdrop.classList.remove("open");
+      els.waitlistDrawer.classList.remove("open");
+      setMessage(els.waitlistMessage, "");
+    }
+
+    function syncDrawer() {
+      els.drawerTitle.textContent = `Лист ожидания · ${state.selectedCourse.title}`;
+      if (!state.currentUser) {
+        els.drawerAuthGuard.classList.remove("hidden");
+        els.drawerFormWrap.classList.add("hidden");
+        return;
+      }
+      els.drawerAuthGuard.classList.add("hidden");
+      els.drawerFormWrap.classList.remove("hidden");
+      els.waitlistName.value = state.currentUser.name || "";
+      els.waitlistEmail.value = state.currentUser.email || "";
+      els.waitlistPhone.value = state.currentUser.phone || "";
+      els.waitlistNote.value = "";
+    }
+
+    function setActiveAuth(mode) {
+      state.authMode = mode;
+      const reg = mode === "register";
+      els.tabRegister.classList.toggle("active", reg);
+      els.tabLogin.classList.toggle("active", !reg);
+      els.registerFields.classList.toggle("hidden", !reg);
+      els.authSubmitBtn.textContent = reg ? "Создать кабинет" : "Войти";
+    }
+
+    function renderCatalog() {
+      const q = els.catalogSearch.value.trim().toLowerCase();
+      const filtered = courses.filter(course => !q || `${course.title} ${course.subtitle} ${course.shortDescription}`.toLowerCase().includes(q));
+      els.coursesGrid.innerHTML = filtered.map(course => `
+        <div class="card course-card">
+          <div style="display:flex; align-items:start; justify-content:space-between; gap:12px;">
+            <div>
+              <span class="pill dark">${course.badge}</span>
+              <h3>${course.title}</h3>
+            </div>
+            <div style="color:var(--muted-2); font-size:20px;">🔒</div>
+          </div>
+          <div class="muted" style="margin-top:10px;">${course.subtitle}</div>
+          <div class="muted" style="margin-top:14px; line-height:1.7;">${course.shortDescription}</div>
+          <div class="tags">
+            <span class="pill">${course.level}</span>
+            <span class="pill">${course.format}</span>
+            <span class="pill">${course.lessons} уроков</span>
+            ${state.favorites.includes(course.id) ? '<span class="pill">В избранном</span>' : ''}
+          </div>
+          <div class="course-bottom">
+            <div>
+              <small style="display:block; font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--muted-2);">Цена от</small>
+              <div class="price">${formatPrice(course.priceFrom)}</div>
+            </div>
+            <div class="course-actions">
+              <button class="btn secondary" data-fav="${course.id}">${state.favorites.includes(course.id) ? 'Убрать' : 'В избранное'}</button>
+              <button class="btn primary" data-waitlist="${course.id}">${course.waitlistLabel}</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      els.coursesGrid.querySelectorAll("[data-waitlist]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const courseId = btn.getAttribute("data-waitlist");
+          state.selectedCourse = courses.find(c => c.id === courseId) || courses[0];
+          els.focusCourseTitle.textContent = state.selectedCourse.title;
+          els.focusCourseCount.textContent = String(state.waitlistEntries.filter(x => x.courseId === courseId || x.course_id === courseId).length);
+          openDrawer();
+        });
       });
-      if (error) throw error;
-      await safeTrackEvent("login_completed", { email }, data.user.id);
-      setView("cabinet");
-    } catch (error) {
-      setAuthMessage(error.message || "Неверный email или пароль.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleLogout = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    setView("home");
-  };
-
-  const toggleFavorite = async (courseId) => {
-    if (!supabase) return;
-    if (!sessionUser) {
-      setView("auth");
-      setAuthMode("login");
-      return;
+      els.coursesGrid.querySelectorAll("[data-fav]").forEach(btn => {
+        btn.addEventListener("click", () => toggleFavorite(btn.getAttribute("data-fav")));
+      });
     }
 
-    const exists = favoriteIds.includes(courseId);
-    if (exists) {
-      await supabase.from("user_favorites").delete().eq("user_id", sessionUser.id).eq("course_id", courseId);
-      setFavoriteIds((prev) => prev.filter((id) => id !== courseId));
-      await safeTrackEvent("favorite_removed", { courseId }, sessionUser.id);
-    } else {
-      await supabase.from("user_favorites").upsert({ user_id: sessionUser.id, course_id: courseId });
-      setFavoriteIds((prev) => [...prev, courseId]);
-      await safeTrackEvent("favorite_added", { courseId }, sessionUser.id);
+    function renderLegal() {
+      els.legalList.innerHTML = legalPages.map(item => `
+        <button class="legal-link" data-legal="${item.id}" style="display:flex; justify-content:space-between; align-items:center; ${state.legalPageId === item.id ? 'background:#111111;color:#fff;border-color:#111111;' : ''}">
+          <span>${item.title}</span>
+          <span>›</span>
+        </button>
+      `).join("");
+      const active = legalPages.find(x => x.id === state.legalPageId) || legalPages[0];
+      els.legalTitle.textContent = active.title;
+      els.legalText.textContent = active.text;
+      els.legalList.querySelectorAll("[data-legal]").forEach(btn => btn.addEventListener("click", () => {
+        state.legalPageId = btn.getAttribute("data-legal");
+        renderLegal();
+      }));
+
+      els.footerLegalLinks.innerHTML = legalPages.map(item => `<button class="legal-link" data-footer-legal="${item.id}">${item.title}</button>`).join("");
+      els.footerLegalLinks.querySelectorAll("[data-footer-legal]").forEach(btn => btn.addEventListener("click", () => {
+        state.legalPageId = btn.getAttribute("data-footer-legal");
+        document.getElementById("legalSection").scrollIntoView({ behavior: "smooth" });
+        renderLegal();
+      }));
     }
 
-    if (isAdmin) {
-      await loadAdminData();
-    }
-  };
-
-  const handleJoinWaitlist = async (courseId) => {
-    if (!supabase) {
-      setWaitlistMessage("Сначала заполни конфиг Supabase.");
-      return;
+    function renderFaq() {
+      els.faqList.innerHTML = faqs.map(item => `
+        <div class="card" style="padding:18px;">
+          <div style="font-weight:700;">${item.q}</div>
+          <div class="muted" style="margin-top:10px; line-height:1.7;">${item.a}</div>
+        </div>
+      `).join("");
     }
 
-    if (!sessionUser || !profile) {
-      setWaitlistMessage("Сначала войди или зарегистрируйся, чтобы встать в лист ожидания.");
-      return;
+    function renderCabinet() {
+      if (!state.currentUser) {
+        els.cabinetUserName.textContent = "Гость";
+        els.cabinetUserEmail.textContent = "Войдите, чтобы открыть кабинет";
+        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="muted" style="line-height:1.7;">Сейчас кабинет скрыт, потому что пользователь не вошёл в систему.</div></div>`;
+        return;
+      }
+      els.cabinetUserName.textContent = state.currentUser.name || state.currentUser.email;
+      els.cabinetUserEmail.textContent = state.currentUser.email || "";
+
+      const myWaitlist = state.waitlistEntries.filter(x => (x.userId || x.user_id) === state.currentUser.id || (x.email === state.currentUser.email));
+      if (state.cabinetTab === "profile") {
+        els.cabinetContent.innerHTML = `
+          <div class="card" style="padding:22px;">
+            <div class="kicker">Данные профиля</div>
+            <div class="grid-2" style="margin-top:16px;">
+              ${[
+                ["Имя", state.currentUser.name || "—"],
+                ["Email", state.currentUser.email || "—"],
+                ["Телефон", state.currentUser.phone || "—"],
+                ["Город", state.currentUser.city || "—"],
+                ["Род занятий", state.currentUser.occupation || "—"],
+              ].map(([label, value]) => `<div class="card" style="padding:18px;"><div class="kicker">${label}</div><div style="margin-top:8px; line-height:1.6;">${value}</div></div>`).join("")}
+            </div>
+          </div>`;
+      } else if (state.cabinetTab === "waitlist") {
+        els.cabinetContent.innerHTML = `
+          <div class="card" style="padding:22px;">
+            <div class="kicker">Мои заявки</div>
+            <div style="display:grid; gap:12px; margin-top:16px;">
+              ${myWaitlist.length ? myWaitlist.map(entry => `
+                <div class="card" style="padding:18px; box-shadow:none;">
+                  <div style="display:flex; justify-content:space-between; gap:12px; align-items:start;">
+                    <div><div style="font-weight:700;">${entry.courseTitle || entry.course_title}</div><div class="muted" style="margin-top:6px;">${formatDate(entry.createdAt || entry.created_at)}</div></div>
+                    <span class="pill">${entry.status || 'new'}</span>
+                  </div>
+                  <div class="muted" style="margin-top:12px; line-height:1.7;">${entry.note || 'Без комментария'}</div>
+                </div>
+              `).join("") : '<div class="notice">Пока заявок нет.</div>'}
+            </div>
+          </div>`;
+      } else if (state.cabinetTab === "favorites") {
+        const favCourses = courses.filter(c => state.favorites.includes(c.id));
+        els.cabinetContent.innerHTML = `
+          <div class="card" style="padding:22px;">
+            <div class="kicker">Избранные курсы</div>
+            <div style="display:grid; gap:12px; margin-top:16px;">
+              ${favCourses.length ? favCourses.map(course => `
+                <div class="card" style="padding:18px; box-shadow:none;">
+                  <div style="display:flex; justify-content:space-between; gap:12px; align-items:start;">
+                    <div><div style="font-weight:700;">${course.title}</div><div class="muted" style="margin-top:6px;">${course.subtitle}</div></div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                      <button class="btn secondary" data-remove-fav="${course.id}">Убрать</button>
+                      <button class="btn primary" data-go-waitlist="${course.id}">В waitlist</button>
+                    </div>
+                  </div>
+                </div>
+              `).join("") : '<div class="notice">Пока ничего не добавлено.</div>'}
+            </div>
+          </div>`;
+        els.cabinetContent.querySelectorAll("[data-remove-fav]").forEach(btn => btn.addEventListener("click", () => toggleFavorite(btn.getAttribute("data-remove-fav"))));
+        els.cabinetContent.querySelectorAll("[data-go-waitlist]").forEach(btn => btn.addEventListener("click", () => {
+          state.selectedCourse = courses.find(c => c.id === btn.getAttribute("data-go-waitlist")) || courses[0];
+          openDrawer();
+        }));
+      } else if (state.cabinetTab === "notifications") {
+        els.cabinetContent.innerHTML = `
+          <div class="card" style="padding:22px;">
+            <div class="kicker">Уведомления</div>
+            <div style="display:grid; gap:12px; margin-top:16px;">
+              ${state.notifications.length ? state.notifications.map(note => `
+                <div class="card" style="padding:18px; box-shadow:none;">
+                  <div style="font-weight:700;">${note.title}</div>
+                  <div class="muted" style="margin-top:8px; line-height:1.7;">${note.body}</div>
+                  <div class="muted" style="margin-top:8px; font-size:13px;">${formatDate(note.created_at || note.createdAt)}</div>
+                </div>
+              `).join("") : '<div class="notice">Пока уведомлений нет.</div>'}
+            </div>
+          </div>`;
+      } else {
+        els.cabinetContent.innerHTML = `
+          <div class="card dark-panel">
+            <div class="inner">
+              <div style="display:flex; align-items:start; justify-content:space-between; gap:14px;">
+                <div>
+                  <div class="kicker" style="color:rgba(255,255,255,.55)">Личный кабинет</div>
+                  <div style="margin-top:8px; font-size:34px; letter-spacing:-0.05em; font-weight:700;">${state.currentUser.name || state.currentUser.email}</div>
+                  <div style="margin-top:8px; color:rgba(255,255,255,.72); line-height:1.6;">Профиль, избранные курсы и заявки в лист ожидания теперь подгружаются как рабочий кабинет пользователя.</div>
+                </div>
+                <span class="pill dark">${myWaitlist.length} заявок</span>
+              </div>
+              <div class="grid-3" style="margin-top:18px;">
+                <div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Курсов в избранном</div><div style="margin-top:8px; font-size:28px; font-weight:700;">${state.favorites.length}</div></div>
+                <div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Моих waitlist-заявок</div><div style="margin-top:8px; font-size:28px; font-weight:700;">${myWaitlist.length}</div></div>
+                <div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Следующий шаг</div><div style="margin-top:8px;">Выбери курс и займи место в листе ожидания.</div></div>
+              </div>
+            </div>
+          </div>`;
+      }
     }
 
-    setWaitlistMessage("");
-    const course = coursesSeed.find((item) => item.id === courseId);
-    if (!course) return;
-
-    const alreadyExists = myWaitlistEntries.some((entry) => entry.course_id === courseId);
-    if (alreadyExists) {
-      setWaitlistMessage("Ты уже в листе ожидания по этому курсу.");
-      return;
+    function renderAdmin() {
+      els.adminSection.classList.toggle("active", state.adminMode);
+      const stats = [
+        { label: "Регистрации", value: state.profilesCount || 0 },
+        { label: "Waitlist-заявки", value: state.waitlistEntries.length || 0 },
+        { label: "Логины", value: state.lastEvents.filter(x => x.event_name === "login_completed" || x.eventName === "login_completed").length || 0 },
+        { label: "Избранное", value: state.favorites.length || 0 },
+      ];
+      els.adminStats.innerHTML = stats.map(item => `<div class="card" style="padding:20px;"><div class="kicker">${item.label}</div><div style="margin-top:10px; font-size:40px; letter-spacing:-0.05em; font-weight:700;">${item.value}</div></div>`).join("");
+      els.adminLeadsTable.innerHTML = state.waitlistEntries.length ? state.waitlistEntries.map(entry => `
+        <div class="table-row">
+          <div><div style="font-weight:700;">${entry.name}</div><div style="margin-top:4px; color:var(--muted-2);">${entry.email}</div></div>
+          <div>${entry.courseTitle || entry.course_title}</div>
+          <div><div>${entry.phone || '—'}</div><div style="margin-top:4px; color:var(--muted-2);">${entry.note || '—'}</div></div>
+          <div>${formatDate(entry.createdAt || entry.created_at)}</div>
+        </div>
+      `).join("") : '<div class="table-row"><div>Пока заявок нет.</div><div></div><div></div><div></div></div>';
+      els.adminEventsList.innerHTML = state.lastEvents.length ? state.lastEvents.map(item => `<div class="card" style="padding:16px; box-shadow:none;"><div style="font-weight:700;">${item.event_name || item.eventName}</div><div class="muted" style="margin-top:8px; line-height:1.6;">${JSON.stringify(item.payload || {})}</div><div class="muted" style="margin-top:8px; font-size:13px;">${formatDate(item.created_at || item.createdAt)}</div></div>`).join("") : '<div class="notice">Пока событий нет.</div>';
     }
 
-    try {
-      setLoading(true);
-      const payload = {
-        user_id: sessionUser.id,
-        course_id: courseId,
-        course_title: course.title,
+    function updateCounters() {
+      els.heroWaitlistCount.textContent = String(state.waitlistEntries.length || 0);
+      els.heroProfilesCount.textContent = String(state.profilesCount || 0);
+      els.focusCourseTitle.textContent = state.selectedCourse.title;
+      els.focusCourseCount.textContent = String(state.waitlistEntries.filter(x => (x.courseId || x.course_id) === state.selectedCourse.id).length);
+    }
+
+    function renderAll() {
+      renderCatalog();
+      renderLegal();
+      renderFaq();
+      renderCabinet();
+      renderAdmin();
+      updateCounters();
+      const dbText = state.dbReady ? 'База подключена. ' : 'База пока не подтверждена. ';
+      const webhookText = state.webhookReady ? 'Webhook подключён.' : 'Webhook пока не подключён.';
+      els.configBanner.textContent = dbText + webhookText;
+    }
+
+    async function initSupabase() {
+      if (!window.supabase) return;
+      try {
+        state.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        state.dbReady = true;
+        state.demoMode = false;
+        const { data: sessionData } = await state.supabase.auth.getSession();
+        if (sessionData?.session?.user) {
+          await hydrateUser(sessionData.session.user);
+        }
+        await loadPublicCounts();
+      } catch (e) {
+        console.error(e);
+        state.dbReady = false;
+        state.demoMode = true;
+      }
+      renderAll();
+    }
+
+    async function loadPublicCounts() {
+      if (!state.supabase) return;
+      const [{ count: profilesCount }, { data: waitlistData }, { data: eventsData }] = await Promise.all([
+        state.supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        state.supabase.from('waitlist_entries').select('*').order('created_at', { ascending: false }),
+        state.supabase.from('platform_events').select('*').order('created_at', { ascending: false }).limit(10),
+      ]);
+      state.profilesCount = profilesCount || 0;
+      state.waitlistEntries = waitlistData || [];
+      state.lastEvents = eventsData || [];
+      renderAll();
+    }
+
+    async function hydrateUser(user) {
+      if (!state.supabase || !user) return;
+      const [{ data: profile }, { data: waitlist }, { data: notes }, { data: favs }] = await Promise.all([
+        state.supabase.from('profiles').select('*').eq('id', user.id).single(),
+        state.supabase.from('waitlist_entries').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        state.supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        state.supabase.from('user_favorites').select('course_id').eq('user_id', user.id),
+      ]);
+      state.currentUser = profile ? {
+        id: profile.id,
         name: profile.name,
         email: profile.email,
-        phone: waitlistForm.phone || profile.phone || "",
-        note: waitlistForm.note || "",
-        source: waitlistForm.source || "site",
-        status: "new",
-      };
+        phone: profile.phone,
+        city: profile.city,
+        occupation: profile.occupation,
+        role: profile.role,
+      } : { id: user.id, email: user.email, name: user.email, role: 'student' };
+      state.notifications = notes || [];
+      state.favorites = (favs || []).map(x => x.course_id);
+      state.profilesCount = Math.max(state.profilesCount, 1);
+      if (profile?.role === 'admin') state.adminMode = true;
+      await loadPublicCounts();
+      renderAll();
+    }
 
-      const { data, error } = await supabase.from("waitlist_entries").insert(payload).select("*").single();
-      if (error) throw error;
-
-      await createDbNotification(
-        sessionUser.id,
-        "Ты в листе ожидания",
-        `Мы сохранили заявку на курс «${course.title}».`
-      );
-      await safeTrackEvent("waitlist_joined", { courseId, courseTitle: course.title }, sessionUser.id);
-      const ownerDelivery = await notifyOwnerAboutWaitlist(data);
-
-      setMyWaitlistEntries((prev) => [data, ...prev]);
-      setNotifications((prev) => [
-        {
-          id: uid("local-note"),
-          user_id: sessionUser.id,
-          title: "Ты в листе ожидания",
-          body: `Мы сохранили заявку на курс «${course.title}».`,
-          created_at: new Date().toISOString(),
-        },
-        ...prev,
-      ]);
-
-      if (isAdmin) {
-        await loadAdminData();
+    async function registerUser() {
+      if (!state.supabase) {
+        setMessage(els.authMessage, 'База пока не подключена.');
+        return;
       }
-
-      setWaitlistMessage(
-        ownerDelivery.sent
-          ? "Заявка сохранена и отправлена владельцу по webhook."
-          : "Заявка сохранена в базе. Для автоматической почты владельцу подключи WAITLIST_WEBHOOK_URL."
-      );
-    } catch (error) {
-      setWaitlistMessage(error.message || "Не удалось записать в лист ожидания.");
-    } finally {
-      setLoading(false);
+      const name = els.regName.value.trim();
+      const email = els.authEmail.value.trim().toLowerCase();
+      const password = els.authPassword.value.trim();
+      if (!name || !email || !password) {
+        setMessage(els.authMessage, 'Заполни имя, email и пароль.');
+        return;
+      }
+      try {
+        const { data, error } = await state.supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        const user = data.user;
+        await state.supabase.from('profiles').upsert({
+          id: user.id,
+          email,
+          name,
+          phone: els.regPhone.value.trim(),
+          city: els.regCity.value.trim(),
+          occupation: els.regOccupation.value.trim(),
+          role: 'student',
+        });
+        await state.supabase.from('notifications').insert({ user_id: user.id, title: 'Аккаунт создан', body: 'Кабинет активирован. Можно вставать в лист ожидания.' });
+        await state.supabase.from('platform_events').insert({ user_id: user.id, event_name: 'signup_completed', payload: { email } });
+        setMessage(els.authMessage, 'Аккаунт создан.');
+        await state.supabase.auth.signInWithPassword({ email, password });
+        await hydrateUser(user);
+        document.getElementById('cabinetSectionWrap').scrollIntoView({ behavior: 'smooth' });
+      } catch (e) {
+        setMessage(els.authMessage, e.message || 'Не удалось создать аккаунт.');
+      }
     }
-  };
 
-  const renderHero = () => (
-    <section className="relative overflow-hidden border-b border-black/10">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.9),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(0,0,0,0.06),transparent_34%)]" />
-      <div className="relative mx-auto grid min-h-[calc(100vh-84px)] max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr,.9fr] lg:px-8 lg:py-20">
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
-          <div className="mb-6 flex flex-wrap gap-2">
-            <Pill>Live DB mode</Pill>
-            <Pill>Email webhook ready</Pill>
-            <Pill>Личные кабинеты работают</Pill>
-          </div>
-          <h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.07em] text-[#111111] sm:text-6xl lg:text-8xl">
-            Архитекторы
-            <br />
-            реальности
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-black/70 lg:text-xl">
-            Источник истины теперь база данных: регистрация, waitlist, профиль, избранное и lead center работают через Supabase, а заявки можно отправлять владельцу через webhook.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <PrimaryButton onClick={() => setView("catalog")}>
-              Открыть каталог <ArrowRight className="h-4 w-4" />
-            </PrimaryButton>
-            <SecondaryButton
-              onClick={() => {
-                setView("auth");
-                setAuthMode(sessionUser ? "login" : "register");
-              }}
-            >
-              {sessionUser ? "Открыть кабинет" : "Регистрация"}
-            </SecondaryButton>
-          </div>
-          <div className="mt-10 grid max-w-3xl gap-3 sm:grid-cols-3">
-            {[
-              { value: coursesSeed.length, label: "курса на витрине" },
-              { value: stats.waitlistLeads, label: "заявок в базе" },
-              { value: stats.registrations, label: "профилей в БД" },
-            ].map((item) => (
-              <Card key={item.label} className="rounded-[22px] p-4">
-                <div className="text-3xl font-semibold tracking-[-0.05em]">{item.value}</div>
-                <div className="mt-1 text-sm text-black/60">{item.label}</div>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
+    async function loginUser() {
+      if (!state.supabase) {
+        setMessage(els.authMessage, 'База пока не подключена.');
+        return;
+      }
+      const email = els.authEmail.value.trim().toLowerCase();
+      const password = els.authPassword.value.trim();
+      try {
+        const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        await state.supabase.from('platform_events').insert({ user_id: data.user.id, event_name: 'login_completed', payload: { email } });
+        await hydrateUser(data.user);
+        setMessage(els.authMessage, 'Вход выполнен.');
+        document.getElementById('cabinetSectionWrap').scrollIntoView({ behavior: 'smooth' });
+      } catch (e) {
+        setMessage(els.authMessage, e.message || 'Неверный email или пароль.');
+      }
+    }
 
-        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.55 }}>
-          <Card className="overflow-hidden rounded-[36px] bg-[#101113] p-0 text-white">
-            <div className="border-b border-white/10 px-6 py-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-xs uppercase tracking-[0.28em] text-white/50">Infra status</div>
-                  <div className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Подключение live-слоя</div>
-                </div>
-                <Pill dark>{configReady ? "DB ready" : "Config needed"}</Pill>
-              </div>
-            </div>
-            <div className="grid gap-3 p-6 text-sm leading-6 text-white/80">
-              {[
-                configReady ? "Supabase client и auth активны" : "Нужно заполнить SUPABASE_URL и SUPABASE_ANON_KEY",
-                webhookReady ? "Webhook/email gateway активен" : "Нужно заполнить WAITLIST_WEBHOOK_URL",
-                "Waitlist и профили живут в базе, а не в localStorage",
-                "Lead center читает данные напрямую из таблиц",
-              ].map((item) => (
-                <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <Check className="mb-2 h-4 w-4" />
-                  {item}
-                </div>
-              ))}
-            </div>
-          </Card>
-        </motion.div>
-      </div>
-    </section>
-  );
+    async function toggleFavorite(courseId) {
+      if (!state.currentUser || !state.supabase) {
+        document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      const exists = state.favorites.includes(courseId);
+      if (exists) {
+        await state.supabase.from('user_favorites').delete().eq('user_id', state.currentUser.id).eq('course_id', courseId);
+        state.favorites = state.favorites.filter(x => x !== courseId);
+        await state.supabase.from('platform_events').insert({ user_id: state.currentUser.id, event_name: 'favorite_removed', payload: { courseId } });
+      } else {
+        await state.supabase.from('user_favorites').upsert({ user_id: state.currentUser.id, course_id: courseId });
+        state.favorites.push(courseId);
+        await state.supabase.from('platform_events').insert({ user_id: state.currentUser.id, event_name: 'favorite_added', payload: { courseId } });
+      }
+      await loadPublicCounts();
+      renderAll();
+    }
 
-  const renderHome = () => (
-    <>
-      {renderHero()}
-      <Section
-        eyebrow="Как это работает"
-        title="Трафик идёт на витрину, лиды сразу пишутся в БД"
-        description="Эта версия не хранит пользовательские данные локально. Регистрация, избранное, waitlist и уведомления живут в таблицах и могут использоваться для реальных запусков и CRM-процессов."
-        right={
-          <Card className="bg-black text-white">
-            <div className="text-xs uppercase tracking-[0.24em] text-white/50">Owner result</div>
-            <div className="mt-4 grid gap-3">
-              {[
-                "Собираешь email и профиль пользователя в БД",
-                "Получаешь лиды по каждому курсу",
-                "Можешь подключить email gateway без переписывания фронта",
-                "Получаешь lead center для запуска релиза",
-              ].map((item) => (
-                <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </Card>
+    async function submitWaitlist() {
+      if (!state.currentUser || !state.supabase) {
+        setMessage(els.waitlistMessage, 'Сначала войди или зарегистрируйся.');
+        return;
+      }
+      const exists = state.waitlistEntries.some(x => (x.user_id === state.currentUser.id || x.userId === state.currentUser.id) && (x.course_id === state.selectedCourse.id || x.courseId === state.selectedCourse.id));
+      if (exists) {
+        setMessage(els.waitlistMessage, 'Ты уже в листе ожидания по этому курсу.');
+        return;
+      }
+      const payload = {
+        user_id: state.currentUser.id,
+        course_id: state.selectedCourse.id,
+        course_title: state.selectedCourse.title,
+        name: state.currentUser.name,
+        email: state.currentUser.email,
+        phone: els.waitlistPhone.value.trim(),
+        note: els.waitlistNote.value.trim(),
+        source: 'site',
+        status: 'new',
+      };
+      try {
+        const { data, error } = await state.supabase.from('waitlist_entries').insert(payload).select('*').single();
+        if (error) throw error;
+        await state.supabase.from('notifications').insert({ user_id: state.currentUser.id, title: 'Ты в листе ожидания', body: `Мы сохранили заявку на курс «${state.selectedCourse.title}».` });
+        await state.supabase.from('platform_events').insert({ user_id: state.currentUser.id, event_name: 'waitlist_joined', payload: { courseId: state.selectedCourse.id, courseTitle: state.selectedCourse.title } });
+        state.waitlistEntries.unshift(data);
+        state.notifications.unshift({ title: 'Ты в листе ожидания', body: `Мы сохранили заявку на курс «${state.selectedCourse.title}».`, created_at: new Date().toISOString() });
+        if (WAITLIST_WEBHOOK_URL) {
+          try {
+            await fetch(WAITLIST_WEBHOOK_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ entry: data, ownerEmail: OWNER_NOTIFICATION_EMAIL }),
+            });
+          } catch (e) {
+            console.error(e);
+          }
         }
-      >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            { title: "База данных", text: "Profiles, waitlist, favorites и notifications больше не теряются между устройствами.", icon: Shield },
-            { title: "Webhook", text: "Каждая waitlist-заявка может сразу уходить в email provider или automation flow.", icon: Mail },
-            { title: "Кабинет", text: "Пользователь видит свои реальные данные и заявки, подгруженные из БД.", icon: Users },
-            { title: "Lead center", text: "Владелец видит актуальную базу лидов и сигналы запуска прямо из таблиц.", icon: Bell },
-          ].map((item) => (
-            <Card key={item.title}>
-              <item.icon className="h-5 w-5" />
-              <div className="mt-4 text-xl font-semibold tracking-[-0.04em]">{item.title}</div>
-              <p className="mt-2 text-sm leading-6 text-black/65">{item.text}</p>
-            </Card>
-          ))}
-        </div>
-      </Section>
-    </>
-  );
-
-  const renderCatalog = () => (
-    <Section
-      eyebrow="Каталог"
-      title="Все курсы стоят на витрине как будущие релизы"
-      description="Люди могут зарегистрироваться, сохранить профиль, добавить курс в избранное и встать в лист ожидания."
-    >
-      <div className="mb-6 grid gap-4 lg:grid-cols-[1fr,.75fr]">
-        <Card>
-          <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3">
-            <Search className="h-4 w-4 text-black/45" />
-            <input
-              value={catalogSearch}
-              onChange={(e) => setCatalogSearch(e.target.value)}
-              placeholder="Поиск по курсам"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-black/35"
-            />
-          </div>
-        </Card>
-        <Card>
-          <div className="text-sm text-black/55">Курс в фокусе</div>
-          <div className="mt-3 text-2xl font-semibold tracking-[-0.04em]">{selectedCourse.title}</div>
-          <div className="mt-2 text-sm leading-6 text-black/65">Заявок по этому курсу: {selectedCourseLeadsCount}</div>
-        </Card>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        {catalogCourses.map((course) => (
-          <Card key={course.id} className={cn(selectedCourseId === course.id && "ring-2 ring-black")}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <Pill dark>{course.badge}</Pill>
-                <div className="mt-4 text-2xl font-semibold tracking-[-0.04em]">{course.title}</div>
-              </div>
-              <Lock className="h-5 w-5 text-black/35" />
-            </div>
-            <div className="mt-3 text-sm text-black/55">{course.subtitle}</div>
-            <div className="mt-4 text-sm leading-6 text-black/70">{course.shortDescription}</div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Pill>{course.level}</Pill>
-              <Pill>{course.format}</Pill>
-              <Pill>{course.lessons} уроков</Pill>
-              {favoriteIds.includes(course.id) ? <Pill>В избранном</Pill> : null}
-            </div>
-            <div className="mt-6 flex items-end justify-between gap-3">
-              <div>
-                <div className="text-xs uppercase tracking-[0.2em] text-black/40">Цена от</div>
-                <div className="mt-1 text-3xl font-semibold tracking-[-0.05em]">{formatPrice(course.priceFrom)}</div>
-              </div>
-              <div className="flex gap-2">
-                <SecondaryButton onClick={() => toggleFavorite(course.id)} disabled={!configReady || loading}>
-                  {favoriteIds.includes(course.id) ? "Убрать" : "В избранное"}
-                </SecondaryButton>
-                <PrimaryButton
-                  onClick={() => {
-                    setSelectedCourseId(course.id);
-                    setDrawer("waitlist");
-                  }}
-                >
-                  {course.waitlistLabel}
-                </PrimaryButton>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </Section>
-  );
-
-  const renderAuth = () => (
-    <Section
-      eyebrow={authMode === "register" ? "Регистрация" : "Вход"}
-      title={authMode === "register" ? "Создать кабинет и сохранить профиль в БД" : "Войти в кабинет"}
-      description="Регистрация использует Supabase Auth, а профиль пишется в таблицу profiles."
-    >
-      <div className="grid gap-4 lg:grid-cols-[1fr,.9fr]">
-        <Card>
-          <div className="grid gap-4">
-            {authMode === "register" ? (
-              <>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-black/65">Имя</label>
-                  <input
-                    value={authForm.name}
-                    onChange={(e) => setAuthForm((prev) => ({ ...prev, name: e.target.value }))}
-                    className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
-                  />
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-black/65">Телефон</label>
-                    <input
-                      value={authForm.phone}
-                      onChange={(e) => setAuthForm((prev) => ({ ...prev, phone: e.target.value }))}
-                      className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-black/65">Город</label>
-                    <input
-                      value={authForm.city}
-                      onChange={(e) => setAuthForm((prev) => ({ ...prev, city: e.target.value }))}
-                      className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-black/65">Чем занимаешься</label>
-                  <input
-                    value={authForm.occupation}
-                    onChange={(e) => setAuthForm((prev) => ({ ...prev, occupation: e.target.value }))}
-                    className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
-                  />
-                </div>
-              </>
-            ) : null}
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-black/65">Email</label>
-              <input
-                value={authForm.email}
-                onChange={(e) => setAuthForm((prev) => ({ ...prev, email: e.target.value }))}
-                className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-black/65">Пароль</label>
-              <input
-                type="password"
-                value={authForm.password}
-                onChange={(e) => setAuthForm((prev) => ({ ...prev, password: e.target.value }))}
-                className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
-              />
-            </div>
-
-            {authMode === "register" ? (
-              <PrimaryButton onClick={handleRegister} disabled={loading || !configReady}>
-                <UserPlus className="h-4 w-4" />Создать кабинет
-              </PrimaryButton>
-            ) : (
-              <PrimaryButton onClick={handleLogin} disabled={loading || !configReady}>
-                <LogIn className="h-4 w-4" />Войти
-              </PrimaryButton>
-            )}
-
-            {authMessage ? (
-              <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-sm text-black/65">{authMessage}</div>
-            ) : null}
-            <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-xs leading-6 text-black/55">
-              Продолжая регистрацию или вход, пользователь подтверждает ознакомление с политикой конфиденциальности, согласием на обработку персональных данных и иными документами правового контура сайта.
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <SecondaryButton onClick={() => setAuthMode(authMode === "register" ? "login" : "register")}>
-                {authMode === "register" ? "Уже есть аккаунт" : "Создать аккаунт"}
-              </SecondaryButton>
-              <SecondaryButton onClick={() => setView("catalog")}>К каталогу</SecondaryButton>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="bg-black text-white">
-          <div className="text-xs uppercase tracking-[0.22em] text-white/55">Что пишет в базу</div>
-          <div className="mt-4 grid gap-3 text-sm leading-6 text-white/80">
-            {[
-              "Supabase Auth хранит email и пароль",
-              "profiles хранит имя, телефон, город и род занятий",
-              "waitlist_entries хранит заявки по курсам",
-              "notifications хранит события кабинета",
-              "user_favorites хранит избранные курсы",
-            ].map((item) => (
-              <div key={item} className="rounded-2xl border border-white/10 bg-white/5 p-4">{item}</div>
-            ))}
-          </div>
-        </Card>
-      </div>
-    </Section>
-  );
-
-  const cabinetNav = [
-    { id: "overview", label: "Обзор" },
-    { id: "profile", label: "Профиль" },
-    { id: "waitlist", label: "Лист ожидания" },
-    { id: "favorites", label: "Избранное" },
-    { id: "notifications", label: "Уведомления" },
-  ];
-
-  const renderCabinetContent = () => {
-    switch (cabinetSection) {
-      case "profile":
-        return (
-          <Card>
-            <div className="text-sm text-black/55">Данные профиля</div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {[
-                ["Имя", profile?.name || "—"],
-                ["Email", profile?.email || sessionUser?.email || "—"],
-                ["Телефон", profile?.phone || "—"],
-                ["Город", profile?.city || "—"],
-                ["Род занятий", profile?.occupation || "—"],
-                ["Дата регистрации", profile?.created_at ? formatDate(profile.created_at) : "—"],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-2xl border border-black/10 p-4">
-                  <div className="text-xs uppercase tracking-[0.18em] text-black/45">{label}</div>
-                  <div className="mt-2 text-sm text-black/75">{value}</div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        );
-      case "waitlist":
-        return (
-          <Card>
-            <div className="text-sm text-black/55">Мои заявки в лист ожидания</div>
-            <div className="mt-4 grid gap-3">
-              {myWaitlistEntries.length === 0 ? (
-                <div className="rounded-2xl border border-black/10 px-4 py-3 text-sm text-black/60">Пока заявок нет.</div>
-              ) : (
-                myWaitlistEntries.map((entry) => (
-                  <div key={entry.id} className="rounded-2xl border border-black/10 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <div className="font-medium">{entry.course_title}</div>
-                        <div className="mt-1 text-sm text-black/55">{formatDate(entry.created_at)}</div>
-                      </div>
-                      <Pill>{entry.status}</Pill>
-                    </div>
-                    <div className="mt-3 text-sm text-black/65">{entry.note || "Без комментария"}</div>
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
-        );
-      case "favorites":
-        return (
-          <Card>
-            <div className="text-sm text-black/55">Избранные курсы</div>
-            <div className="mt-4 grid gap-3">
-              {favoriteIds.length === 0 ? (
-                <div className="rounded-2xl border border-black/10 px-4 py-3 text-sm text-black/60">Пока ничего не добавлено.</div>
-              ) : (
-                favoriteIds.map((id) => {
-                  const course = coursesSeed.find((item) => item.id === id);
-                  if (!course) return null;
-                  return (
-                    <div key={course.id} className="rounded-2xl border border-black/10 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="font-medium">{course.title}</div>
-                          <div className="mt-1 text-sm text-black/55">{course.subtitle}</div>
-                        </div>
-                        <div className="flex gap-2">
-                          <SecondaryButton onClick={() => toggleFavorite(course.id)} disabled={loading}>
-                            Убрать
-                          </SecondaryButton>
-                          <PrimaryButton
-                            onClick={() => {
-                              setSelectedCourseId(course.id);
-                              setDrawer("waitlist");
-                            }}
-                          >
-                            В waitlist
-                          </PrimaryButton>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </Card>
-        );
-      case "notifications":
-        return (
-          <Card>
-            <div className="text-sm text-black/55">Уведомления</div>
-            <div className="mt-4 grid gap-3">
-              {notifications.length === 0 ? (
-                <div className="rounded-2xl border border-black/10 px-4 py-3 text-sm text-black/60">Пока уведомлений нет.</div>
-              ) : (
-                notifications.map((note) => (
-                  <div key={note.id} className="rounded-2xl border border-black/10 p-4">
-                    <div className="font-medium">{note.title}</div>
-                    <div className="mt-2 text-sm leading-6 text-black/65">{note.body}</div>
-                    <div className="mt-2 text-xs text-black/45">{formatDate(note.created_at)}</div>
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
-        );
-      default:
-        return (
-          <Card className="bg-black text-white">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-xs uppercase tracking-[0.22em] text-white/55">Личный кабинет</div>
-                <div className="mt-2 text-3xl font-semibold tracking-[-0.05em]">{profile?.name || sessionUser?.email}</div>
-                <div className="mt-2 text-sm text-white/70">
-                  Профиль, избранные курсы и заявки в лист ожидания теперь подгружаются из базы данных.
-                </div>
-              </div>
-              <Pill dark>{myWaitlistEntries.length} заявок</Pill>
-            </div>
-            <div className="mt-6 grid gap-3 md:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-white/50">Курсов в избранном</div>
-                <div className="mt-2 text-2xl font-semibold">{favoriteIds.length}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-white/50">Моих waitlist-заявок</div>
-                <div className="mt-2 text-2xl font-semibold">{myWaitlistEntries.length}</div>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs uppercase tracking-[0.18em] text-white/50">Источник истины</div>
-                <div className="mt-2 text-sm text-white/80">Supabase DB</div>
-              </div>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <PrimaryButton className="bg-white text-black hover:bg-white/90" onClick={() => setView("catalog")}>
-                В каталог
-              </PrimaryButton>
-              <SecondaryButton className="border-white/10 bg-white/5 text-white hover:bg-white/10" onClick={() => setCabinetSection("profile")}>
-                Мой профиль
-              </SecondaryButton>
-            </div>
-          </Card>
-        );
-    }
-  };
-
-  const renderCabinet = () => (
-    <Section
-      eyebrow="Личный кабинет"
-      title="Рабочий кабинет пользователя"
-      description="Профиль, избранное и waitlist читаются из базы, а не из localStorage."
-    >
-      <div className="mb-5 flex flex-wrap gap-2">
-        {cabinetNav.map((item) => (
-          <NavPill key={item.id} active={cabinetSection === item.id} onClick={() => setCabinetSection(item.id)}>
-            {item.label}
-          </NavPill>
-        ))}
-      </div>
-      {renderCabinetContent()}
-    </Section>
-  );
-
-  const renderAdmin = () => {
-    if (!isAdmin) {
-      return (
-        <Section eyebrow="Admin" title="Доступ только для владельца" description="Эта зона предназначена для операционного управления базой и заявками.">
-          <Card>
-            <div className="text-sm text-black/65">Войди под admin-аккаунтом, чтобы увидеть lead center.</div>
-          </Card>
-        </Section>
-      );
+        setMessage(els.waitlistMessage, 'Заявка сохранена.');
+        renderAll();
+      } catch (e) {
+        setMessage(els.waitlistMessage, e.message || 'Не удалось записать в лист ожидания.');
+      }
     }
 
-    return (
-      <Section
-        eyebrow="Lead center"
-        title="Рабочая панель владельца"
-        description="Здесь видны регистрации, заявки в лист ожидания и сигналы подключённой инфраструктуры."
-      >
-        <div className="grid gap-4 xl:grid-cols-4">
-          {[
-            { label: "Регистрации", value: stats.registrations, icon: Users },
-            { label: "Waitlist-заявки", value: stats.waitlistLeads, icon: Mail },
-            { label: "Логины", value: stats.logins, icon: LogIn },
-            { label: "Избранное", value: stats.favorites, icon: Star },
-          ].map((item) => (
-            <Card key={item.label}>
-              <item.icon className="h-5 w-5" />
-              <div className="mt-4 text-3xl font-semibold tracking-[-0.05em]">{item.value}</div>
-              <div className="mt-1 text-sm text-black/60">{item.label}</div>
-            </Card>
-          ))}
-        </div>
-
-        <div className="mt-8 grid gap-4 xl:grid-cols-[1.1fr,.9fr]">
-          <Card>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm text-black/55">Waitlist leads</div>
-                <div className="mt-1 text-2xl font-semibold tracking-[-0.04em]">Все заявки из БД</div>
-              </div>
-              <Pill>{adminLeads.length} leads</Pill>
-            </div>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-black/10">
-              <div className="grid grid-cols-[1fr,1fr,1fr,.8fr] gap-3 border-b border-black/10 bg-black/[0.03] px-4 py-3 text-xs uppercase tracking-[0.18em] text-black/45">
-                <div>Имя / Email</div>
-                <div>Курс</div>
-                <div>Телефон / note</div>
-                <div>Дата</div>
-              </div>
-              {adminLeads.length === 0 ? (
-                <div className="px-4 py-4 text-sm text-black/55">Пока заявок нет.</div>
-              ) : (
-                adminLeads.map((entry) => (
-                  <div key={entry.id} className="grid grid-cols-[1fr,1fr,1fr,.8fr] gap-3 border-t border-black/10 px-4 py-3 text-sm text-black/70">
-                    <div>
-                      <div className="font-medium">{entry.name}</div>
-                      <div className="text-black/55">{entry.email}</div>
-                    </div>
-                    <div>{entry.course_title}</div>
-                    <div>
-                      <div>{entry.phone || "—"}</div>
-                      <div className="text-black/55">{entry.note || "—"}</div>
-                    </div>
-                    <div>{formatDate(entry.created_at)}</div>
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
-
-          <div className="grid gap-4">
-            <Card>
-              <div className="text-sm text-black/55">Infra setup</div>
-              <div className="mt-4 grid gap-3 text-sm text-black/70">
-                <div className="rounded-2xl border border-black/10 p-4">
-                  <div className="font-medium">Supabase</div>
-                  <div className="mt-2">{configReady ? "Подключён" : "Нужно заполнить URL и anon key"}</div>
-                </div>
-                <div className="rounded-2xl border border-black/10 p-4">
-                  <div className="font-medium">Webhook / email gateway</div>
-                  <div className="mt-2">{webhookReady ? "Подключён" : "Нужно заполнить WAITLIST_WEBHOOK_URL"}</div>
-                </div>
-                <div className="rounded-2xl border border-black/10 p-4">
-                  <div className="font-medium">Owner email</div>
-                  <div className="mt-2">{OWNER_NOTIFICATION_EMAIL}</div>
-                </div>
-              </div>
-            </Card>
-            <Card>
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-sm text-black/55">DB schema</div>
-                <a
-                  href="https://supabase.com/docs/guides/database"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-sm text-black/55"
-                >
-                  docs <ExternalLink className="h-4 w-4" />
-                </a>
-              </div>
-              <pre className="mt-4 max-h-[320px] overflow-auto rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-xs leading-6 text-black/70 whitespace-pre-wrap">
-                {DB_SETUP_SQL}
-              </pre>
-            </Card>
-            <Card>
-              <div className="text-sm text-black/55">Последние события</div>
-              <div className="mt-4 grid gap-2">
-                {adminEvents.length === 0 ? (
-                  <div className="rounded-2xl border border-black/10 px-4 py-3 text-sm text-black/55">Пока событий нет.</div>
-                ) : (
-                  adminEvents.map((item) => (
-                    <div key={item.id} className="rounded-2xl border border-black/10 p-4">
-                      <div className="font-medium">{item.event_name}</div>
-                      <div className="mt-2 text-sm text-black/65 break-all">{JSON.stringify(item.payload)}</div>
-                      <div className="mt-2 text-xs text-black/45">{formatDate(item.created_at)}</div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </Card>
-          </div>
-        </div>
-      </Section>
-    );
-  };
-
-  const renderLegal = () => (
-    <Section eyebrow="Legal" title="Юридический контур" description="Все ключевые документы доступны из footer и в любой момент могут быть открыты пользователем.">
-      <div className="grid gap-4 lg:grid-cols-[.9fr,1.1fr]">
-        <Card>
-          <div className="grid gap-2">
-            {legalPagesSeed.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setSelectedLegalId(item.id)}
-                className={cn(
-                  "flex items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition",
-                  selectedLegalId === item.id ? "border-black bg-black text-white" : "border-black/10 bg-white text-black hover:bg-black/5"
-                )}
-              >
-                <span>{item.title}</span>
-                <ChevronRight className={cn("h-4 w-4", selectedLegalId === item.id ? "text-white/60" : "text-black/35")} />
-              </button>
-            ))}
-          </div>
-        </Card>
-        <Card>
-          <div className="text-xs uppercase tracking-[0.22em] text-black/45">{activeLegalPage.title}</div>
-          <div className="mt-4 whitespace-pre-wrap text-sm leading-7 text-black/70">{activeLegalPage.text}</div>
-        </Card>
-      </div>
-    </Section>
-  );
-
-  const renderFaq = () => (
-    <Section eyebrow="FAQ" title="Что работает уже сейчас" description="Эта версия рассчитана на живой pre-launch с реальной БД и webhook-уведомлениями владельцу.">
-      <div className="grid gap-4 lg:grid-cols-[1fr,.9fr]">
-        <Card>
-          <div className="grid gap-3">
-            {faqSeed.map((item) => (
-              <div key={item.q} className="rounded-2xl border border-black/10 p-4">
-                <div className="font-medium">{item.q}</div>
-                <div className="mt-2 text-sm leading-6 text-black/65">{item.a}</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-        <Card>
-          <div className="text-sm text-black/55">Статус live-архитектуры</div>
-          <div className="mt-4 grid gap-2 text-sm text-black/70">
-            {[
-              "localStorage больше не источник истины",
-              "Профиль и waitlist лежат в таблицах",
-              "Курсы остаются в статусе «Скоро релиз»",
-              "Webhook может отправлять письмо владельцу по каждой заявке",
-              "Lead center читает актуальные данные из БД",
-            ].map((item) => (
-              <div key={item} className="rounded-2xl border border-black/10 px-4 py-3">{item}</div>
-            ))}
-          </div>
-        </Card>
-      </div>
-    </Section>
-  );
-
-  const renderWaitlistDrawer = () => (
-    <Drawer open={drawer === "waitlist"} onClose={() => setDrawer(null)} title={`Лист ожидания · ${selectedCourse.title}`}>
-      <Card>
-        {!sessionUser || !profile ? (
-          <>
-            <div className="text-sm leading-6 text-black/65">
-              Чтобы встать в лист ожидания и сохранить заявку в базе, сначала войди или зарегистрируйся.
-            </div>
-            <div className="mt-5 flex gap-3">
-              <PrimaryButton
-                onClick={() => {
-                  setDrawer(null);
-                  setView("auth");
-                  setAuthMode("register");
-                }}
-              >
-                Регистрация
-              </PrimaryButton>
-              <SecondaryButton
-                onClick={() => {
-                  setDrawer(null);
-                  setView("auth");
-                  setAuthMode("login");
-                }}
-              >
-                Войти
-              </SecondaryButton>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="text-sm text-black/55">
-              Оставь комментарий, и заявка уйдёт в базу. При подключённом webhook владелец также получит письмо.
-            </div>
-            <div className="mt-4 grid gap-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-black/65">Имя</label>
-                <input value={profile.name || waitlistForm.name} readOnly className="w-full rounded-2xl border border-black/10 bg-black/[0.02] px-4 py-3 outline-none" />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-black/65">Email</label>
-                <input value={profile.email || sessionUser.email || waitlistForm.email} readOnly className="w-full rounded-2xl border border-black/10 bg-black/[0.02] px-4 py-3 outline-none" />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-black/65">Телефон</label>
-                <input
-                  value={waitlistForm.phone}
-                  onChange={(e) => setWaitlistForm((prev) => ({ ...prev, phone: e.target.value }))}
-                  className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-black/65">Комментарий</label>
-                <textarea
-                  rows={4}
-                  value={waitlistForm.note}
-                  onChange={(e) => setWaitlistForm((prev) => ({ ...prev, note: e.target.value }))}
-                  className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none"
-                  placeholder="Например: хочу первым, нужен корпоративный тариф"
-                />
-              </div>
-              <PrimaryButton onClick={() => handleJoinWaitlist(selectedCourse.id)} disabled={loading}>
-                Встать в лист ожидания
-              </PrimaryButton>
-              {waitlistMessage ? (
-                <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-sm text-black/65">{waitlistMessage}</div>
-              ) : null}
-              <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-4 text-xs leading-6 text-black/55">
-                Отправляя заявку, пользователь подтверждает ознакомление с политикой конфиденциальности, согласием на обработку персональных данных и правилами работы с листом ожидания.
-              </div>
-            </div>
-          </>
-        )}
-      </Card>
-    </Drawer>
-  );
-
-  const renderConfigBanner = () => {
-    if (configReady && webhookReady) return null;
-    return (
-      <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-black/10 bg-[#fff7e8] p-4 text-sm text-black/75">
-          {!configReady ? "Заполни SUPABASE_URL и SUPABASE_ANON_KEY. " : "Supabase подключён. "}
-          {!webhookReady ? "Заполни WAITLIST_WEBHOOK_URL, чтобы владельцу приходили письма по новым waitlist-заявкам." : "Webhook подключён."}
-        </div>
-      </div>
-    );
-  };
-
-  const renderView = () => {
-    switch (view) {
-      case "catalog":
-        return renderCatalog();
-      case "auth":
-        return renderAuth();
-      case "cabinet":
-        return renderCabinet();
-      case "admin":
-        return renderAdmin();
-      case "legal":
-        return renderLegal();
-      case "faq":
-        return renderFaq();
-      default:
-        return renderHome();
+    function bindStaticEvents() {
+      els.catalogSearch.addEventListener('input', renderCatalog);
+      els.openWaitlistBtn.addEventListener('click', openDrawer);
+      els.openAuthBtn.addEventListener('click', () => document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' }));
+      els.tabRegister.addEventListener('click', () => setActiveAuth('register'));
+      els.tabLogin.addEventListener('click', () => setActiveAuth('login'));
+      els.authSubmitBtn.addEventListener('click', () => state.authMode === 'register' ? registerUser() : loginUser());
+      els.closeDrawerBtn.addEventListener('click', closeDrawer);
+      els.drawerBackdrop.addEventListener('click', closeDrawer);
+      els.drawerRegisterBtn.addEventListener('click', () => { closeDrawer(); document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' }); setActiveAuth('register'); });
+      els.drawerLoginBtn.addEventListener('click', () => { closeDrawer(); document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' }); setActiveAuth('login'); });
+      els.submitWaitlistBtn.addEventListener('click', submitWaitlist);
+      document.querySelectorAll('[data-cabinet-tab]').forEach(btn => btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-cabinet-tab]').forEach(x => x.classList.remove('active'));
+        btn.classList.add('active');
+        state.cabinetTab = btn.getAttribute('data-cabinet-tab');
+        renderCabinet();
+      }));
     }
-  };
 
-  const navItems = [
-    { id: "home", label: "Платформа" },
-    { id: "catalog", label: "Каталог" },
-    { id: sessionUser ? "cabinet" : "auth", label: sessionUser ? "Кабинет" : "Регистрация" },
-    ...(isAdmin ? [{ id: "admin", label: "Lead center" }] : []),
-  ];
+    runChecks();
+    bindStaticEvents();
+    setActiveAuth('register');
+    renderAll();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    initSupabase();
+  </script>
+</body>
+</html>
 
-  return (
-    <div className="min-h-screen bg-[#f3f1ec] text-[#111111]">
-      <header className="sticky top-0 z-50 border-b border-black/10 bg-[#f3f1ec]/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <button onClick={() => setView("home")} className="text-left">
-            <div className="text-[11px] uppercase tracking-[0.28em] text-black/45">Live DB version</div>
-            <div className="mt-1 text-lg font-semibold tracking-[-0.05em]">Архитекторы реальности</div>
-          </button>
-
-          <nav className="hidden flex-wrap items-center gap-2 lg:flex">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setView(item.id)}
-                className={cn(
-                  "rounded-2xl px-4 py-2 text-sm font-medium transition",
-                  view === item.id ? "bg-black text-white" : "bg-white/80 text-black/65 hover:bg-white"
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-2">
-            {profile ? <div className="hidden rounded-2xl border border-black/10 bg-white/80 px-4 py-2 text-sm text-black/65 sm:block">{profile.name}</div> : null}
-            <div className="hidden gap-2 sm:flex">
-              {sessionUser ? (
-                <SecondaryButton onClick={handleLogout}>Выйти</SecondaryButton>
-              ) : (
-                <SecondaryButton onClick={() => { setView("auth"); setAuthMode("login"); }}>Войти</SecondaryButton>
-              )}
-              <PrimaryButton onClick={() => { setSelectedCourseId(coursesSeed[0].id); setDrawer("waitlist"); }}>
-                Лист ожидания
-              </PrimaryButton>
-            </div>
-            <button onClick={() => setMobileMenu(true)} className="rounded-2xl border border-black/10 bg-white p-2 lg:hidden">
-              <Menu className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {renderConfigBanner()}
-      <main>{renderView()}</main>
-
-      <footer className="border-t border-black/10 bg-white/70">
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1fr,.9fr] lg:px-8">
-          <div>
-            <div className="text-sm uppercase tracking-[0.22em] text-black/45">Seller transparency</div>
-            <div className="mt-4 text-2xl font-semibold tracking-[-0.04em]">{seller.name}</div>
-            <div className="mt-2 text-sm text-black/60">{seller.status}</div>
-            <div className="mt-4 max-w-2xl text-sm leading-6 text-black/65">
-              Эта версия уже переведена на живую архитектуру: профили, waitlist и сигналы запуска живут в базе, а владельцу можно подключить реальные письма через webhook.
-            </div>
-          </div>
-          <div>
-            <div className="text-sm uppercase tracking-[0.22em] text-black/45">Legal / support</div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              {legalPagesSeed.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setSelectedLegalId(item.id);
-                    setView("legal");
-                  }}
-                  className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm text-black/70 transition hover:bg-black/5"
-                >
-                  {item.title}
-                </button>
-              ))}
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2 text-sm text-black/55">
-              <button onClick={() => setView("faq")} className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-2">
-                <FileText className="h-4 w-4" />FAQ
-              </button>
-              <span className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-2">
-                <Clock3 className="h-4 w-4" />Все курсы «Скоро релиз»
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 py-2">
-                <Shield className="h-4 w-4" />Данные в базе
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {renderWaitlistDrawer()}
-
-      <Drawer open={mobileMenu} onClose={() => setMobileMenu(false)} title="Навигация">
-        <div className="grid gap-2">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                setView(item.id);
-                setMobileMenu(false);
-              }}
-              className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm text-black/70"
-            >
-              {item.label}
-            </button>
-          ))}
-          <button
-            onClick={() => {
-              setSelectedCourseId(coursesSeed[0].id);
-              setDrawer("waitlist");
-              setMobileMenu(false);
-            }}
-            className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm text-black/70"
-          >
-            Лист ожидания
-          </button>
-          {sessionUser ? (
-            <button
-              onClick={() => {
-                handleLogout();
-                setMobileMenu(false);
-              }}
-              className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm text-black/70"
-            >
-              Выйти
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                setView("auth");
-                setAuthMode("login");
-                setMobileMenu(false);
-              }}
-              className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm text-black/70"
-            >
-              Войти
-            </button>
-          )}
-        </div>
-      </Drawer>
-    </div>
-  );
-}
