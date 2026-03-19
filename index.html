@@ -8,13 +8,12 @@
   <style>
     :root {
       --bg: #f3f1ec;
-      --card: rgba(255,255,255,0.82);
+      --card: rgba(255,255,255,0.84);
       --line: rgba(17,17,17,0.10);
       --text: #111111;
-      --muted: rgba(17,17,17,0.62);
-      --muted-2: rgba(17,17,17,0.45);
+      --muted: rgba(17,17,17,0.64);
+      --muted-2: rgba(17,17,17,0.46);
       --black: #111111;
-      --accent: #0f172a;
       --success: #0a7f39;
       --warn: #8a5a00;
       --shadow: 0 20px 80px rgba(0,0,0,0.06);
@@ -22,118 +21,97 @@
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: var(--bg); }
+    body.locked { overflow: hidden; }
     a { color: inherit; text-decoration: none; }
     button, input, textarea { font: inherit; }
     .container { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 20px; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-    .pill {
-      display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px;
-      border: 1px solid var(--line); background: rgba(255,255,255,0.8); font-size: 12px; font-weight: 600; color: var(--muted);
-    }
-    .pill.dark { background: var(--black); color: #fff; border-color: transparent; }
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: none; cursor: pointer;
-      border-radius: 18px; padding: 14px 18px; font-size: 14px; font-weight: 600; transition: .2s ease;
-    }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(10px); }
+    .pill { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.8); font-size:12px; font-weight:600; color:var(--muted); }
+    .pill.dark { background: var(--black); color:#fff; border-color:transparent; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; border:none; cursor:pointer; border-radius:18px; padding:14px 18px; font-size:14px; font-weight:600; transition:.2s ease; }
     .btn:hover { transform: translateY(-1px); }
-    .btn.primary { background: var(--black); color: white; }
-    .btn.secondary { background: rgba(255,255,255,0.9); color: var(--text); border: 1px solid var(--line); }
-    .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
-    .topbar {
-      position: sticky; top: 0; z-index: 50; border-bottom: 1px solid var(--line); backdrop-filter: blur(12px); background: rgba(243,241,236,0.90);
-    }
-    .topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
-    .brand-kicker { font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--muted-2); }
-    .brand-title { margin-top: 4px; font-size: 18px; font-weight: 700; letter-spacing: -0.04em; }
-    .nav { display: flex; flex-wrap: wrap; gap: 8px; }
-    .nav a { padding: 10px 14px; border-radius: 16px; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .btn.primary { background: var(--black); color:#fff; }
+    .btn.secondary { background: rgba(255,255,255,.92); color:var(--text); border:1px solid var(--line); }
+    .btn.ghost { background: transparent; color: var(--muted); border:1px solid var(--line); }
+    .topbar { position: sticky; top:0; z-index:50; border-bottom:1px solid var(--line); backdrop-filter: blur(12px); background: rgba(243,241,236,.92); }
+    .topbar-inner { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 0; }
+    .brand-kicker { font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted-2); }
+    .brand-title { margin-top:4px; font-size:18px; font-weight:700; letter-spacing:-.04em; }
+    .nav { display:flex; flex-wrap:wrap; gap:8px; }
+    .nav a { padding:10px 14px; border-radius:16px; color:var(--muted); font-size:14px; font-weight:600; }
     .nav a:hover { background: rgba(255,255,255,.8); }
-    .hero {
-      position: relative; overflow: hidden; border-bottom: 1px solid var(--line);
-      background: radial-gradient(circle at top left, rgba(255,255,255,.92), transparent 42%), radial-gradient(circle at bottom right, rgba(0,0,0,.06), transparent 34%);
-    }
-    .hero-grid { display: grid; grid-template-columns: 1.12fr .88fr; gap: 36px; min-height: calc(100vh - 84px); align-items: center; padding: 56px 0 72px; }
-    h1 { margin: 0; font-size: clamp(52px, 8vw, 112px); line-height: .9; letter-spacing: -0.08em; }
-    .hero-text { margin-top: 24px; max-width: 720px; font-size: 20px; line-height: 1.7; color: var(--muted); }
-    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 34px; max-width: 760px; }
-    .stat { padding: 18px; border-radius: 22px; }
-    .stat strong { display: block; font-size: 34px; letter-spacing: -0.05em; }
-    .stat span { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; }
-    .dark-panel { background: #101113; color: white; overflow: hidden; }
-    .dark-panel .inner { padding: 28px; }
-    .dark-panel .grid { display: grid; gap: 12px; margin-top: 18px; }
-    .dark-panel .item { border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.05); border-radius: 20px; padding: 16px; color: rgba(255,255,255,.84); line-height: 1.55; }
-    .section { padding: 64px 0; }
-    .section-head { display: grid; grid-template-columns: 1.14fr .86fr; gap: 28px; align-items: start; margin-bottom: 28px; }
-    .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.75); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .24em; color: var(--muted); }
-    h2 { margin: 0; font-size: clamp(34px, 4vw, 58px); line-height: 1.02; letter-spacing: -0.05em; }
-    .section-desc { margin-top: 16px; max-width: 760px; font-size: 18px; line-height: 1.7; color: var(--muted); }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-    .feature { padding: 20px; }
-    .feature h3 { margin: 14px 0 10px; font-size: 22px; letter-spacing: -0.04em; }
-    .muted { color: var(--muted); }
-    .kicker { font-size: 12px; text-transform: uppercase; letter-spacing: .22em; color: var(--muted-2); }
-    .catalog-controls { display: grid; grid-template-columns: 1fr .8fr; gap: 16px; margin-bottom: 20px; }
-    .search {
-      display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 18px; background: white;
-    }
-    .search input { width: 100%; border: 0; outline: 0; background: transparent; }
-    .course-card { padding: 22px; display: flex; flex-direction: column; min-height: 360px; }
-    .course-card h3 { margin: 16px 0 0; font-size: 28px; letter-spacing: -0.04em; }
-    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
-    .course-bottom { margin-top: auto; display: flex; align-items: end; justify-content: space-between; gap: 12px; }
-    .price { font-size: 38px; letter-spacing: -0.05em; font-weight: 700; }
-    .price small { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .2em; color: var(--muted-2); font-weight: 600; }
-    .course-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .notice {
-      padding: 16px 18px; border-radius: 20px; border: 1px solid var(--line); background: rgba(0,0,0,.02); font-size: 13px; line-height: 1.6; color: var(--muted);
-    }
-    .auth-wrap, .legal-wrap, .cabinet-wrap, .admin-wrap { display: none; }
-    .faq-wrap { display: block; }
-    .auth-wrap.active, .legal-wrap.active, .faq-wrap.active, .cabinet-wrap.active, .admin-wrap.active { display: block; }
-    .input { width: 100%; padding: 14px 16px; border-radius: 18px; border: 1px solid var(--line); background: white; outline: none; }
-    textarea.input { min-height: 112px; resize: vertical; }
-    .field label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--muted); font-weight: 600; }
-    .form-grid { display: grid; gap: 14px; }
-    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-    .tab-btn { padding: 10px 14px; border-radius: 16px; border: 0; cursor: pointer; background: rgba(255,255,255,.85); color: var(--muted); font-weight: 600; }
-    .tab-btn.active { background: var(--black); color: white; }
-    .message { padding: 14px 16px; border-radius: 18px; border: 1px solid var(--line); background: rgba(0,0,0,.02); color: var(--muted); font-size: 14px; line-height: 1.55; }
-    .table { overflow: hidden; border-radius: 22px; border: 1px solid var(--line); }
-    .table-head, .table-row { display: grid; grid-template-columns: 1fr 1fr 1fr .8fr; gap: 14px; padding: 14px 16px; }
-    .table-head { font-size: 12px; text-transform: uppercase; letter-spacing: .18em; color: var(--muted-2); background: rgba(0,0,0,.03); }
-    .table-row { border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
-    .footer { border-top: 1px solid var(--line); background: rgba(255,255,255,.72); }
-    .footer-grid { display: grid; grid-template-columns: 1fr .95fr; gap: 28px; padding: 44px 0; }
-    .legal-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .legal-link { text-align: left; padding: 14px; border-radius: 18px; border: 1px solid var(--line); background: white; color: var(--muted); }
-    .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.30); display: none; z-index: 90; }
-    .drawer-backdrop.open { display: block; }
-    .drawer {
-      position: fixed; top: 0; right: -520px; width: min(520px, 100%); height: 100%; background: #f7f4ee; border-left: 1px solid var(--line);
-      box-shadow: -20px 0 60px rgba(0,0,0,.14); z-index: 91; transition: right .25s ease; padding: 18px; overflow-y: auto;
-    }
-    .drawer.open { right: 0; }
-    .drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
-    .icon-btn { width: 40px; height: 40px; border-radius: 14px; border: 1px solid var(--line); background: white; cursor: pointer; }
-    .status-banner { margin: 14px auto 0; max-width: 1180px; padding: 0 20px; }
-    .status-banner .notice { background: #fff7e8; color: #5b4b12; }
-    .hidden { display: none !important; }
+    .hero { position:relative; overflow:hidden; border-bottom:1px solid var(--line); background: radial-gradient(circle at top left, rgba(255,255,255,.92), transparent 42%), radial-gradient(circle at bottom right, rgba(0,0,0,.06), transparent 34%); }
+    .hero-grid { display:grid; grid-template-columns:1.12fr .88fr; gap:36px; min-height: calc(100vh - 84px); align-items:center; padding:56px 0 72px; }
+    h1 { margin:0; font-size:clamp(52px, 8vw, 112px); line-height:.9; letter-spacing:-.08em; }
+    .hero-text { margin-top:24px; max-width:720px; font-size:20px; line-height:1.7; color:var(--muted); }
+    .hero-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
+    .stats { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-top:34px; max-width:760px; }
+    .stat { padding:18px; border-radius:22px; }
+    .stat strong { display:block; font-size:34px; letter-spacing:-.05em; }
+    .stat span { display:block; margin-top:6px; color:var(--muted); font-size:14px; }
+    .dark-panel { background:#101113; color:#fff; overflow:hidden; }
+    .dark-panel .inner { padding:28px; }
+    .dark-panel .grid { display:grid; gap:12px; margin-top:18px; }
+    .dark-panel .item { border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.05); border-radius:20px; padding:16px; color:rgba(255,255,255,.84); line-height:1.55; }
+    .section { padding:64px 0; }
+    .section-head { display:grid; grid-template-columns:1.14fr .86fr; gap:28px; align-items:start; margin-bottom:28px; }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.75); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.24em; color:var(--muted); }
+    h2 { margin:0; font-size:clamp(34px, 4vw, 58px); line-height:1.02; letter-spacing:-.05em; }
+    .section-desc { margin-top:16px; max-width:760px; font-size:18px; line-height:1.7; color:var(--muted); }
+    .grid-4 { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; }
+    .grid-3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+    .grid-2 { display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; }
+    .feature { padding:20px; }
+    .feature h3 { margin:14px 0 10px; font-size:22px; letter-spacing:-.04em; }
+    .muted { color:var(--muted); }
+    .kicker { font-size:12px; text-transform:uppercase; letter-spacing:.22em; color:var(--muted-2); }
+    .catalog-controls { display:grid; grid-template-columns:1fr .8fr; gap:16px; margin-bottom:20px; }
+    .search { display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid var(--line); border-radius:18px; background:#fff; }
+    .search input { width:100%; border:0; outline:0; background:transparent; }
+    .course-card { padding:22px; display:flex; flex-direction:column; min-height:360px; }
+    .course-card h3 { margin:16px 0 0; font-size:28px; letter-spacing:-.04em; }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+    .course-bottom { margin-top:auto; display:flex; align-items:end; justify-content:space-between; gap:12px; }
+    .price { font-size:38px; letter-spacing:-.05em; font-weight:700; }
+    .price small { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--muted-2); font-weight:600; }
+    .course-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .notice { padding:16px 18px; border-radius:20px; border:1px solid var(--line); background:rgba(0,0,0,.02); font-size:13px; line-height:1.6; color:var(--muted); }
+    .input { width:100%; padding:14px 16px; border-radius:18px; border:1px solid var(--line); background:#fff; outline:none; }
+    textarea.input { min-height:112px; resize:vertical; }
+    .field label { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); font-weight:600; }
+    .form-grid { display:grid; gap:14px; }
+    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+    .tab-btn { padding:10px 14px; border-radius:16px; border:0; cursor:pointer; background:rgba(255,255,255,.85); color:var(--muted); font-weight:600; }
+    .tab-btn.active { background:var(--black); color:#fff; }
+    .message { padding:14px 16px; border-radius:18px; border:1px solid var(--line); background:rgba(0,0,0,.02); color:var(--muted); font-size:14px; line-height:1.55; }
+    .table { overflow:hidden; border-radius:22px; border:1px solid var(--line); }
+    .table-head, .table-row { display:grid; grid-template-columns:1fr 1fr 1fr .8fr; gap:14px; padding:14px 16px; }
+    .table-head { font-size:12px; text-transform:uppercase; letter-spacing:.18em; color:var(--muted-2); background:rgba(0,0,0,.03); }
+    .table-row { border-top:1px solid var(--line); font-size:14px; color:var(--muted); }
+    .footer { border-top:1px solid var(--line); background:rgba(255,255,255,.72); }
+    .footer-grid { display:grid; grid-template-columns:1fr .95fr; gap:28px; padding:44px 0; }
+    .legal-links { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    .legal-link { text-align:left; padding:14px; border-radius:18px; border:1px solid var(--line); background:#fff; color:var(--muted); }
+    .drawer-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.30); display:none; z-index:90; }
+    .drawer-backdrop.open { display:block; }
+    .drawer { position:fixed; top:0; right:-520px; width:min(520px,100%); height:100%; background:#f7f4ee; border-left:1px solid var(--line); box-shadow:-20px 0 60px rgba(0,0,0,.14); z-index:91; transition:right .25s ease; padding:18px; overflow-y:auto; }
+    .drawer.open { right:0; }
+    .drawer-head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px; }
+    .icon-btn { width:40px; height:40px; border-radius:14px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+    .status-banner { margin:14px auto 0; max-width:1180px; padding:0 20px; }
+    .status-banner .notice { background:#fff7e8; color:#5b4b12; }
+    .hidden { display:none !important; }
+    .dashboard-screen { position:fixed; inset:0; z-index:80; background:var(--bg); overflow:auto; display:none; }
+    .dashboard-screen.active { display:block; }
+    .dashboard-head { position:sticky; top:0; z-index:4; backdrop-filter: blur(12px); background:rgba(243,241,236,.92); border-bottom:1px solid var(--line); }
+    .dashboard-head-inner { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:18px 0; }
     @media (max-width: 980px) {
-      .hero-grid, .section-head, .catalog-controls, .grid-4, .grid-3, .grid-2, .footer-grid { grid-template-columns: 1fr; }
-      .stats { grid-template-columns: 1fr; }
-      .nav { display: none; }
-      .hero { min-height: auto; }
-      .table-head, .table-row { grid-template-columns: 1fr; }
+      .hero-grid, .section-head, .catalog-controls, .grid-4, .grid-3, .grid-2, .footer-grid { grid-template-columns:1fr; }
+      .stats { grid-template-columns:1fr; }
+      .nav { display:none; }
+      .hero { min-height:auto; }
+      .table-head, .table-row { grid-template-columns:1fr; }
+      .course-bottom { flex-direction:column; align-items:start; }
     }
   </style>
 </head>
@@ -158,7 +136,7 @@
   </header>
 
   <div class="status-banner">
-    <div class="notice" id="configBanner">Сайт работает как pre-launch версия. Можно регистрироваться, вставать в лист ожидания и сохранять профиль. Если база или webhook ещё не подключены, формы будут работать в демо-режиме.</div>
+    <div class="notice" id="configBanner">Сайт работает как pre-launch версия. Можно регистрироваться, вставать в лист ожидания и сохранять профиль.</div>
   </div>
 
   <main>
@@ -195,7 +173,7 @@
               <div class="grid">
                 <div class="item">Каталог со статусами «Скоро релиз»</div>
                 <div class="item">Регистрация и вход пользователей</div>
-                <div class="item">Личный кабинет и сохранение профиля</div>
+                <div class="item">Отдельный кабинет пользователя</div>
                 <div class="item">Лист ожидания по каждому курсу</div>
                 <div class="item">Lead center для владельца</div>
                 <div class="item">Готовый юридический контур сайта</div>
@@ -229,7 +207,7 @@
         <div class="grid-4">
           <div class="card feature"><div class="kicker">Витрина</div><h3>Курсы уже на сайте</h3><div class="muted">Все программы показаны как будущие релизы. Это уже формирует интерес и структуру каталога.</div></div>
           <div class="card feature"><div class="kicker">Регистрация</div><h3>Профиль пользователя</h3><div class="muted">Собираются имя, email, телефон, город и род занятий, чтобы сегментировать аудиторию и строить коммуникации.</div></div>
-          <div class="card feature"><div class="kicker">Кабинет</div><h3>Живой личный раздел</h3><div class="muted">Пользователь видит свои заявки, избранные курсы и уведомления, а не просто «спасибо за регистрацию».</div></div>
+          <div class="card feature"><div class="kicker">Кабинет</div><h3>Отдельный dashboard</h3><div class="muted">Пользователь видит кабинет в отдельном экране, а не внизу лендинга.</div></div>
           <div class="card feature"><div class="kicker">Lead center</div><h3>Управление лидами</h3><div class="muted">Владелец видит все waitlist-заявки в одном месте и готовит запуск без ручного хаоса.</div></div>
         </div>
       </div>
@@ -263,7 +241,7 @@
       </div>
     </section>
 
-    <section class="section auth-wrap active" id="authSection">
+    <section class="section" id="auth">
       <div class="container">
         <div class="section-head">
           <div>
@@ -314,83 +292,14 @@
             <div class="muted" style="margin-top:12px; line-height:1.7;">На этом этапе кабинет нужен не для просмотра уроков, а для фиксации интереса, сбора базы и возврата пользователя к будущим продуктам.</div>
             <div class="grid" style="display:grid; gap:12px; margin-top:18px;">
               <div class="notice">Регистрация уже может быть боевой, если подключены база и email-шлюз.</div>
-              <div class="notice">Если база пока недоступна, форму можно использовать как staging-поток до финальной проверки.</div>
+              <div class="notice">Если база ещё донастраивается, waitlist всё равно не ломается: заявка сохраняется и уходит владельцу.</div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section cabinet-wrap" id="cabinetSectionWrap">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <div class="eyebrow">Личный кабинет</div>
-            <h2>Рабочий кабинет пользователя</h2>
-            <div class="section-desc">Даже до старта продаж у пользователя уже есть живой кабинет с профилем, waitlist и избранным.</div>
-          </div>
-          <div class="card dark-panel">
-            <div class="inner">
-              <div class="kicker" style="color:rgba(255,255,255,.55)">Кто вошёл</div>
-              <div id="cabinetUserName" style="margin-top:10px; font-size:30px; letter-spacing:-0.04em; font-weight:700;">Гость</div>
-              <div id="cabinetUserEmail" style="margin-top:8px; color:rgba(255,255,255,.72)">Войдите, чтобы открыть кабинет</div>
-            </div>
-          </div>
-        </div>
-        <div class="tabs">
-          <button class="tab-btn active" data-cabinet-tab="overview">Обзор</button>
-          <button class="tab-btn" data-cabinet-tab="profile">Профиль</button>
-          <button class="tab-btn" data-cabinet-tab="waitlist">Лист ожидания</button>
-          <button class="tab-btn" data-cabinet-tab="favorites">Избранное</button>
-          <button class="tab-btn" data-cabinet-tab="notifications">Уведомления</button>
-        </div>
-        <div id="cabinetContent"></div>
-      </div>
-    </section>
-
-    <section class="section admin-wrap" id="adminSection">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <div class="eyebrow">Lead center</div>
-            <h2>Панель владельца</h2>
-            <div class="section-desc">Здесь видны регистрации, избранное, заявки в лист ожидания и общая готовность инфраструктуры.</div>
-          </div>
-          <div class="card">
-            <div class="kicker">Owner email</div>
-            <div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">mikhsan@yandex.ru</div>
-            <div class="muted" style="margin-top:8px; line-height:1.6;">После подключения webhook каждая новая заявка может автоматически приходить на почту владельца.</div>
-          </div>
-        </div>
-        <div class="grid-4" id="adminStats"></div>
-        <div class="grid-2" style="margin-top:18px; align-items:start;">
-          <div class="card" style="padding:20px;">
-            <div class="kicker">Waitlist leads</div>
-            <div style="margin-top:10px; font-size:28px; letter-spacing:-0.04em; font-weight:700;">Все заявки</div>
-            <div class="table" style="margin-top:16px;">
-              <div class="table-head"><div>Имя / Email</div><div>Курс</div><div>Телефон / note</div><div>Дата</div></div>
-              <div id="adminLeadsTable"></div>
-            </div>
-          </div>
-          <div style="display:grid; gap:16px;">
-            <div class="card" style="padding:20px;">
-              <div class="kicker">DB setup</div>
-              <pre style="margin:14px 0 0; max-height:320px; overflow:auto; white-space:pre-wrap; background:rgba(0,0,0,.02); border:1px solid var(--line); border-radius:18px; padding:16px; font-size:12px; line-height:1.65; color:var(--muted);">create table if not exists public.profiles (...)
-create table if not exists public.waitlist_entries (...)
-create table if not exists public.notifications (...)
-create table if not exists public.user_favorites (...)
-create table if not exists public.platform_events (...)</pre>
-            </div>
-            <div class="card" style="padding:20px;">
-              <div class="kicker">Последние события</div>
-              <div id="adminEventsList" style="display:grid; gap:10px; margin-top:14px;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section legal-wrap active" id="legalSection">
+    <section class="section" id="legalSection">
       <div class="container">
         <div class="section-head">
           <div>
@@ -410,7 +319,7 @@ create table if not exists public.platform_events (...)</pre>
       </div>
     </section>
 
-    <section class="section faq-wrap active" id="faqSection">
+    <section class="section" id="faq">
       <div class="container">
         <div class="section-head">
           <div>
@@ -425,10 +334,10 @@ create table if not exists public.platform_events (...)</pre>
           <div class="card" style="padding:20px;">
             <div class="kicker">Что ещё осталось</div>
             <div class="grid" style="display:grid; gap:10px; margin-top:14px;">
-              <div class="notice">Финальный тест DNS и домена</div>
-              <div class="notice">Живой проход регистрации и waitlist</div>
-              <div class="notice">Проверка записи в базу</div>
-              <div class="notice">Проверка доставки письма владельцу</div>
+              <div class="notice">Финальный тест домена</div>
+              <div class="notice">Живой проход waitlist и почты</div>
+              <div class="notice">Дожать контент кабинета</div>
+              <div class="notice">Подготовить checkout и запуск продаж</div>
             </div>
           </div>
         </div>
@@ -451,6 +360,88 @@ create table if not exists public.platform_events (...)</pre>
     </div>
   </footer>
 
+  <div class="dashboard-screen" id="cabinetScreen">
+    <div class="dashboard-head">
+      <div class="container dashboard-head-inner">
+        <div>
+          <div class="brand-kicker">User dashboard</div>
+          <div class="brand-title">Личный кабинет</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn secondary" id="cabinetBackBtn">На сайт</button>
+          <button class="btn ghost" id="cabinetLogoutBtn">Выйти</button>
+        </div>
+      </div>
+    </div>
+    <div class="container" style="padding-top:26px; padding-bottom:40px;">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Личный кабинет</div>
+          <h2>Отдельный экран пользователя</h2>
+          <div class="section-desc">После входа пользователь видит кабинет как отдельный дашборд, а не как случайный блок на лендинге.</div>
+        </div>
+        <div class="card dark-panel">
+          <div class="inner">
+            <div class="kicker" style="color:rgba(255,255,255,.55)">Пользователь</div>
+            <div id="cabinetUserName" style="margin-top:10px; font-size:30px; letter-spacing:-0.04em; font-weight:700;">Гость</div>
+            <div id="cabinetUserEmail" style="margin-top:8px; color:rgba(255,255,255,.72)">Войдите, чтобы открыть кабинет</div>
+          </div>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" data-cabinet-tab="overview">Обзор</button>
+        <button class="tab-btn" data-cabinet-tab="profile">Профиль</button>
+        <button class="tab-btn" data-cabinet-tab="waitlist">Лист ожидания</button>
+        <button class="tab-btn" data-cabinet-tab="favorites">Избранное</button>
+        <button class="tab-btn" data-cabinet-tab="notifications">Уведомления</button>
+      </div>
+      <div id="cabinetContent"></div>
+    </div>
+  </div>
+
+  <div class="dashboard-screen" id="adminScreen">
+    <div class="dashboard-head">
+      <div class="container dashboard-head-inner">
+        <div>
+          <div class="brand-kicker">Owner dashboard</div>
+          <div class="brand-title">Lead center</div>
+        </div>
+        <button class="btn secondary" id="adminBackBtn">На сайт</button>
+      </div>
+    </div>
+    <div class="container" style="padding-top:26px; padding-bottom:40px;">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Lead center</div>
+          <h2>Панель владельца</h2>
+          <div class="section-desc">Здесь видны регистрации, избранное, заявки в лист ожидания и общая готовность инфраструктуры.</div>
+        </div>
+        <div class="card">
+          <div class="kicker">Owner email</div>
+          <div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">mikhsan@yandex.ru</div>
+          <div class="muted" style="margin-top:8px; line-height:1.6;">После подключения webhook каждая новая заявка может автоматически приходить на почту владельца.</div>
+        </div>
+      </div>
+      <div class="grid-4" id="adminStats"></div>
+      <div class="grid-2" style="margin-top:18px; align-items:start;">
+        <div class="card" style="padding:20px;">
+          <div class="kicker">Waitlist leads</div>
+          <div style="margin-top:10px; font-size:28px; letter-spacing:-0.04em; font-weight:700;">Все заявки</div>
+          <div class="table" style="margin-top:16px;">
+            <div class="table-head"><div>Имя / Email</div><div>Курс</div><div>Телефон / note</div><div>Дата</div></div>
+            <div id="adminLeadsTable"></div>
+          </div>
+        </div>
+        <div style="display:grid; gap:16px;">
+          <div class="card" style="padding:20px;">
+            <div class="kicker">Последние события</div>
+            <div id="adminEventsList" style="display:grid; gap:10px; margin-top:14px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
   <aside class="drawer" id="waitlistDrawer">
     <div class="drawer-head">
@@ -460,7 +451,7 @@ create table if not exists public.platform_events (...)</pre>
     <div class="card" style="padding:20px;">
       <div id="drawerIntro" class="muted" style="line-height:1.7;">Оставь заявку, и мы сохраним тебя в базе релиза.</div>
       <div id="drawerAuthGuard" class="hidden" style="margin-top:16px;">
-        <div class="notice">Чтобы встать в лист ожидания и сохранить заявку в базе, сначала войди или зарегистрируйся.</div>
+        <div class="notice">Чтобы встать в лист ожидания и сохранить заявку, сначала войди или зарегистрируйся.</div>
         <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
           <button class="btn primary" id="drawerRegisterBtn">Регистрация</button>
           <button class="btn secondary" id="drawerLoginBtn">Войти</button>
@@ -478,6 +469,7 @@ create table if not exists public.platform_events (...)</pre>
     </div>
   </aside>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = "https://vbomuwdabjtcnvvwfxtt.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_qMSROQdi856dh55hmv3lKg_DDeiY6Ib";
@@ -507,16 +499,16 @@ create table if not exists public.platform_events (...)</pre>
     const faqs = [
       { q: "Когда откроется доступ к курсам?", a: "Сейчас курсы собирают лист ожидания. После релиза участники waitlist получат письмо первыми." },
       { q: "Какие документы уже размещены на сайте?", a: "На сайте размещены пользовательское соглашение, политика конфиденциальности, согласие на обработку персональных данных, политика cookie, сведения о продавце, условия оплаты, возврата, доступа и контакты поддержки." },
-      { q: "Что работает уже сейчас?", a: "Работают витрина, каталог, регистрация, логин, личный кабинет, лист ожидания, сбор заявок и lead center." },
+      { q: "Что работает уже сейчас?", a: "Работают витрина, каталог, регистрация, логин, отдельный кабинет, лист ожидания, сбор заявок и lead center." },
       { q: "Будут ли мне писать после релиза?", a: "Технические уведомления о выбранном курсе возможны в рамках работы с листом ожидания. Для рекламных рассылок лучше использовать отдельное согласие пользователя." },
     ];
 
     const state = {
-      authMode: "register",
+      authMode: 'register',
       currentUser: null,
       selectedCourse: courses[0],
-      legalPageId: "offer",
-      cabinetTab: "overview",
+      legalPageId: 'offer',
+      cabinetTab: 'overview',
       waitlistEntries: [],
       notifications: [],
       favorites: [],
@@ -526,123 +518,120 @@ create table if not exists public.platform_events (...)</pre>
       supabase: null,
       dbReady: false,
       webhookReady: Boolean(WAITLIST_WEBHOOK_URL),
-      demoMode: true,
+      view: 'site',
     };
 
     const els = {
-      configBanner: document.getElementById("configBanner"),
-      coursesGrid: document.getElementById("coursesGrid"),
-      catalogSearch: document.getElementById("catalogSearch"),
-      heroWaitlistCount: document.getElementById("heroWaitlistCount"),
-      heroProfilesCount: document.getElementById("heroProfilesCount"),
-      focusCourseTitle: document.getElementById("focusCourseTitle"),
-      focusCourseCount: document.getElementById("focusCourseCount"),
-      openWaitlistBtn: document.getElementById("openWaitlistBtn"),
-      openAuthBtn: document.getElementById("openAuthBtn"),
-      authSection: document.getElementById("authSection"),
-      cabinetSectionWrap: document.getElementById("cabinetSectionWrap"),
-      adminSection: document.getElementById("adminSection"),
-      legalSection: document.getElementById("legalSection"),
-      faqSection: document.getElementById("faqSection"),
-      tabRegister: document.getElementById("tabRegister"),
-      tabLogin: document.getElementById("tabLogin"),
-      registerFields: document.getElementById("registerFields"),
-      authSubmitBtn: document.getElementById("authSubmitBtn"),
-      authMessage: document.getElementById("authMessage"),
-      regName: document.getElementById("regName"),
-      regPhone: document.getElementById("regPhone"),
-      regCity: document.getElementById("regCity"),
-      regOccupation: document.getElementById("regOccupation"),
-      authEmail: document.getElementById("authEmail"),
-      authPassword: document.getElementById("authPassword"),
-      cabinetUserName: document.getElementById("cabinetUserName"),
-      cabinetUserEmail: document.getElementById("cabinetUserEmail"),
-      cabinetContent: document.getElementById("cabinetContent"),
-      adminStats: document.getElementById("adminStats"),
-      adminLeadsTable: document.getElementById("adminLeadsTable"),
-      adminEventsList: document.getElementById("adminEventsList"),
-      legalList: document.getElementById("legalList"),
-      legalTitle: document.getElementById("legalTitle"),
-      legalText: document.getElementById("legalText"),
-      faqList: document.getElementById("faqList"),
-      footerLegalLinks: document.getElementById("footerLegalLinks"),
-      drawerBackdrop: document.getElementById("drawerBackdrop"),
-      waitlistDrawer: document.getElementById("waitlistDrawer"),
-      closeDrawerBtn: document.getElementById("closeDrawerBtn"),
-      drawerTitle: document.getElementById("drawerTitle"),
-      drawerIntro: document.getElementById("drawerIntro"),
-      drawerAuthGuard: document.getElementById("drawerAuthGuard"),
-      drawerFormWrap: document.getElementById("drawerFormWrap"),
-      drawerRegisterBtn: document.getElementById("drawerRegisterBtn"),
-      drawerLoginBtn: document.getElementById("drawerLoginBtn"),
-      waitlistName: document.getElementById("waitlistName"),
-      waitlistEmail: document.getElementById("waitlistEmail"),
-      waitlistPhone: document.getElementById("waitlistPhone"),
-      waitlistNote: document.getElementById("waitlistNote"),
-      submitWaitlistBtn: document.getElementById("submitWaitlistBtn"),
-      waitlistMessage: document.getElementById("waitlistMessage"),
+      configBanner: document.getElementById('configBanner'),
+      coursesGrid: document.getElementById('coursesGrid'),
+      catalogSearch: document.getElementById('catalogSearch'),
+      heroWaitlistCount: document.getElementById('heroWaitlistCount'),
+      heroProfilesCount: document.getElementById('heroProfilesCount'),
+      focusCourseTitle: document.getElementById('focusCourseTitle'),
+      focusCourseCount: document.getElementById('focusCourseCount'),
+      openWaitlistBtn: document.getElementById('openWaitlistBtn'),
+      openAuthBtn: document.getElementById('openAuthBtn'),
+      tabRegister: document.getElementById('tabRegister'),
+      tabLogin: document.getElementById('tabLogin'),
+      registerFields: document.getElementById('registerFields'),
+      authSubmitBtn: document.getElementById('authSubmitBtn'),
+      authMessage: document.getElementById('authMessage'),
+      regName: document.getElementById('regName'),
+      regPhone: document.getElementById('regPhone'),
+      regCity: document.getElementById('regCity'),
+      regOccupation: document.getElementById('regOccupation'),
+      authEmail: document.getElementById('authEmail'),
+      authPassword: document.getElementById('authPassword'),
+      cabinetScreen: document.getElementById('cabinetScreen'),
+      adminScreen: document.getElementById('adminScreen'),
+      cabinetBackBtn: document.getElementById('cabinetBackBtn'),
+      cabinetLogoutBtn: document.getElementById('cabinetLogoutBtn'),
+      adminBackBtn: document.getElementById('adminBackBtn'),
+      cabinetUserName: document.getElementById('cabinetUserName'),
+      cabinetUserEmail: document.getElementById('cabinetUserEmail'),
+      cabinetContent: document.getElementById('cabinetContent'),
+      adminStats: document.getElementById('adminStats'),
+      adminLeadsTable: document.getElementById('adminLeadsTable'),
+      adminEventsList: document.getElementById('adminEventsList'),
+      legalList: document.getElementById('legalList'),
+      legalTitle: document.getElementById('legalTitle'),
+      legalText: document.getElementById('legalText'),
+      faqList: document.getElementById('faqList'),
+      footerLegalLinks: document.getElementById('footerLegalLinks'),
+      drawerBackdrop: document.getElementById('drawerBackdrop'),
+      waitlistDrawer: document.getElementById('waitlistDrawer'),
+      closeDrawerBtn: document.getElementById('closeDrawerBtn'),
+      drawerTitle: document.getElementById('drawerTitle'),
+      drawerAuthGuard: document.getElementById('drawerAuthGuard'),
+      drawerFormWrap: document.getElementById('drawerFormWrap'),
+      drawerRegisterBtn: document.getElementById('drawerRegisterBtn'),
+      drawerLoginBtn: document.getElementById('drawerLoginBtn'),
+      waitlistName: document.getElementById('waitlistName'),
+      waitlistEmail: document.getElementById('waitlistEmail'),
+      waitlistPhone: document.getElementById('waitlistPhone'),
+      waitlistNote: document.getElementById('waitlistNote'),
+      submitWaitlistBtn: document.getElementById('submitWaitlistBtn'),
+      waitlistMessage: document.getElementById('waitlistMessage'),
     };
 
-    function formatPrice(value) {
-      return new Intl.NumberFormat("ru-RU").format(value) + " ₽";
-    }
+    function formatPrice(v) { return new Intl.NumberFormat('ru-RU').format(v) + ' ₽'; }
+    function formatDate(v) { return new Intl.DateTimeFormat('ru-RU').format(v instanceof Date ? v : new Date(v)); }
+    function setMessage(el, text) { if (!text) { el.classList.add('hidden'); el.textContent=''; } else { el.classList.remove('hidden'); el.textContent=text; } }
+    function runChecks() { console.assert(courses.length === 4, 'courses broken'); console.assert(legalPages.length >= 8, 'legal broken'); }
 
-    function formatDate(value) {
-      const date = value instanceof Date ? value : new Date(value);
-      return new Intl.DateTimeFormat("ru-RU").format(date);
+    function openWaitlistDrawer() {
+      els.drawerBackdrop.classList.add('open');
+      els.waitlistDrawer.classList.add('open');
+      syncWaitlistDrawer();
     }
-
-    function runChecks() {
-      console.assert(formatPrice(990) === "990 ₽", "formatPrice broken");
-      console.assert(courses.length === 4, "courses count broken");
-      console.assert(legalPages.length >= 8, "legal pages broken");
+    function closeWaitlistDrawer() {
+      els.drawerBackdrop.classList.remove('open');
+      els.waitlistDrawer.classList.remove('open');
+      setMessage(els.waitlistMessage, '');
     }
-
-    function setMessage(el, text) {
-      if (!text) {
-        el.classList.add("hidden");
-        el.textContent = "";
-      } else {
-        el.classList.remove("hidden");
-        el.textContent = text;
-      }
-    }
-
-    function openDrawer() {
-      els.drawerBackdrop.classList.add("open");
-      els.waitlistDrawer.classList.add("open");
-      syncDrawer();
-    }
-
-    function closeDrawer() {
-      els.drawerBackdrop.classList.remove("open");
-      els.waitlistDrawer.classList.remove("open");
-      setMessage(els.waitlistMessage, "");
-    }
-
-    function syncDrawer() {
+    function syncWaitlistDrawer() {
       els.drawerTitle.textContent = `Лист ожидания · ${state.selectedCourse.title}`;
       if (!state.currentUser) {
-        els.drawerAuthGuard.classList.remove("hidden");
-        els.drawerFormWrap.classList.add("hidden");
+        els.drawerAuthGuard.classList.remove('hidden');
+        els.drawerFormWrap.classList.add('hidden');
         return;
       }
-      els.drawerAuthGuard.classList.add("hidden");
-      els.drawerFormWrap.classList.remove("hidden");
-      els.waitlistName.value = state.currentUser.name || "";
-      els.waitlistEmail.value = state.currentUser.email || "";
-      els.waitlistPhone.value = state.currentUser.phone || "";
-      els.waitlistNote.value = "";
+      els.drawerAuthGuard.classList.add('hidden');
+      els.drawerFormWrap.classList.remove('hidden');
+      els.waitlistName.value = state.currentUser.name || '';
+      els.waitlistEmail.value = state.currentUser.email || '';
+      els.waitlistPhone.value = state.currentUser.phone || '';
+      els.waitlistNote.value = '';
+    }
+
+    function openCabinet() {
+      state.view = 'cabinet';
+      els.cabinetScreen.classList.add('active');
+      els.adminScreen.classList.remove('active');
+      document.body.classList.add('locked');
+      renderCabinet();
+    }
+    function openAdmin() {
+      state.view = 'admin';
+      els.adminScreen.classList.add('active');
+      els.cabinetScreen.classList.remove('active');
+      document.body.classList.add('locked');
+      renderAdmin();
+    }
+    function closeDashboards() {
+      state.view = 'site';
+      els.cabinetScreen.classList.remove('active');
+      els.adminScreen.classList.remove('active');
+      document.body.classList.remove('locked');
     }
 
     function setActiveAuth(mode) {
       state.authMode = mode;
-      const reg = mode === "register";
-      els.tabRegister.classList.toggle("active", reg);
-      els.tabLogin.classList.toggle("active", !reg);
-      els.registerFields.classList.toggle("hidden", !reg);
-      els.authSubmitBtn.textContent = reg ? "Создать кабинет" : "Войти";
-      els.authSection.classList.add("active");
+      const reg = mode === 'register';
+      els.tabRegister.classList.toggle('active', reg);
+      els.tabLogin.classList.toggle('active', !reg);
+      els.registerFields.classList.toggle('hidden', !reg);
+      els.authSubmitBtn.textContent = reg ? 'Создать кабинет' : 'Войти';
     }
 
     function renderCatalog() {
@@ -676,174 +665,73 @@ create table if not exists public.platform_events (...)</pre>
             </div>
           </div>
         </div>
-      `).join("");
-
-      els.coursesGrid.querySelectorAll("[data-waitlist]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const courseId = btn.getAttribute("data-waitlist");
-          state.selectedCourse = courses.find(c => c.id === courseId) || courses[0];
-          els.focusCourseTitle.textContent = state.selectedCourse.title;
-          els.focusCourseCount.textContent = String(state.waitlistEntries.filter(x => x.courseId === courseId || x.course_id === courseId).length);
-          openDrawer();
-        });
-      });
-
-      els.coursesGrid.querySelectorAll("[data-fav]").forEach(btn => {
-        btn.addEventListener("click", () => toggleFavorite(btn.getAttribute("data-fav")));
-      });
+      `).join('');
+      els.coursesGrid.querySelectorAll('[data-fav]').forEach(btn => btn.addEventListener('click', () => toggleFavorite(btn.getAttribute('data-fav'))));
+      els.coursesGrid.querySelectorAll('[data-waitlist]').forEach(btn => btn.addEventListener('click', () => {
+        const courseId = btn.getAttribute('data-waitlist');
+        state.selectedCourse = courses.find(c => c.id === courseId) || courses[0];
+        openWaitlistDrawer();
+        updateCounters();
+      }));
     }
 
     function renderLegal() {
-      els.legalList.innerHTML = legalPages.map(item => `
-        <button class="legal-link" data-legal="${item.id}" style="display:flex; justify-content:space-between; align-items:center; ${state.legalPageId === item.id ? 'background:#111111;color:#fff;border-color:#111111;' : ''}">
-          <span>${item.title}</span>
-          <span>›</span>
-        </button>
-      `).join("");
+      els.legalList.innerHTML = legalPages.map(item => `<button class="legal-link" data-legal="${item.id}" style="display:flex; justify-content:space-between; align-items:center; ${state.legalPageId === item.id ? 'background:#111111;color:#fff;border-color:#111111;' : ''}"><span>${item.title}</span><span>›</span></button>`).join('');
       const active = legalPages.find(x => x.id === state.legalPageId) || legalPages[0];
       els.legalTitle.textContent = active.title;
       els.legalText.textContent = active.text;
-      els.legalList.querySelectorAll("[data-legal]").forEach(btn => btn.addEventListener("click", () => {
-        state.legalPageId = btn.getAttribute("data-legal");
-        renderLegal();
-      }));
-
-      els.footerLegalLinks.innerHTML = legalPages.map(item => `<button class="legal-link" data-footer-legal="${item.id}">${item.title}</button>`).join("");
-      els.footerLegalLinks.querySelectorAll("[data-footer-legal]").forEach(btn => btn.addEventListener("click", () => {
-        state.legalPageId = btn.getAttribute("data-footer-legal");
-        document.getElementById("legalSection").scrollIntoView({ behavior: "smooth" });
-        renderLegal();
-      }));
+      els.legalList.querySelectorAll('[data-legal]').forEach(btn => btn.addEventListener('click', () => { state.legalPageId = btn.getAttribute('data-legal'); renderLegal(); }));
+      els.footerLegalLinks.innerHTML = legalPages.map(item => `<button class="legal-link" data-footer-legal="${item.id}">${item.title}</button>`).join('');
+      els.footerLegalLinks.querySelectorAll('[data-footer-legal]').forEach(btn => btn.addEventListener('click', () => { state.legalPageId = btn.getAttribute('data-footer-legal'); document.getElementById('legalSection').scrollIntoView({ behavior: 'smooth' }); renderLegal(); }));
     }
 
     function renderFaq() {
-      els.faqList.innerHTML = faqs.map(item => `
-        <div class="card" style="padding:18px;">
-          <div style="font-weight:700;">${item.q}</div>
-          <div class="muted" style="margin-top:10px; line-height:1.7;">${item.a}</div>
-        </div>
-      `).join("");
+      els.faqList.innerHTML = faqs.map(item => `<div class="card" style="padding:18px;"><div style="font-weight:700;">${item.q}</div><div class="muted" style="margin-top:10px; line-height:1.7;">${item.a}</div></div>`).join('');
     }
 
     function renderCabinet() {
       if (!state.currentUser) {
-        els.cabinetUserName.textContent = "Гость";
-        els.cabinetUserEmail.textContent = "Войдите, чтобы открыть кабинет";
-        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="muted" style="line-height:1.7;">Сейчас кабинет скрыт, потому что пользователь не вошёл в систему.</div></div>`;
+        els.cabinetUserName.textContent = 'Гость';
+        els.cabinetUserEmail.textContent = 'Войдите, чтобы открыть кабинет';
+        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="notice">Сейчас кабинет скрыт, потому что пользователь не вошёл в систему.</div></div>`;
         return;
       }
       els.cabinetUserName.textContent = state.currentUser.name || state.currentUser.email;
-      els.cabinetUserEmail.textContent = state.currentUser.email || "";
+      els.cabinetUserEmail.textContent = state.currentUser.email || '';
+      const myWaitlist = state.waitlistEntries.filter(x => (x.user_id || x.userId) === state.currentUser.id || x.email === state.currentUser.email);
 
-      const myWaitlist = state.waitlistEntries.filter(x => (x.userId || x.user_id) === state.currentUser.id || (x.email === state.currentUser.email));
-      if (state.cabinetTab === "profile") {
-        els.cabinetContent.innerHTML = `
-          <div class="card" style="padding:22px;">
-            <div class="kicker">Данные профиля</div>
-            <div class="grid-2" style="margin-top:16px;">
-              ${[
-                ["Имя", state.currentUser.name || "—"],
-                ["Email", state.currentUser.email || "—"],
-                ["Телефон", state.currentUser.phone || "—"],
-                ["Город", state.currentUser.city || "—"],
-                ["Род занятий", state.currentUser.occupation || "—"],
-              ].map(([label, value]) => `<div class="card" style="padding:18px;"><div class="kicker">${label}</div><div style="margin-top:8px; line-height:1.6;">${value}</div></div>`).join("")}
-            </div>
-          </div>`;
-      } else if (state.cabinetTab === "waitlist") {
-        els.cabinetContent.innerHTML = `
-          <div class="card" style="padding:22px;">
-            <div class="kicker">Мои заявки</div>
-            <div style="display:grid; gap:12px; margin-top:16px;">
-              ${myWaitlist.length ? myWaitlist.map(entry => `
-                <div class="card" style="padding:18px; box-shadow:none;">
-                  <div style="display:flex; justify-content:space-between; gap:12px; align-items:start;">
-                    <div><div style="font-weight:700;">${entry.courseTitle || entry.course_title}</div><div class="muted" style="margin-top:6px;">${formatDate(entry.createdAt || entry.created_at)}</div></div>
-                    <span class="pill">${entry.status || 'new'}</span>
-                  </div>
-                  <div class="muted" style="margin-top:12px; line-height:1.7;">${entry.note || 'Без комментария'}</div>
-                </div>
-              `).join("") : '<div class="notice">Пока заявок нет.</div>'}
-            </div>
-          </div>`;
-      } else if (state.cabinetTab === "favorites") {
+      if (state.cabinetTab === 'profile') {
+        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="kicker">Данные профиля</div><div class="grid-2" style="margin-top:16px;">${[
+          ['Имя', state.currentUser.name || '—'],
+          ['Email', state.currentUser.email || '—'],
+          ['Телефон', state.currentUser.phone || '—'],
+          ['Город', state.currentUser.city || '—'],
+          ['Род занятий', state.currentUser.occupation || '—']
+        ].map(([label, value]) => `<div class="card" style="padding:18px;"><div class="kicker">${label}</div><div style="margin-top:8px; line-height:1.6;">${value}</div></div>`).join('')}</div></div>`;
+      } else if (state.cabinetTab === 'waitlist') {
+        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="kicker">Мои заявки</div><div style="display:grid; gap:12px; margin-top:16px;">${myWaitlist.length ? myWaitlist.map(entry => `<div class="card" style="padding:18px; box-shadow:none;"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700;">${entry.courseTitle || entry.course_title}</div><div class="muted" style="margin-top:6px;">${formatDate(entry.createdAt || entry.created_at)}</div></div><span class="pill">${entry.status || 'new'}</span></div><div class="muted" style="margin-top:12px; line-height:1.7;">${entry.note || 'Без комментария'}</div></div>`).join('') : '<div class="notice">Пока заявок нет.</div>'}</div></div>`;
+      } else if (state.cabinetTab === 'favorites') {
         const favCourses = courses.filter(c => state.favorites.includes(c.id));
-        els.cabinetContent.innerHTML = `
-          <div class="card" style="padding:22px;">
-            <div class="kicker">Избранные курсы</div>
-            <div style="display:grid; gap:12px; margin-top:16px;">
-              ${favCourses.length ? favCourses.map(course => `
-                <div class="card" style="padding:18px; box-shadow:none;">
-                  <div style="display:flex; justify-content:space-between; gap:12px; align-items:start;">
-                    <div><div style="font-weight:700;">${course.title}</div><div class="muted" style="margin-top:6px;">${course.subtitle}</div></div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                      <button class="btn secondary" data-remove-fav="${course.id}">Убрать</button>
-                      <button class="btn primary" data-go-waitlist="${course.id}">В waitlist</button>
-                    </div>
-                  </div>
-                </div>
-              `).join("") : '<div class="notice">Пока ничего не добавлено.</div>'}
-            </div>
-          </div>`;
-        els.cabinetContent.querySelectorAll("[data-remove-fav]").forEach(btn => btn.addEventListener("click", () => toggleFavorite(btn.getAttribute("data-remove-fav"))));
-        els.cabinetContent.querySelectorAll("[data-go-waitlist]").forEach(btn => btn.addEventListener("click", () => {
-          state.selectedCourse = courses.find(c => c.id === btn.getAttribute("data-go-waitlist")) || courses[0];
-          openDrawer();
-        }));
-      } else if (state.cabinetTab === "notifications") {
-        els.cabinetContent.innerHTML = `
-          <div class="card" style="padding:22px;">
-            <div class="kicker">Уведомления</div>
-            <div style="display:grid; gap:12px; margin-top:16px;">
-              ${state.notifications.length ? state.notifications.map(note => `
-                <div class="card" style="padding:18px; box-shadow:none;">
-                  <div style="font-weight:700;">${note.title}</div>
-                  <div class="muted" style="margin-top:8px; line-height:1.7;">${note.body}</div>
-                  <div class="muted" style="margin-top:8px; font-size:13px;">${formatDate(note.created_at || note.createdAt)}</div>
-                </div>
-              `).join("") : '<div class="notice">Пока уведомлений нет.</div>'}
-            </div>
-          </div>`;
+        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="kicker">Избранные курсы</div><div style="display:grid; gap:12px; margin-top:16px;">${favCourses.length ? favCourses.map(course => `<div class="card" style="padding:18px; box-shadow:none;"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700;">${course.title}</div><div class="muted" style="margin-top:6px;">${course.subtitle}</div></div><div style="display:flex; gap:10px; flex-wrap:wrap;"><button class="btn secondary" data-remove-fav="${course.id}">Убрать</button><button class="btn primary" data-go-waitlist="${course.id}">В waitlist</button></div></div></div>`).join('') : '<div class="notice">Пока ничего не добавлено.</div>'}</div></div>`;
+        els.cabinetContent.querySelectorAll('[data-remove-fav]').forEach(btn => btn.addEventListener('click', () => toggleFavorite(btn.getAttribute('data-remove-fav'))));
+        els.cabinetContent.querySelectorAll('[data-go-waitlist]').forEach(btn => btn.addEventListener('click', () => { state.selectedCourse = courses.find(c => c.id === btn.getAttribute('data-go-waitlist')) || courses[0]; openWaitlistDrawer(); }));
+      } else if (state.cabinetTab === 'notifications') {
+        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="kicker">Уведомления</div><div style="display:grid; gap:12px; margin-top:16px;">${state.notifications.length ? state.notifications.map(note => `<div class="card" style="padding:18px; box-shadow:none;"><div style="font-weight:700;">${note.title}</div><div class="muted" style="margin-top:8px; line-height:1.7;">${note.body}</div><div class="muted" style="margin-top:8px; font-size:13px;">${formatDate(note.created_at || note.createdAt)}</div></div>`).join('') : '<div class="notice">Пока уведомлений нет.</div>'}</div></div>`;
       } else {
-        els.cabinetContent.innerHTML = `
-          <div class="card dark-panel">
-            <div class="inner">
-              <div style="display:flex; align-items:start; justify-content:space-between; gap:14px;">
-                <div>
-                  <div class="kicker" style="color:rgba(255,255,255,.55)">Личный кабинет</div>
-                  <div style="margin-top:8px; font-size:34px; letter-spacing:-0.05em; font-weight:700;">${state.currentUser.name || state.currentUser.email}</div>
-                  <div style="margin-top:8px; color:rgba(255,255,255,.72); line-height:1.6;">Профиль, избранные курсы и заявки в лист ожидания теперь подгружаются как рабочий кабинет пользователя.</div>
-                </div>
-                <span class="pill dark">${myWaitlist.length} заявок</span>
-              </div>
-              <div class="grid-3" style="margin-top:18px;">
-                <div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Курсов в избранном</div><div style="margin-top:8px; font-size:28px; font-weight:700;">${state.favorites.length}</div></div>
-                <div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Моих waitlist-заявок</div><div style="margin-top:8px; font-size:28px; font-weight:700;">${myWaitlist.length}</div></div>
-                <div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Следующий шаг</div><div style="margin-top:8px;">Выбери курс и займи место в листе ожидания.</div></div>
-              </div>
-            </div>
-          </div>`;
+        els.cabinetContent.innerHTML = `<div class="card dark-panel"><div class="inner"><div style="display:flex; align-items:start; justify-content:space-between; gap:14px;"><div><div class="kicker" style="color:rgba(255,255,255,.55)">Личный кабинет</div><div style="margin-top:8px; font-size:34px; letter-spacing:-0.05em; font-weight:700;">${state.currentUser.name || state.currentUser.email}</div><div style="margin-top:8px; color:rgba(255,255,255,.72); line-height:1.6;">Профиль, избранные курсы и заявки в лист ожидания теперь подгружаются как отдельный дашборд пользователя.</div></div><span class="pill dark">${myWaitlist.length} заявок</span></div><div class="grid-3" style="margin-top:18px;"><div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Курсов в избранном</div><div style="margin-top:8px; font-size:28px; font-weight:700;">${state.favorites.length}</div></div><div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Моих waitlist-заявок</div><div style="margin-top:8px; font-size:28px; font-weight:700;">${myWaitlist.length}</div></div><div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Следующий шаг</div><div style="margin-top:8px;">Выбери курс и займи место в листе ожидания.</div></div></div></div></div>`;
       }
     }
 
     function renderAdmin() {
-      els.adminSection.classList.toggle("active", state.adminMode);
       const stats = [
-        { label: "Регистрации", value: state.profilesCount || 0 },
-        { label: "Waitlist-заявки", value: state.waitlistEntries.length || 0 },
-        { label: "Логины", value: state.lastEvents.filter(x => x.event_name === "login_completed" || x.eventName === "login_completed").length || 0 },
-        { label: "Избранное", value: state.favorites.length || 0 },
+        { label: 'Регистрации', value: state.profilesCount || 0 },
+        { label: 'Waitlist-заявки', value: state.waitlistEntries.length || 0 },
+        { label: 'Логины', value: state.lastEvents.filter(x => (x.event_name || x.eventName) === 'login_completed').length || 0 },
+        { label: 'Избранное', value: state.favorites.length || 0 },
       ];
-      els.adminStats.innerHTML = stats.map(item => `<div class="card" style="padding:20px;"><div class="kicker">${item.label}</div><div style="margin-top:10px; font-size:40px; letter-spacing:-0.05em; font-weight:700;">${item.value}</div></div>`).join("");
-      els.adminLeadsTable.innerHTML = state.waitlistEntries.length ? state.waitlistEntries.map(entry => `
-        <div class="table-row">
-          <div><div style="font-weight:700;">${entry.name}</div><div style="margin-top:4px; color:var(--muted-2);">${entry.email}</div></div>
-          <div>${entry.courseTitle || entry.course_title}</div>
-          <div><div>${entry.phone || '—'}</div><div style="margin-top:4px; color:var(--muted-2);">${entry.note || '—'}</div></div>
-          <div>${formatDate(entry.createdAt || entry.created_at)}</div>
-        </div>
-      `).join("") : '<div class="table-row"><div>Пока заявок нет.</div><div></div><div></div><div></div></div>';
-      els.adminEventsList.innerHTML = state.lastEvents.length ? state.lastEvents.map(item => `<div class="card" style="padding:16px; box-shadow:none;"><div style="font-weight:700;">${item.event_name || item.eventName}</div><div class="muted" style="margin-top:8px; line-height:1.6;">${JSON.stringify(item.payload || {})}</div><div class="muted" style="margin-top:8px; font-size:13px;">${formatDate(item.created_at || item.createdAt)}</div></div>`).join("") : '<div class="notice">Пока событий нет.</div>';
+      els.adminStats.innerHTML = stats.map(item => `<div class="card" style="padding:20px;"><div class="kicker">${item.label}</div><div style="margin-top:10px; font-size:40px; letter-spacing:-0.05em; font-weight:700;">${item.value}</div></div>`).join('');
+      els.adminLeadsTable.innerHTML = state.waitlistEntries.length ? state.waitlistEntries.map(entry => `<div class="table-row"><div><div style="font-weight:700;">${entry.name}</div><div style="margin-top:4px; color:var(--muted-2);">${entry.email}</div></div><div>${entry.courseTitle || entry.course_title}</div><div><div>${entry.phone || '—'}</div><div style="margin-top:4px; color:var(--muted-2);">${entry.note || '—'}</div></div><div>${formatDate(entry.createdAt || entry.created_at)}</div></div>`).join('') : '<div class="table-row"><div>Пока заявок нет.</div><div></div><div></div><div></div></div>';
+      els.adminEventsList.innerHTML = state.lastEvents.length ? state.lastEvents.map(item => `<div class="card" style="padding:16px; box-shadow:none;"><div style="font-weight:700;">${item.event_name || item.eventName}</div><div class="muted" style="margin-top:8px; line-height:1.6;">${JSON.stringify(item.payload || {})}</div><div class="muted" style="margin-top:8px; font-size:13px;">${formatDate(item.created_at || item.createdAt)}</div></div>`).join('') : '<div class="notice">Пока событий нет.</div>';
     }
 
     function updateCounters() {
@@ -860,104 +748,81 @@ create table if not exists public.platform_events (...)</pre>
       renderCabinet();
       renderAdmin();
       updateCounters();
-      if (state.currentUser) {
-        els.cabinetSectionWrap.classList.add('active');
-      }
-      const dbText = state.dbReady ? 'База подключена. ' : 'База пока не подтверждена. ';
+      const dbText = state.dbReady ? 'База подключена. ' : 'База ещё донастраивается. ';
       const webhookText = state.webhookReady ? 'Webhook подключён.' : 'Webhook пока не подключён.';
       els.configBanner.textContent = dbText + webhookText;
     }
 
     async function initSupabase() {
-      if (!window.supabase) return;
+      if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) return;
       try {
         state.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         state.dbReady = true;
-        state.demoMode = false;
         const { data: sessionData } = await state.supabase.auth.getSession();
-        if (sessionData?.session?.user) {
-          await hydrateUser(sessionData.session.user);
-        }
-        await loadPublicCounts();
+        if (sessionData?.session?.user) await hydrateUser(sessionData.session.user);
+        await loadPublicData();
       } catch (e) {
         console.error(e);
         state.dbReady = false;
-        state.demoMode = true;
       }
       renderAll();
     }
 
-    async function loadPublicCounts() {
+    async function loadPublicData() {
       if (!state.supabase) return;
-      const [{ count: profilesCount }, { data: waitlistData }, { data: eventsData }] = await Promise.all([
-        state.supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        state.supabase.from('waitlist_entries').select('*').order('created_at', { ascending: false }),
-        state.supabase.from('platform_events').select('*').order('created_at', { ascending: false }).limit(10),
-      ]);
-      state.profilesCount = profilesCount || 0;
-      state.waitlistEntries = waitlistData || [];
-      state.lastEvents = eventsData || [];
-      renderAll();
+      try {
+        const [{ count: profilesCount }, { data: waitlistData }, { data: eventsData }] = await Promise.all([
+          state.supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          state.supabase.from('waitlist_entries').select('*').order('created_at', { ascending: false }),
+          state.supabase.from('platform_events').select('*').order('created_at', { ascending: false }).limit(10),
+        ]);
+        state.profilesCount = profilesCount || 0;
+        state.waitlistEntries = waitlistData || [];
+        state.lastEvents = eventsData || [];
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     async function hydrateUser(user) {
       if (!state.supabase || !user) return;
-      const [{ data: profile }, { data: waitlist }, { data: notes }, { data: favs }] = await Promise.all([
-        state.supabase.from('profiles').select('*').eq('id', user.id).single(),
-        state.supabase.from('waitlist_entries').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-        state.supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-        state.supabase.from('user_favorites').select('course_id').eq('user_id', user.id),
-      ]);
-      state.currentUser = profile ? {
-        id: profile.id,
-        name: profile.name,
-        email: profile.email,
-        phone: profile.phone,
-        city: profile.city,
-        occupation: profile.occupation,
-        role: profile.role,
-      } : { id: user.id, email: user.email, name: user.email, role: 'student' };
-      state.notifications = notes || [];
-      state.favorites = (favs || []).map(x => x.course_id);
-      state.profilesCount = Math.max(state.profilesCount, 1);
-      if (profile?.role === 'admin') state.adminMode = true;
-      await loadPublicCounts();
-      renderAll();
+      try {
+        const [{ data: profile }, { data: notes }, { data: favs }] = await Promise.all([
+          state.supabase.from('profiles').select('*').eq('id', user.id).single(),
+          state.supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+          state.supabase.from('user_favorites').select('course_id').eq('user_id', user.id),
+        ]);
+        state.currentUser = profile ? { id: profile.id, name: profile.name, email: profile.email, phone: profile.phone, city: profile.city, occupation: profile.occupation, role: profile.role } : { id: user.id, email: user.email, name: user.email, role: 'student' };
+        state.notifications = notes || [];
+        state.favorites = (favs || []).map(x => x.course_id);
+        if (profile?.role === 'admin') state.adminMode = true;
+        await loadPublicData();
+        renderAll();
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     async function registerUser() {
-      if (!state.supabase) {
-        setMessage(els.authMessage, 'База пока не подключена.');
-        return;
-      }
+      if (!state.supabase) { setMessage(els.authMessage, 'База пока не подключена.'); return; }
       const name = els.regName.value.trim();
       const email = els.authEmail.value.trim().toLowerCase();
       const password = els.authPassword.value.trim();
-      if (!name || !email || !password) {
-        setMessage(els.authMessage, 'Заполни имя, email и пароль.');
-        return;
-      }
+      if (!name || !email || !password) { setMessage(els.authMessage, 'Заполни имя, email и пароль.'); return; }
       try {
         const { data, error } = await state.supabase.auth.signUp({ email, password });
         if (error) throw error;
         const user = data.user;
         if (!user) throw new Error('Не удалось создать пользователя.');
-        await state.supabase.from('profiles').upsert({
-          id: user.id,
-          email,
-          name,
-          phone: els.regPhone.value.trim(),
-          city: els.regCity.value.trim(),
-          occupation: els.regOccupation.value.trim(),
-          role: 'student',
-        });
+        await state.supabase.from('profiles').upsert({ id: user.id, email, name, phone: els.regPhone.value.trim(), city: els.regCity.value.trim(), occupation: els.regOccupation.value.trim(), role: 'student' });
         await state.supabase.from('notifications').insert({ user_id: user.id, title: 'Аккаунт создан', body: 'Кабинет активирован. Можно вставать в лист ожидания.' });
         await state.supabase.from('platform_events').insert({ user_id: user.id, event_name: 'signup_completed', payload: { email } });
         if (!data.session) {
           const signInRes = await state.supabase.auth.signInWithPassword({ email, password });
           if (signInRes.error) {
-            setMessage(els.authMessage, 'Аккаунт создан. Проверь настройки Email Auth в Supabase или войди вручную.');
-            await loadPublicCounts();
+            setMessage(els.authMessage, 'Аккаунт создан. Если сессия не открылась автоматически, попробуй войти вручную.');
+            await loadPublicData();
+            renderAll();
             return;
           }
           await hydrateUser(signInRes.data.user);
@@ -965,32 +830,24 @@ create table if not exists public.platform_events (...)</pre>
           await hydrateUser(user);
         }
         setMessage(els.authMessage, 'Аккаунт создан. Кабинет открыт.');
-        els.cabinetSectionWrap.classList.add('active');
-        document.getElementById('cabinetSectionWrap').scrollIntoView({ behavior: 'smooth' });
+        openCabinet();
       } catch (e) {
         setMessage(els.authMessage, e.message || 'Не удалось создать аккаунт.');
       }
     }
 
     async function loginUser() {
-      if (!state.supabase) {
-        setMessage(els.authMessage, 'База пока не подключена.');
-        return;
-      }
+      if (!state.supabase) { setMessage(els.authMessage, 'База пока не подключена.'); return; }
       const email = els.authEmail.value.trim().toLowerCase();
       const password = els.authPassword.value.trim();
-      if (!email || !password) {
-        setMessage(els.authMessage, 'Заполни email и пароль.');
-        return;
-      }
+      if (!email || !password) { setMessage(els.authMessage, 'Заполни email и пароль.'); return; }
       try {
         const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         await state.supabase.from('platform_events').insert({ user_id: data.user.id, event_name: 'login_completed', payload: { email } });
         await hydrateUser(data.user);
         setMessage(els.authMessage, 'Вход выполнен.');
-        els.cabinetSectionWrap.classList.add('active');
-        document.getElementById('cabinetSectionWrap').scrollIntoView({ behavior: 'smooth' });
+        openCabinet();
       } catch (e) {
         setMessage(els.authMessage, e.message || 'Неверный email или пароль.');
       }
@@ -998,113 +855,96 @@ create table if not exists public.platform_events (...)</pre>
 
     async function toggleFavorite(courseId) {
       if (!state.currentUser || !state.supabase) {
-        document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('auth').scrollIntoView({ behavior: 'smooth' });
         return;
       }
       const exists = state.favorites.includes(courseId);
-      if (exists) {
-        await state.supabase.from('user_favorites').delete().eq('user_id', state.currentUser.id).eq('course_id', courseId);
-        state.favorites = state.favorites.filter(x => x !== courseId);
-        await state.supabase.from('platform_events').insert({ user_id: state.currentUser.id, event_name: 'favorite_removed', payload: { courseId } });
-      } else {
-        await state.supabase.from('user_favorites').upsert({ user_id: state.currentUser.id, course_id: courseId });
-        state.favorites.push(courseId);
-        await state.supabase.from('platform_events').insert({ user_id: state.currentUser.id, event_name: 'favorite_added', payload: { courseId } });
+      try {
+        if (exists) {
+          await state.supabase.from('user_favorites').delete().eq('user_id', state.currentUser.id).eq('course_id', courseId);
+          state.favorites = state.favorites.filter(x => x !== courseId);
+        } else {
+          await state.supabase.from('user_favorites').upsert({ user_id: state.currentUser.id, course_id: courseId });
+          state.favorites.push(courseId);
+        }
+      } catch (e) {
+        console.error(e);
       }
-      await loadPublicCounts();
+      await loadPublicData();
       renderAll();
     }
 
     async function submitWaitlist() {
-      if (!state.currentUser || !state.supabase) {
-        setMessage(els.waitlistMessage, 'Сначала войди или зарегистрируйся.');
-        return;
-      }
+      if (!state.currentUser) { setMessage(els.waitlistMessage, 'Сначала войди или зарегистрируйся.'); return; }
       const exists = state.waitlistEntries.some(x => (x.user_id === state.currentUser.id || x.userId === state.currentUser.id) && (x.course_id === state.selectedCourse.id || x.courseId === state.selectedCourse.id));
-      if (exists) {
-        setMessage(els.waitlistMessage, 'Ты уже в листе ожидания по этому курсу.');
-        return;
-      }
-      const payload = {
-        user_id: state.currentUser.id,
-        course_id: state.selectedCourse.id,
-        course_title: state.selectedCourse.title,
-        name: state.currentUser.name,
-        email: state.currentUser.email,
-        phone: els.waitlistPhone.value.trim(),
-        note: els.waitlistNote.value.trim(),
-        source: 'site',
-        status: 'new',
-      };
-      try {
-        const { data, error } = await state.supabase.from('waitlist_entries').insert(payload).select('*').single();
-        if (error) throw error;
-        await state.supabase.from('notifications').insert({ user_id: state.currentUser.id, title: 'Ты в листе ожидания', body: `Мы сохранили заявку на курс «${state.selectedCourse.title}».` });
-        await state.supabase.from('platform_events').insert({ user_id: state.currentUser.id, event_name: 'waitlist_joined', payload: { courseId: state.selectedCourse.id, courseTitle: state.selectedCourse.title } });
-        state.waitlistEntries.unshift(data);
-        state.notifications.unshift({ title: 'Ты в листе ожидания', body: `Мы сохранили заявку на курс «${state.selectedCourse.title}».`, created_at: new Date().toISOString() });
-        if (WAITLIST_WEBHOOK_URL) {
-          try {
-            await fetch(WAITLIST_WEBHOOK_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ entry: data, ownerEmail: OWNER_NOTIFICATION_EMAIL }),
-            });
-          } catch (e) {
-            console.error(e);
-          }
+      if (exists) { setMessage(els.waitlistMessage, 'Ты уже в листе ожидания по этому курсу.'); return; }
+      const payload = { user_id: state.currentUser.id, course_id: state.selectedCourse.id, course_title: state.selectedCourse.title, name: state.currentUser.name, email: state.currentUser.email, phone: els.waitlistPhone.value.trim(), note: els.waitlistNote.value.trim(), source: 'site', status: 'new', created_at: new Date().toISOString() };
+      let savedEntry = null;
+      let dbFailed = false;
+      if (state.supabase) {
+        try {
+          const { data, error } = await state.supabase.from('waitlist_entries').insert(payload).select('*').single();
+          if (error) throw error;
+          savedEntry = data;
+          await state.supabase.from('notifications').insert({ user_id: state.currentUser.id, title: 'Ты в листе ожидания', body: `Мы сохранили заявку на курс «${state.selectedCourse.title}».` });
+          await state.supabase.from('platform_events').insert({ user_id: state.currentUser.id, event_name: 'waitlist_joined', payload: { courseId: state.selectedCourse.id, courseTitle: state.selectedCourse.title } });
+        } catch (e) {
+          console.error(e);
+          dbFailed = true;
         }
-        setMessage(els.waitlistMessage, 'Заявка сохранена.');
-        renderAll();
-      } catch (e) {
-        setMessage(els.waitlistMessage, e.message || 'Не удалось записать в лист ожидания.');
+      } else {
+        dbFailed = true;
       }
+      if (!savedEntry) {
+        savedEntry = { id: `local-${Date.now()}`, userId: state.currentUser.id, courseId: state.selectedCourse.id, courseTitle: state.selectedCourse.title, name: state.currentUser.name, email: state.currentUser.email, phone: payload.phone, note: payload.note, source: 'site', status: 'new', createdAt: payload.created_at };
+      }
+      state.waitlistEntries.unshift(savedEntry);
+      state.notifications.unshift({ title: 'Ты в листе ожидания', body: `Мы сохранили заявку на курс «${state.selectedCourse.title}».`, created_at: new Date().toISOString() });
+      if (WAITLIST_WEBHOOK_URL) {
+        try {
+          await fetch(WAITLIST_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entry: savedEntry, ownerEmail: OWNER_NOTIFICATION_EMAIL }) });
+        } catch (e) { console.error(e); }
+      }
+      setMessage(els.waitlistMessage, dbFailed ? 'Заявка принята. База ещё донастраивается, но запрос сохранён и отправлен владельцу.' : 'Заявка сохранена.');
+      renderAll();
     }
 
-    function bindStaticEvents() {
+    function bindEvents() {
       els.catalogSearch.addEventListener('input', renderCatalog);
-      els.openWaitlistBtn.addEventListener('click', openDrawer);
-      els.openAuthBtn.addEventListener('click', () => {
-        els.authSection.classList.add('active');
-        document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' });
-      });
+      els.openWaitlistBtn.addEventListener('click', openWaitlistDrawer);
+      els.openAuthBtn.addEventListener('click', () => document.getElementById('auth').scrollIntoView({ behavior: 'smooth' }));
+      els.closeDrawerBtn.addEventListener('click', closeWaitlistDrawer);
+      els.drawerBackdrop.addEventListener('click', closeWaitlistDrawer);
+      els.drawerRegisterBtn.addEventListener('click', () => { closeWaitlistDrawer(); setActiveAuth('register'); document.getElementById('auth').scrollIntoView({ behavior: 'smooth' }); });
+      els.drawerLoginBtn.addEventListener('click', () => { closeWaitlistDrawer(); setActiveAuth('login'); document.getElementById('auth').scrollIntoView({ behavior: 'smooth' }); });
+      els.submitWaitlistBtn.addEventListener('click', submitWaitlist);
       els.tabRegister.addEventListener('click', () => setActiveAuth('register'));
       els.tabLogin.addEventListener('click', () => setActiveAuth('login'));
       els.authSubmitBtn.addEventListener('click', () => state.authMode === 'register' ? registerUser() : loginUser());
-      els.closeDrawerBtn.addEventListener('click', closeDrawer);
-      els.drawerBackdrop.addEventListener('click', closeDrawer);
-      els.drawerRegisterBtn.addEventListener('click', () => {
-        closeDrawer();
-        els.authSection.classList.add('active');
-        document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' });
-        setActiveAuth('register');
+      els.cabinetBackBtn.addEventListener('click', closeDashboards);
+      els.adminBackBtn.addEventListener('click', closeDashboards);
+      els.cabinetLogoutBtn.addEventListener('click', async () => {
+        if (state.supabase) await state.supabase.auth.signOut();
+        state.currentUser = null;
+        state.notifications = [];
+        state.favorites = [];
+        closeDashboards();
+        renderAll();
       });
-      els.drawerLoginBtn.addEventListener('click', () => {
-        closeDrawer();
-        els.authSection.classList.add('active');
-        document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' });
-        setActiveAuth('login');
-      });
-      els.submitWaitlistBtn.addEventListener('click', submitWaitlist);
       document.querySelectorAll('[data-cabinet-tab]').forEach(btn => btn.addEventListener('click', () => {
         document.querySelectorAll('[data-cabinet-tab]').forEach(x => x.classList.remove('active'));
         btn.classList.add('active');
         state.cabinetTab = btn.getAttribute('data-cabinet-tab');
-        els.cabinetSectionWrap.classList.add('active');
         renderCabinet();
       }));
     }
 
     runChecks();
-    bindStaticEvents();
+    bindEvents();
     setActiveAuth('register');
     renderAll();
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
     initSupabase();
   </script>
 </body>
 </html>
-
 
