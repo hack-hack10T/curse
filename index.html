@@ -97,7 +97,8 @@
     .notice {
       padding: 16px 18px; border-radius: 20px; border: 1px solid var(--line); background: rgba(0,0,0,.02); font-size: 13px; line-height: 1.6; color: var(--muted);
     }
-    .auth-wrap, .legal-wrap, .faq-wrap, .cabinet-wrap, .admin-wrap { display: none; }
+    .auth-wrap, .legal-wrap, .cabinet-wrap, .admin-wrap { display: none; }
+    .faq-wrap { display: block; }
     .auth-wrap.active, .legal-wrap.active, .faq-wrap.active, .cabinet-wrap.active, .admin-wrap.active { display: block; }
     .input { width: 100%; padding: 14px 16px; border-radius: 18px; border: 1px solid var(--line); background: white; outline: none; }
     textarea.input { min-height: 112px; resize: vertical; }
@@ -262,7 +263,7 @@
       </div>
     </section>
 
-    <section class="section auth-wrap" id="authSection">
+    <section class="section auth-wrap active" id="authSection">
       <div class="container">
         <div class="section-head">
           <div>
@@ -389,7 +390,7 @@ create table if not exists public.platform_events (...)</pre>
       </div>
     </section>
 
-    <section class="section legal-wrap" id="legalSection">
+    <section class="section legal-wrap active" id="legalSection">
       <div class="container">
         <div class="section-head">
           <div>
@@ -641,6 +642,7 @@ create table if not exists public.platform_events (...)</pre>
       els.tabLogin.classList.toggle("active", !reg);
       els.registerFields.classList.toggle("hidden", !reg);
       els.authSubmitBtn.textContent = reg ? "Создать кабинет" : "Войти";
+      els.authSection.classList.add("active");
     }
 
     function renderCatalog() {
@@ -858,6 +860,9 @@ create table if not exists public.platform_events (...)</pre>
       renderCabinet();
       renderAdmin();
       updateCounters();
+      if (state.currentUser) {
+        els.cabinetSectionWrap.classList.add('active');
+      }
       const dbText = state.dbReady ? 'База подключена. ' : 'База пока не подтверждена. ';
       const webhookText = state.webhookReady ? 'Webhook подключён.' : 'Webhook пока не подключён.';
       els.configBanner.textContent = dbText + webhookText;
@@ -936,6 +941,7 @@ create table if not exists public.platform_events (...)</pre>
         const { data, error } = await state.supabase.auth.signUp({ email, password });
         if (error) throw error;
         const user = data.user;
+        if (!user) throw new Error('Не удалось создать пользователя.');
         await state.supabase.from('profiles').upsert({
           id: user.id,
           email,
@@ -947,9 +953,19 @@ create table if not exists public.platform_events (...)</pre>
         });
         await state.supabase.from('notifications').insert({ user_id: user.id, title: 'Аккаунт создан', body: 'Кабинет активирован. Можно вставать в лист ожидания.' });
         await state.supabase.from('platform_events').insert({ user_id: user.id, event_name: 'signup_completed', payload: { email } });
-        setMessage(els.authMessage, 'Аккаунт создан.');
-        await state.supabase.auth.signInWithPassword({ email, password });
-        await hydrateUser(user);
+        if (!data.session) {
+          const signInRes = await state.supabase.auth.signInWithPassword({ email, password });
+          if (signInRes.error) {
+            setMessage(els.authMessage, 'Аккаунт создан. Проверь настройки Email Auth в Supabase или войди вручную.');
+            await loadPublicCounts();
+            return;
+          }
+          await hydrateUser(signInRes.data.user);
+        } else {
+          await hydrateUser(user);
+        }
+        setMessage(els.authMessage, 'Аккаунт создан. Кабинет открыт.');
+        els.cabinetSectionWrap.classList.add('active');
         document.getElementById('cabinetSectionWrap').scrollIntoView({ behavior: 'smooth' });
       } catch (e) {
         setMessage(els.authMessage, e.message || 'Не удалось создать аккаунт.');
@@ -963,12 +979,17 @@ create table if not exists public.platform_events (...)</pre>
       }
       const email = els.authEmail.value.trim().toLowerCase();
       const password = els.authPassword.value.trim();
+      if (!email || !password) {
+        setMessage(els.authMessage, 'Заполни email и пароль.');
+        return;
+      }
       try {
         const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         await state.supabase.from('platform_events').insert({ user_id: data.user.id, event_name: 'login_completed', payload: { email } });
         await hydrateUser(data.user);
         setMessage(els.authMessage, 'Вход выполнен.');
+        els.cabinetSectionWrap.classList.add('active');
         document.getElementById('cabinetSectionWrap').scrollIntoView({ behavior: 'smooth' });
       } catch (e) {
         setMessage(els.authMessage, e.message || 'Неверный email или пароль.');
@@ -1043,19 +1064,33 @@ create table if not exists public.platform_events (...)</pre>
     function bindStaticEvents() {
       els.catalogSearch.addEventListener('input', renderCatalog);
       els.openWaitlistBtn.addEventListener('click', openDrawer);
-      els.openAuthBtn.addEventListener('click', () => document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' }));
+      els.openAuthBtn.addEventListener('click', () => {
+        els.authSection.classList.add('active');
+        document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' });
+      });
       els.tabRegister.addEventListener('click', () => setActiveAuth('register'));
       els.tabLogin.addEventListener('click', () => setActiveAuth('login'));
       els.authSubmitBtn.addEventListener('click', () => state.authMode === 'register' ? registerUser() : loginUser());
       els.closeDrawerBtn.addEventListener('click', closeDrawer);
       els.drawerBackdrop.addEventListener('click', closeDrawer);
-      els.drawerRegisterBtn.addEventListener('click', () => { closeDrawer(); document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' }); setActiveAuth('register'); });
-      els.drawerLoginBtn.addEventListener('click', () => { closeDrawer(); document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' }); setActiveAuth('login'); });
+      els.drawerRegisterBtn.addEventListener('click', () => {
+        closeDrawer();
+        els.authSection.classList.add('active');
+        document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' });
+        setActiveAuth('register');
+      });
+      els.drawerLoginBtn.addEventListener('click', () => {
+        closeDrawer();
+        els.authSection.classList.add('active');
+        document.getElementById('authSection').scrollIntoView({ behavior: 'smooth' });
+        setActiveAuth('login');
+      });
       els.submitWaitlistBtn.addEventListener('click', submitWaitlist);
       document.querySelectorAll('[data-cabinet-tab]').forEach(btn => btn.addEventListener('click', () => {
         document.querySelectorAll('[data-cabinet-tab]').forEach(x => x.classList.remove('active'));
         btn.classList.add('active');
         state.cabinetTab = btn.getAttribute('data-cabinet-tab');
+        els.cabinetSectionWrap.classList.add('active');
         renderCabinet();
       }));
     }
@@ -1071,4 +1106,5 @@ create table if not exists public.platform_events (...)</pre>
   </script>
 </body>
 </html>
+
 
