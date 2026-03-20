@@ -647,6 +647,7 @@
       notifications: [],
       favorites: [],
       profilesCount: 0,
+      waitlistCount: 0,
       lastEvents: [],
       supabase: null,
       dbReady: false,
@@ -702,6 +703,19 @@
       }
     }
 
+    function isAdmin() {
+      return state.currentUser?.role === 'admin';
+    }
+
+    function explainDbError(error, fallback) {
+      const code = error?.code || '';
+      const details = [error?.message, error?.details, error?.hint].filter(Boolean).join(' · ');
+      if (code === '23505') return 'Такая запись уже существует. Дубликат не сохранён.';
+      if (code === '42501') return 'Нет прав на эту операцию. Нужно обновить политики доступа в Supabase.';
+      if (code === '42P01') return 'В базе не найдена нужная таблица. Нужно применить SQL-схему проекта.';
+      return details ? `${fallback} ${details}` : fallback;
+    }
+
     async function initSupabase() {
       try {
         if (!window.supabase) throw new Error('Библиотека Supabase не загрузилась');
@@ -719,8 +733,11 @@
             state.currentUser = null;
             state.notifications = [];
             state.favorites = [];
+            state.waitlistEntries = [];
             state.orders = [];
+            state.lastEvents = [];
             state.accessItems = [];
+            await loadPublicData();
             renderAll();
           }
         });
@@ -736,16 +753,26 @@
     async function loadPublicData() {
       if (!state.dbReady || !state.supabase) return;
       try {
-        const [{ count: profilesCount }, { data: waitlistData }, { data: eventsData }, { data: ordersData }] = await Promise.all([
-          state.supabase.from('profiles').select('id', { count: 'exact', head: true }),
-          state.supabase.from('waitlist_entries').select('*').order('created_at', { ascending: false }),
-          state.supabase.from('platform_events').select('*').order('created_at', { ascending: false }).limit(10),
-          state.supabase.from('orders').select('*').order('created_at', { ascending: false })
-        ]);
-        state.profilesCount = profilesCount || 0;
-        state.waitlistEntries = waitlistData || [];
-        state.lastEvents = eventsData || [];
-        state.orders = ordersData || [];
+        const { data: statsData, error: statsError } = await state.supabase.rpc('get_public_platform_stats');
+        if (statsError) throw statsError;
+        const stats = Array.isArray(statsData) ? statsData[0] : statsData;
+        state.profilesCount = stats?.profiles_count || 0;
+        state.waitlistCount = stats?.waitlist_count || 0;
+
+        if (isAdmin()) {
+          const [{ data: waitlistData, error: waitlistError }, { data: eventsData, error: eventsError }, { data: ordersData, error: ordersError }] = await Promise.all([
+            state.supabase.from('waitlist_entries').select('*').order('created_at', { ascending: false }),
+            state.supabase.from('platform_events').select('*').order('created_at', { ascending: false }).limit(10),
+            state.supabase.from('orders').select('*').order('created_at', { ascending: false })
+          ]);
+          if (waitlistError) throw waitlistError;
+          if (eventsError) throw eventsError;
+          if (ordersError) throw ordersError;
+          state.waitlistEntries = waitlistData || [];
+          state.lastEvents = eventsData || [];
+          state.orders = ordersData || [];
+        }
+
         syncAccessFromOrders();
       } catch (e) {
         state.dbError = `Ошибка загрузки данных: ${e.message || e}`;
@@ -782,10 +809,8 @@
         };
         state.notifications = notes || [];
         state.favorites = (favs || []).map(x => x.course_id);
-        const otherWait = state.waitlistEntries.filter(x => (x.user_id !== user.id && x.email !== user.email));
-        const otherOrders = state.orders.filter(x => (x.user_id !== user.id && x.email !== user.email));
-        state.waitlistEntries = [...(myWait || []), ...otherWait];
-        state.orders = [...(myOrders || []), ...otherOrders];
+        state.waitlistEntries = myWait || [];
+        state.orders = myOrders || [];
         syncAccessFromOrders();
       } catch (e) {
         state.dbError = `Ошибка профиля: ${e.message || e}`;
@@ -936,7 +961,8 @@
 
     function updateCounters() {
       const waitlistMine = myWaitlist();
-      els.heroWaitlistCount.textContent = String(state.waitlistEntries.length || 0);
+      const totalWaitlistCount = isAdmin() ? state.waitlistEntries.length : (state.waitlistCount || 0);
+      els.heroWaitlistCount.textContent = String(totalWaitlistCount || 0);
       els.heroProfilesCount.textContent = String(state.profilesCount || 0);
       els.focusCourseTitle.textContent = state.selectedCourse.title;
       
@@ -1099,7 +1125,7 @@
         renderAll();
         setTimeout(() => { closeCheckout(); openCabinet(); }, 350);
       } catch (e) {
-        setMessage(els.checkoutMessage, 'Не удалось сохранить заказ. Требуется корректировка доступа к базе данных.', 'error');
+        setMessage(els.checkoutMessage, explainDbError(e, 'Не удалось сохранить заказ.'), 'error');
       }
     }
 
@@ -1154,7 +1180,7 @@
         setMessage(els.waitlistMessage, 'Готово. Заявка сохранена.', 'success');
         renderAll();
       } catch (e) {
-        setMessage(els.waitlistMessage, 'Не удалось сохранить заявку. Требуется корректировка доступа к базе данных.', 'error');
+        setMessage(els.waitlistMessage, explainDbError(e, 'Не удалось сохранить заявку.'), 'error');
       }
     }
 
