@@ -71,6 +71,35 @@
     .dark-panel .inner { padding:30px; }
     .dark-panel .grid { display:grid; gap:12px; margin-top:18px; }
     .dark-panel .item { padding:16px; border-radius:20px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.05); color:rgba(255,255,255,.84); line-height:1.55; }
+
+    .club-launch { padding:28px 0 8px; }
+    .club-shell { position:relative; overflow:hidden; display:grid; grid-template-columns:1.08fr .92fr; gap:22px; padding:30px; border-radius:38px; background:linear-gradient(135deg, #101114 0%, #17181d 44%, #1b1d26 100%); border:1px solid rgba(255,255,255,.08); box-shadow:0 30px 100px rgba(0,0,0,.16); color:#fff; }
+    .club-shell::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at top left, rgba(138,180,255,.16), transparent 28%), radial-gradient(circle at bottom right, rgba(183,152,99,.18), transparent 24%); pointer-events:none; }
+    .club-main, .club-card { position:relative; z-index:1; }
+    .club-main h2 { color:#fff; max-width:760px; }
+    .club-launch .section-desc { color:rgba(255,255,255,.72); max-width:720px; }
+    .club-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:22px; }
+    .club-point { padding:16px 18px; border-radius:22px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.05); color:rgba(255,255,255,.78); line-height:1.55; font-size:14px; }
+    .club-point strong { display:block; margin-bottom:6px; color:#fff; font-size:15px; }
+    .club-meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .club-meta .pill { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.10); color:rgba(255,255,255,.76); }
+    .club-card { padding:24px; border-radius:30px; background:linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,.04) 100%); border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(12px); }
+    .club-kicker { font-size:11px; text-transform:uppercase; letter-spacing:.22em; color:rgba(255,255,255,.54); }
+    .club-title { margin-top:10px; font-size:30px; line-height:1.05; letter-spacing:-.04em; font-weight:700; }
+    .club-copy { margin-top:12px; color:rgba(255,255,255,.72); line-height:1.65; font-size:15px; }
+    .club-price-wrap { margin-top:22px; padding:18px 20px; border-radius:24px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); }
+    .club-price { font-size:48px; line-height:1; font-weight:700; letter-spacing:-.06em; }
+    .club-price span { font-size:18px; color:rgba(255,255,255,.62); letter-spacing:0; font-weight:500; margin-left:8px; }
+    .club-price-note { margin-top:8px; color:rgba(255,255,255,.64); font-size:14px; }
+    .club-list { display:grid; gap:10px; margin-top:18px; }
+    .club-list-item { display:flex; gap:10px; color:rgba(255,255,255,.84); font-size:14px; line-height:1.55; }
+    .club-list-item::before { content:'✦'; color:#d1b585; }
+    .club-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+    .btn.club-cta { background: linear-gradient(135deg, #d7ba86 0%, #b19058 100%); color:#161616; box-shadow: 0 14px 36px rgba(183,152,99,.24); }
+    .btn.club-secondary { background: rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.10); }
+    .club-steps { display:grid; gap:10px; margin-top:16px; }
+    .club-step { padding:12px 14px; border-radius:18px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); color:rgba(255,255,255,.68); font-size:13px; line-height:1.55; }
+    .club-step strong { color:#fff; }
     .section { padding:68px 0; }
     .section-head { display:grid; grid-template-columns:1.14fr .86fr; gap:28px; align-items:start; margin-bottom:28px; }
     .eyebrow { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.76); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.24em; color:var(--muted); }
@@ -113,6 +142,18 @@
     .legal-link { text-align:left; padding:14px; border-radius:18px; border:1px solid var(--line); background:#fff; color:var(--muted); cursor:pointer; }
     .legal-link.active { background:#111; color:#fff; border-color:#111; }
     .footer { border-top:1px solid var(--line); background:rgba(255,255,255,.72); }
+
+    .partners-strip { padding: 0 0 26px; }
+    .partners-wrap { position: relative; overflow: hidden; border:1px solid var(--line); border-radius:26px; background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.72)); }
+    .partners-wrap::before, .partners-wrap::after { content:""; position:absolute; top:0; bottom:0; width:72px; z-index:2; pointer-events:none; }
+    .partners-wrap::before { left:0; background:linear-gradient(90deg, rgba(247,247,248,1), rgba(247,247,248,0)); }
+    .partners-wrap::after { right:0; background:linear-gradient(270deg, rgba(247,247,248,1), rgba(247,247,248,0)); }
+    .partners-track { display:flex; width:max-content; animation: partnersMarquee 24s linear infinite; }
+    .partners-wrap:hover .partners-track { animation-play-state: paused; }
+    .partner-item { flex:0 0 auto; display:flex; align-items:center; gap:14px; padding:18px 22px; font-size:15px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:var(--text); white-space:nowrap; }
+    .partner-item::after { content:"✦"; color:var(--accent); opacity:.8; margin-left:14px; }
+    .partner-item:last-child::after { content:""; margin-left:0; }
+    @keyframes partnersMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
     .footer-grid { display:grid; grid-template-columns:1fr .95fr; gap:28px; padding:44px 0; }
     .drawer-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.30); display:none; z-index:90; }
     .drawer-backdrop.open { display:block; }
@@ -154,7 +195,7 @@
     .table-head { font-size:12px; text-transform:uppercase; letter-spacing:.18em; color:var(--muted-2); background:rgba(0,0,0,.03); }
     .table-row { border-top:1px solid var(--line); font-size:14px; color:var(--muted); }
     @media (max-width: 1120px) {
-      .hero-grid, .section-head, .catalog-controls, .grid-4, .grid-3, .grid-2, .footer-grid, .dashboard-shell, .metric-grid, .owner-stats, .hero-proof, .stats { grid-template-columns:1fr; }
+      .hero-grid, .section-head, .catalog-controls, .grid-4, .grid-3, .grid-2, .footer-grid, .dashboard-shell, .metric-grid, .owner-stats, .hero-proof, .stats, .club-shell, .club-grid { grid-template-columns:1fr; }
       .sidebar-card { position:static; }
     }
     @media (max-width: 980px) {
@@ -176,6 +217,7 @@
       </div>
       <nav class="nav">
         <a href="#home">Платформа</a>
+        <a href="#club">Клуб</a>
         <a href="#catalog">Каталог</a>
         <a href="#auth">Вход</a>
         <a href="#legalSection">Документы</a>
@@ -244,8 +286,55 @@
                 <div class="item">Лист ожидания по каждому курсу</div>
                 <div class="item">Оформление заказа и статусы доступа</div>
                 <div class="item">Юридический контур сайта</div>
+                <div class="item">Закрытый Telegram-клуб как первый продукт</div>
               </div>
               <div id="supabaseStatusCard" class="notice warn hidden" style="margin-top:16px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="club-launch" id="club">
+      <div class="container">
+        <div class="club-shell">
+          <div class="club-main">
+            <div class="eyebrow" style="background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.10); color:rgba(255,255,255,.7);">Закрытый Telegram-клуб</div>
+            <h2 style="margin-top:18px;">Клуб архитекторов реальности</h2>
+            <div class="section-desc">Минимальный по усилиям, но сильный по восприятию формат до релиза курсов: короткие AI-материалы, готовые промпты, практические разборы и ранний доступ к новым идеям проекта.</div>
+            <div class="club-grid">
+              <div class="club-point"><strong>Готовые промпты</strong>Для работы, контента, личных задач и быстрых решений без долгой подготовки.</div>
+              <div class="club-point"><strong>Полезные материалы</strong>Небольшие публикации без воды, которые можно применить сразу.</div>
+              <div class="club-point"><strong>Разборы и подборки</strong>Понятные сценарии использования AI, шаблоны и рабочие связки.</div>
+              <div class="club-point"><strong>Ранний доступ</strong>Идеи, наработки и анонсы до официальных запусков основных продуктов.</div>
+            </div>
+            <div class="club-meta">
+                            <span class="pill">Лёгкий формат без перегруза</span>
+              <span class="pill">Закрытый канал без хаоса</span>
+            </div>
+          </div>
+          <div class="club-card">
+            <div class="club-kicker">Стартовый продукт</div>
+            <div class="club-title">Вход в клуб на 30 дней</div>
+            <div class="club-copy">Получите доступ в закрытый Telegram-клуб с авторскими промптами, полезными материалами и практическими AI-разборами сразу после подтверждения оплаты.</div>
+            <div class="club-price-wrap">
+              <div class="club-price">99 ₽ <span>/ 30 дней</span></div>
+              <div class="club-price-note">Разовая оплата. Без автосписаний.</div>
+            </div>
+            <div class="club-list">
+              <div class="club-list-item">Доступ к закрытому Telegram-каналу с материалами проекта</div>
+              <div class="club-list-item">Архив публикаций на период действия доступа</div>
+              <div class="club-list-item">Простой MVP-продукт, который удобно запускать уже сейчас</div>
+              <div class="club-list-item">Подходит как первый тест платёжной интеграции на сайте</div>
+            </div>
+            <div class="club-actions">
+              <button class="btn club-cta" id="clubCheckoutBtn">Вступить в клуб за 99 ₽</button>
+              <a class="btn club-secondary" href="#faq">Как это работает</a>
+            </div>
+            <div class="club-steps">
+              <div class="club-step"><strong>1.</strong> Оформляете доступ на сайте</div>
+              <div class="club-step"><strong>2.</strong> После оплаты получаете ссылку или переход в Telegram</div>
+              <div class="club-step"><strong>3.</strong> Сразу заходите в закрытый клуб архитекторов реальности</div>
             </div>
           </div>
         </div>
@@ -257,26 +346,26 @@
         <div class="section-head">
           <div>
             <div class="eyebrow">Как это работает</div>
-            <h2>Обучение, покупка и доступ — в одной системе</h2>
-            <div class="section-desc">Платформа уже показывает каталог, собирает интерес к программам, оформляет заказы и ведёт пользователя в личный кабинет.</div>
+            <h2>Простой путь к новым материалам и практическим инструментам</h2>
+            <div class="section-desc">Выбирайте подходящий формат, оформляйте доступ за пару минут и сразу переходите к полезным материалам, промптам и новым возможностям проекта.</div>
           </div>
           <div class="card dark-panel glass">
             <div class="inner">
-              <div class="kicker" style="color:rgba(255,255,255,.55)">Что получает пользователь</div>
+              <div class="kicker" style="color:rgba(255,255,255,.55)">Что вы получаете</div>
               <div class="grid" style="margin-top:14px;">
-                <div class="item">Сильную публичную витрину</div>
-                <div class="item">Понятные условия и документы</div>
-                <div class="item">Личный кабинет пользователя</div>
-                <div class="item">Путь от интереса к доступу</div>
+                <div class="item">Быстрый и понятный старт</div>
+                <div class="item">Закрытые материалы проекта</div>
+                <div class="item">Удобный доступ в Telegram</div>
+                <div class="item">Прозрачные условия участия</div>
               </div>
             </div>
           </div>
         </div>
         <div class="grid-4">
-          <div class="card glass feature"><div class="kicker">Платформа</div><h3>Чистая главная</h3><div style="color:var(--muted);">Главный экран объясняет ценность продукта без технического шума.</div></div>
-          <div class="card glass feature"><div class="kicker">Каталог</div><h3>Курсы на витрине</h3><div style="color:var(--muted);">Каждая карточка ведёт к действию: сохранить, встать в лист ожидания или оформить доступ.</div></div>
-          <div class="card glass feature"><div class="kicker">Кабинет</div><h3>После входа</h3><div style="color:var(--muted);">Кабинет открывается только авторизованным пользователям и хранит всю личную активность.</div></div>
-          <div class="card glass feature"><div class="kicker">Документы</div><h3>Прозрачные правила</h3><div style="color:var(--muted);">Юридический контур доступен из основного блока и футера.</div></div>
+          <div class="card glass feature"><div class="kicker">Шаг 1</div><h3>Выбираете формат</h3><div style="color:var(--muted);">Смотрите доступные продукты и выбираете то, что подходит вам сейчас: клуб, ранний доступ или будущие программы.</div></div>
+          <div class="card glass feature"><div class="kicker">Шаг 2</div><h3>Оформляете доступ</h3><div style="color:var(--muted);">Оплата занимает всего несколько минут, без лишних действий и сложных сценариев.</div></div>
+          <div class="card glass feature"><div class="kicker">Шаг 3</div><h3>Получаете материалы</h3><div style="color:var(--muted);">После подтверждения оплаты вам открывается путь к закрытому контенту, полезным публикациям и новым материалам.</div></div>
+          <div class="card glass feature"><div class="kicker">Шаг 4</div><h3>Остаётесь в курсе</h3><div style="color:var(--muted);">Следите за обновлениями проекта, новыми форматами и ранними предложениями в одном удобном пространстве.</div></div>
         </div>
       </div>
     </section>
@@ -410,6 +499,31 @@
       </div>
     </section>
   </main>
+
+  <section class="section partners-strip" aria-label="Партнёры">
+    <div class="container">
+      <div class="section-head" style="margin-bottom:16px;">
+        <div>
+          <div class="eyebrow">Партнёры</div>
+          <h2 style="font-size:32px;">Компании и проекты, рядом с которыми формируется среда Lectaro</h2>
+        </div>
+      </div>
+      <div class="partners-wrap">
+        <div class="partners-track">
+          <div class="partner-item">A CUP COFFEESHOP</div>
+          <div class="partner-item">HACKER CLUB huck huck 10T</div>
+          <div class="partner-item">FENIX GOUP</div>
+          <div class="partner-item">EMELYA OS</div>
+          <div class="partner-item">ПРОЕКТ ХУНЗАХ</div>
+          <div class="partner-item">A CUP COFFEESHOP</div>
+          <div class="partner-item">HACKER CLUB huck huck 10T</div>
+          <div class="partner-item">FENIX GOUP</div>
+          <div class="partner-item">EMELYA OS</div>
+          <div class="partner-item">ПРОЕКТ ХУНЗАХ</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <footer class="footer">
     <div class="container footer-grid">
@@ -621,13 +735,14 @@
       { id: 'cookies', title: 'Политика использования cookie', text: 'Сайт может использовать cookie и иные аналогичные технологии для сохранения пользовательской сессии, улучшения работы интерфейса, аналитики и безопасности. Пользователь может ограничить cookie в настройках браузера, однако это может повлиять на корректность отдельных функций сайта.' },
       { id: 'marketing', title: 'Согласие на информационные и рекламные сообщения', text: 'Пользователь может дать отдельное согласие на получение информационных и рекламных сообщений о запуске курсов, вебинарах, специальных предложениях и обновлениях проекта. От такого согласия можно отказаться в любой момент, написав на ceo@manyfeed.ru.' },
       { id: 'seller', title: 'Сведения о продавце', text: 'Продавец / оператор сайта: Дмитриев Михаил Александрович. Статус: самозанятый. ИНН: 772453231807. Контактный email: ceo@manyfeed.ru.' },
-      { id: 'payment', title: 'Условия оплаты', text: 'До запуска продаж сайт используется для информирования и сбора заявок. После запуска продаж на сайте будут размещены актуальные условия оплаты, порядок оформления заказа, способы оплаты и правила предоставления электронных чеков.' },
-      { id: 'refund', title: 'Условия возврата', text: 'До запуска продаж сайт не формирует денежных обязательств пользователя в части образовательных продуктов. После запуска продаж на сайте будут размещены условия возврата и порядок рассмотрения обращений.' },
-      { id: 'access', title: 'Порядок предоставления доступа', text: 'В режиме раннего доступа пользователю предоставляется доступ к информационным разделам сайта и личному кабинету. Доступ к учебным материалам будет открыт после официального запуска конкретного продукта и, при необходимости, после выполнения условий оплаты.' },
+      { id: 'payment', title: 'Условия оплаты', text: 'На сайте доступен цифровой продукт «Клуб архитекторов реальности» — доступ на 30 календарных дней в закрытый Telegram-канал с авторскими материалами. Оплата оформляется на сайте через подключённую платёжную систему. После получения оплаты покупателю направляется электронный чек в соответствии с режимом НПД.' },
+      { id: 'refund', title: 'Условия возврата', text: 'По продукту «Клуб архитекторов реальности» обращения по возврату рассматриваются индивидуально по адресу ceo@manyfeed.ru. Если оплаченный доступ фактически не был предоставлен, пользователь вправе обратиться за урегулированием и возвратом.' },
+      { id: 'access', title: 'Порядок предоставления доступа', text: 'После подтверждения оплаты продукта «Клуб архитекторов реальности» пользователю предоставляется доступ в закрытый Telegram-канал на оплаченный период. Доступ к основным курсам платформы по-прежнему открывается после официального запуска соответствующих программ.' },
       { id: 'support', title: 'Контакты поддержки', text: 'По вопросам регистрации, кабинета, удаления персональных данных, листа ожидания и правовых документов можно обращаться по адресу ceo@manyfeed.ru.' }
     ];
 
     const faqs = [
+      { q: 'Что такое клуб архитекторов реальности?', a: 'Это закрытый Telegram-клуб с промптами, короткими полезными материалами, практическими AI-разборами и ранним доступом к идеям проекта.' },
       { q: 'Когда откроется доступ к курсам?', a: 'Сейчас курсы собирают лист ожидания. После релиза участники waitlist получат письмо первыми.' },
       { q: 'Какие документы уже размещены на сайте?', a: 'На сайте размещены пользовательское соглашение, политика конфиденциальности, согласие на обработку персональных данных, политика cookie, сведения о продавце, условия оплаты, возврата, доступа и контакты поддержки.' },
       { q: 'Что работает уже сейчас?', a: 'Работают витрина, каталог, регистрация, вход, отдельный кабинет, лист ожидания и предварительное оформление доступа.' },
@@ -1009,6 +1124,36 @@
       }
     }
 
+    function getOfferKindLabel(product) {
+      return product?.kind === 'club' ? 'Формат' : 'Курс';
+    }
+
+    function getOrderCreatedText(product) {
+      if (product?.kind === 'club') return `Мы сохранили заказ на доступ «${product.title}».`;
+      return `Мы сохранили заказ на курс «${product.title}».`;
+    }
+
+    function openOfferCheckout(product, tariff) {
+      state.selectedCourse = product;
+      state.selectedTariff = tariff;
+      els.checkoutTitle.textContent = `${product.title} · ${tariff.name}`;
+      els.checkoutSummary.innerHTML = `<div class="checkout-row"><div><div class="kicker">${getOfferKindLabel(product)}</div><div style="margin-top:6px; font-weight:700; font-size:18px;">${product.title}</div></div><div class="pill dark">${tariff.name}</div></div><div class="checkout-row"><div><div class="kicker">Что входит</div><div style="margin-top:6px; color:var(--muted); line-height:1.6; max-width:320px;">${tariff.note}</div></div><div class="checkout-price">${formatPrice(tariff.price)}</div></div><div class="checkout-row"><div><div class="kicker">Статус</div><div style="margin-top:6px; color:var(--muted);">После оформления заказ появится в кабинете.</div></div><span class="pill gold">pending_payment</span></div>`;
+      els.checkoutEmail.value = state.currentUser?.email || '';
+      els.checkoutComment.value = '';
+      setMessage(els.checkoutMessage, '');
+      els.drawerBackdrop.classList.add('open');
+      els.checkoutDrawer.classList.add('open');
+      document.body.classList.add('locked');
+      if (!state.currentUser) {
+        document.getElementById('auth').scrollIntoView({ behavior: 'smooth' });
+        setMessage(els.authMessage, 'Сначала войдите или зарегистрируйтесь, чтобы оформить доступ.', 'error');
+      }
+    }
+
+    function openClubCheckout() {
+      openOfferCheckout(clubProduct, clubTariff);
+    }
+
     function closeWaitlistDrawer() {
       els.waitlistDrawer.classList.remove('open');
       if (!els.checkoutDrawer.classList.contains('open')) {
@@ -1021,16 +1166,7 @@
     function openCheckout(courseId) {
       const course = courses.find(x => x.id === courseId) || courses[0];
       const tariff = getTariffsForCourse(course.id)[0];
-      state.selectedCourse = course;
-      state.selectedTariff = tariff;
-      els.checkoutTitle.textContent = `${course.title} · ${tariff.name}`;
-      els.checkoutSummary.innerHTML = `<div class="checkout-row"><div><div class="kicker">Курс</div><div style="margin-top:6px; font-weight:700; font-size:18px;">${course.title}</div></div><div class="pill dark">${tariff.name}</div></div><div class="checkout-row"><div><div class="kicker">Что входит</div><div style="margin-top:6px; color:var(--muted); line-height:1.6; max-width:320px;">${tariff.note}</div></div><div class="checkout-price">${formatPrice(tariff.price)}</div></div><div class="checkout-row"><div><div class="kicker">Статус</div><div style="margin-top:6px; color:var(--muted);">После оформления заказ появится в кабинете.</div></div><span class="pill gold">pending_payment</span></div>`;
-      els.checkoutEmail.value = state.currentUser?.email || '';
-      els.checkoutComment.value = '';
-      setMessage(els.checkoutMessage, '');
-      els.drawerBackdrop.classList.add('open');
-      els.checkoutDrawer.classList.add('open');
-      document.body.classList.add('locked');
+      openOfferCheckout(course, tariff);
     }
 
     function closeCheckout() {
@@ -1094,7 +1230,8 @@
     }
 
     async function submitCheckout() {
-      if (!state.currentUser || !state.selectedCourse || !state.selectedTariff) return;
+      if (!state.currentUser) { setMessage(els.checkoutMessage, 'Сначала войдите или зарегистрируйтесь, чтобы оформить доступ.', 'error'); return; }
+      if (!state.selectedCourse || !state.selectedTariff) return;
       if (!state.dbReady || !state.supabase) {
         setMessage(els.checkoutMessage, 'Нет соединения с базой. Заказ не может быть сохранён.', 'error');
         return;
@@ -1115,10 +1252,10 @@
         if (error) throw error;
         state.orders = [data, ...state.orders];
         try {
-          await state.supabase.from('notifications').insert({ user_id: state.currentUser.id, title: 'Заказ создан', body: `Мы сохранили заказ на курс «${state.selectedCourse.title}».` });
+          await state.supabase.from('notifications').insert({ user_id: state.currentUser.id, title: 'Заказ создан', body: getOrderCreatedText(state.selectedCourse) });
           await state.supabase.from('platform_events').insert({ user_id: state.currentUser.id, event_name: 'order_created', payload: { courseId: state.selectedCourse.id, tariffId: state.selectedTariff.id, amount: state.selectedTariff.price } });
         } catch (_) {}
-        state.notifications = [{ title: 'Заказ создан', body: `Мы сохранили заказ на курс «${state.selectedCourse.title}».`, created_at: new Date().toISOString() }, ...state.notifications];
+        state.notifications = [{ title: 'Заказ создан', body: getOrderCreatedText(state.selectedCourse), created_at: new Date().toISOString() }, ...state.notifications];
         state.lastEvents = [{ event_name: 'order_created', payload: { courseId: state.selectedCourse.id, tariffId: state.selectedTariff.id, amount: state.selectedTariff.price }, created_at: new Date().toISOString() }, ...state.lastEvents].slice(0, 10);
         syncAccessFromOrders();
         setMessage(els.checkoutMessage, 'Заказ создан. Он уже отражён в кабинете.', 'success');
@@ -1283,6 +1420,7 @@
       els.drawerLoginBtn.addEventListener('click', () => { closeWaitlistDrawer(); setActiveAuth('login'); document.getElementById('auth').scrollIntoView({ behavior: 'smooth' }); });
       els.submitWaitlistBtn.addEventListener('click', submitWaitlist);
       els.submitCheckoutBtn.addEventListener('click', submitCheckout);
+      els.clubCheckoutBtn?.addEventListener('click', openClubCheckout);
       els.tabRegister.addEventListener('click', () => setActiveAuth('register'));
       els.tabLogin.addEventListener('click', () => setActiveAuth('login'));
       els.authSubmitBtn.addEventListener('click', handleAuthSubmit);
