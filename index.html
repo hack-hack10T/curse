@@ -4,114 +4,169 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lectaro — Архитекторы реальности</title>
-  <meta name="description" content="Платформа Lectaro. Курсы по нейросетям для жизни и работы. Сейчас открыт лист ожидания и ранняя регистрация." />
+  <meta name="description" content="Lectaro — pre-launch платформа курсов по нейросетям. Каталог, регистрация, юридический контур, кабинет, waitlist, checkout и управление доступами." />
   <style>
     :root {
-      --bg: #f3f1ec;
-      --card: rgba(255,255,255,0.84);
-      --line: rgba(17,17,17,0.10);
-      --text: #111111;
-      --muted: rgba(17,17,17,0.64);
-      --muted-2: rgba(17,17,17,0.46);
-      --black: #111111;
+      --bg: #f6f1e8;
+      --bg-2: #ece3d5;
+      --card: rgba(255,255,255,.9);
+      --line: rgba(17,17,17,.10);
+      --line-strong: rgba(17,17,17,.16);
+      --text: #111;
+      --muted: rgba(17,17,17,.66);
+      --muted-2: rgba(17,17,17,.45);
+      --black: #111;
+      --gold: #b79863;
       --success: #0a7f39;
-      --warn: #8a5a00;
-      --shadow: 0 20px 80px rgba(0,0,0,0.06);
+      --shadow: 0 24px 80px rgba(0,0,0,.06);
+      --shadow-strong: 0 28px 100px rgba(0,0,0,.10);
       --radius: 28px;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: var(--bg); }
+    html, body { margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%); }
     body.locked { overflow: hidden; }
     a { color: inherit; text-decoration: none; }
     button, input, textarea { font: inherit; }
-    .container { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+    .container { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 22px; }
     .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(10px); }
-    .pill { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.8); font-size:12px; font-weight:600; color:var(--muted); }
-    .pill.dark { background: var(--black); color:#fff; border-color:transparent; }
+    .glass { background: linear-gradient(135deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.84) 100%); border:1px solid rgba(17,17,17,.08); box-shadow: 0 20px 70px rgba(0,0,0,.06); }
+    .card-strong { background: rgba(255,255,255,.96); border: 1px solid var(--line-strong); border-radius: 34px; box-shadow: var(--shadow-strong); }
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; border:none; cursor:pointer; border-radius:18px; padding:14px 18px; font-size:14px; font-weight:600; transition:.2s ease; }
     .btn:hover { transform: translateY(-1px); }
     .btn.primary { background: var(--black); color:#fff; }
-    .btn.secondary { background: rgba(255,255,255,.92); color:var(--text); border:1px solid var(--line); }
-    .btn.ghost { background: transparent; color: var(--muted); border:1px solid var(--line); }
-    .topbar { position: sticky; top:0; z-index:50; border-bottom:1px solid var(--line); backdrop-filter: blur(12px); background: rgba(243,241,236,.92); }
+    .btn.secondary { background:linear-gradient(180deg, #ffffff 0%, #f7f3eb 100%); color:var(--text); border:1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,.04); }
+    .btn.gold { background: linear-gradient(135deg, #c7ab7a 0%, #a78750 100%); color:#fff; }
+    .btn.ghost { background: transparent; border:1px solid var(--line); color: var(--muted); }
+    .pill { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.86); font-size:12px; font-weight:600; color:var(--muted); }
+    .pill.dark { background: var(--black); border-color:transparent; color:#fff; }
+    .pill.gold { background: rgba(183,152,99,.12); border-color: rgba(183,152,99,.28); color:#73562c; }
+    .pill.success { background: rgba(10,127,57,.10); border-color: rgba(10,127,57,.22); color: var(--success); }
+    .topbar { position: sticky; top: 0; z-index: 40; border-bottom:1px solid rgba(17,17,17,.06); background: rgba(249,245,238,.80); backdrop-filter: blur(18px); box-shadow: 0 10px 30px rgba(0,0,0,.03); }
     .topbar-inner { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 0; }
-    .brand-kicker { font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted-2); }
+    .brand-kicker { font-size:11px; text-transform:uppercase; letter-spacing:.28em; color:var(--muted-2); }
     .brand-title { margin-top:4px; font-size:18px; font-weight:700; letter-spacing:-.04em; }
-    .nav { display:flex; flex-wrap:wrap; gap:8px; }
+    .nav { display:flex; gap:8px; flex-wrap:wrap; }
     .nav a { padding:10px 14px; border-radius:16px; color:var(--muted); font-size:14px; font-weight:600; }
-    .nav a:hover { background: rgba(255,255,255,.8); }
-    .hero { position:relative; overflow:hidden; border-bottom:1px solid var(--line); background: radial-gradient(circle at top left, rgba(255,255,255,.92), transparent 42%), radial-gradient(circle at bottom right, rgba(0,0,0,.06), transparent 34%); }
-    .hero-grid { display:grid; grid-template-columns:1.12fr .88fr; gap:36px; min-height: calc(100vh - 84px); align-items:center; padding:56px 0 72px; }
-    h1 { margin:0; font-size:clamp(52px, 8vw, 112px); line-height:.9; letter-spacing:-.08em; }
-    .hero-text { margin-top:24px; max-width:720px; font-size:20px; line-height:1.7; color:var(--muted); }
+    .nav a:hover { background: rgba(255,255,255,.78); }
+    .profile-chip { display:flex; align-items:center; gap:12px; padding:8px 12px; border-radius:999px; border:1px solid rgba(17,17,17,.08); background:linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(247,243,235,.92) 100%); box-shadow: 0 8px 24px rgba(0,0,0,.04); }
+    .avatar { width:36px; height:36px; border-radius:50%; background: linear-gradient(135deg, #151515 0%, #444 100%); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; }
+    .profile-meta { display:flex; flex-direction:column; gap:2px; }
+    .profile-name { font-size:13px; font-weight:700; max-width:160px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .profile-role { font-size:11px; color:var(--muted-2); text-transform:uppercase; letter-spacing:.18em; }
+    .hidden { display:none !important; }
+    .status-banner { margin:14px auto 0; max-width:1240px; padding:0 22px; }
+    .notice { padding:16px 18px; border-radius:20px; border:1px solid var(--line); background:rgba(0,0,0,.02); color:var(--muted); font-size:13px; line-height:1.6; }
+    .notice.soft { background:linear-gradient(135deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.72) 100%); }
+    .notice.warm { background:rgba(183,152,99,.10); border-color:rgba(183,152,99,.24); color:#6f572b; }
+    .hero { border-bottom:1px solid var(--line); overflow:hidden; background: radial-gradient(circle at top left, rgba(255,255,255,.97), transparent 42%), radial-gradient(circle at bottom right, rgba(0,0,0,.05), transparent 34%); }
+    .hero-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:38px; min-height: calc(100vh - 84px); align-items:center; padding:56px 0 72px; }
+    h1 { margin:0; font-size:clamp(56px, 8vw, 116px); line-height:.9; letter-spacing:-.08em; }
+    .hero-text { margin-top:24px; max-width:760px; font-size:20px; line-height:1.7; color:var(--muted); }
+    .hero-proof { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:18px; }
+    .hero-proof-item { padding:14px 16px; border-radius:20px; border:1px solid var(--line); background:rgba(255,255,255,.72); color:var(--muted); font-size:13px; line-height:1.55; }
+    .release-checklist { display:grid; gap:10px; }
+    .release-check { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-radius:18px; border:1px solid var(--line); background:rgba(255,255,255,.82); }
+    .release-check strong { font-size:14px; }
+    .release-check span { color:var(--muted); font-size:13px; }
     .hero-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
-    .stats { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-top:34px; max-width:760px; }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:34px; max-width:780px; }
     .stat { padding:18px; border-radius:22px; }
     .stat strong { display:block; font-size:34px; letter-spacing:-.05em; }
     .stat span { display:block; margin-top:6px; color:var(--muted); font-size:14px; }
     .dark-panel { background:#101113; color:#fff; overflow:hidden; }
-    .dark-panel .inner { padding:28px; }
+    .dark-panel .inner { padding:30px; }
     .dark-panel .grid { display:grid; gap:12px; margin-top:18px; }
-    .dark-panel .item { border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.05); border-radius:20px; padding:16px; color:rgba(255,255,255,.84); line-height:1.55; }
-    .section { padding:64px 0; }
+    .dark-panel .item { padding:16px; border-radius:20px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.05); color:rgba(255,255,255,.84); line-height:1.55; }
+    .section { padding:68px 0; }
     .section-head { display:grid; grid-template-columns:1.14fr .86fr; gap:28px; align-items:start; margin-bottom:28px; }
-    .eyebrow { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.75); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.24em; color:var(--muted); }
-    h2 { margin:0; font-size:clamp(34px, 4vw, 58px); line-height:1.02; letter-spacing:-.05em; }
-    .section-desc { margin-top:16px; max-width:760px; font-size:18px; line-height:1.7; color:var(--muted); }
-    .grid-4 { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; }
-    .grid-3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
-    .grid-2 { display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; }
-    .feature { padding:20px; }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.76); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.24em; color:var(--muted); }
+    h2 { margin:0; font-size:clamp(34px, 4vw, 60px); line-height:1.02; letter-spacing:-.05em; }
+    .section-desc { margin-top:16px; max-width:780px; font-size:18px; line-height:1.7; color:var(--muted); }
+    .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+    .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .feature { padding:22px; }
     .feature h3 { margin:14px 0 10px; font-size:22px; letter-spacing:-.04em; }
-    .muted { color:var(--muted); }
     .kicker { font-size:12px; text-transform:uppercase; letter-spacing:.22em; color:var(--muted-2); }
     .catalog-controls { display:grid; grid-template-columns:1fr .8fr; gap:16px; margin-bottom:20px; }
     .search { display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid var(--line); border-radius:18px; background:#fff; }
     .search input { width:100%; border:0; outline:0; background:transparent; }
-    .course-card { padding:22px; display:flex; flex-direction:column; min-height:360px; }
-    .course-card h3 { margin:16px 0 0; font-size:28px; letter-spacing:-.04em; }
+    .course-card { padding:24px; display:flex; flex-direction:column; min-height:390px; position:relative; overflow:hidden; }
+    .course-card::after { content:''; position:absolute; right:-32px; top:-32px; width:120px; height:120px; border-radius:50%; background:rgba(183,152,99,.08); pointer-events:none; }
+    .course-card h3 { margin:16px 0 0; font-size:29px; letter-spacing:-.04em; }
+    .course-subgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+    .course-mini { padding:12px 14px; border-radius:18px; border:1px solid var(--line); background:rgba(255,255,255,.76); }
+    .course-mini .label { font-size:11px; color:var(--muted-2); text-transform:uppercase; letter-spacing:.16em; }
+    .course-mini .value { margin-top:6px; font-size:14px; font-weight:700; color:var(--text); }
     .tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
     .course-bottom { margin-top:auto; display:flex; align-items:end; justify-content:space-between; gap:12px; }
-    .price { font-size:38px; letter-spacing:-.05em; font-weight:700; }
-    .price small { display:block; font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--muted-2); font-weight:600; }
-    .course-actions { display:flex; gap:10px; flex-wrap:wrap; }
-    .notice { padding:16px 18px; border-radius:20px; border:1px solid var(--line); background:rgba(0,0,0,.02); font-size:13px; line-height:1.6; color:var(--muted); }
-    .input { width:100%; padding:14px 16px; border-radius:18px; border:1px solid var(--line); background:#fff; outline:none; }
-    textarea.input { min-height:112px; resize:vertical; }
-    .field label { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); font-weight:600; }
-    .form-grid { display:grid; gap:14px; }
+    .price { font-size:40px; letter-spacing:-.05em; font-weight:700; }
+    .course-actions { display:flex; flex-wrap:wrap; gap:10px; }
     .tabs { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
     .tab-btn { padding:10px 14px; border-radius:16px; border:0; cursor:pointer; background:rgba(255,255,255,.85); color:var(--muted); font-weight:600; }
     .tab-btn.active { background:var(--black); color:#fff; }
+    .field label { display:block; margin-bottom:8px; font-size:14px; color:var(--muted); font-weight:600; }
+    .input { width:100%; padding:14px 16px; border-radius:18px; border:1px solid var(--line); background:#fff; outline:none; }
+    textarea.input { min-height:110px; resize:vertical; }
+    .form-grid { display:grid; gap:14px; }
     .message { padding:14px 16px; border-radius:18px; border:1px solid var(--line); background:rgba(0,0,0,.02); color:var(--muted); font-size:14px; line-height:1.55; }
-    .table { overflow:hidden; border-radius:22px; border:1px solid var(--line); }
+    .message.success { border-color: rgba(10,127,57,.24); background: rgba(10,127,57,.08); color:#0a6a33; }
+    .legal-links { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    .legal-link { text-align:left; padding:14px; border-radius:18px; border:1px solid var(--line); background:#fff; color:var(--muted); cursor:pointer; }
+    .legal-link.active { background:#111; color:#fff; border-color:#111; }
+    .muted { color: var(--muted); }
+    .footer { border-top:1px solid var(--line); background:rgba(255,255,255,.72); }
+    .footer-grid { display:grid; grid-template-columns:1fr .95fr; gap:28px; padding:44px 0; }
+    .drawer-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.30); display:none; z-index:90; }
+    .drawer-backdrop.open { display:block; }
+    .drawer { position:fixed; top:0; right:-560px; width:min(560px,100%); height:100%; background:#f7f4ee; border-left:1px solid var(--line); box-shadow:-20px 0 60px rgba(0,0,0,.14); z-index:91; transition:right .25s ease; padding:18px; overflow-y:auto; }
+    .drawer.open { right:0; }
+    .checkout-drawer { position:fixed; top:0; left:-620px; width:min(620px,100%); height:100%; background:linear-gradient(180deg, #faf6ef 0%, #efe7db 100%); border-right:1px solid rgba(17,17,17,.08); box-shadow:20px 0 60px rgba(0,0,0,.12); z-index:92; transition:left .25s ease; padding:18px; overflow-y:auto; }
+    .checkout-drawer.open { left:0; }
+    .checkout-price { font-size:48px; letter-spacing:-.06em; font-weight:700; }
+    .checkout-row { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:12px 0; border-top:1px solid var(--line); }
+    .checkout-row:first-child { border-top:0; padding-top:0; }
+    .checkout-note { padding:14px 16px; border-radius:18px; border:1px solid rgba(183,152,99,.24); background:rgba(183,152,99,.10); color:#6f572b; line-height:1.6; font-size:14px; }
+    .drawer-head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px; }
+    .icon-btn { width:40px; height:40px; border-radius:14px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+    .dashboard-screen { position:fixed; inset:0; z-index:80; background:linear-gradient(180deg, #f3eee6 0%, #eee7dc 100%); overflow:auto; display:none; }
+    .dashboard-screen.active { display:block; }
+    .dashboard-head { position:sticky; top:0; z-index:4; backdrop-filter: blur(14px); background:rgba(243,238,230,.92); border-bottom:1px solid var(--line); }
+    .dashboard-head-inner { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:18px 0; }
+    .dashboard-shell { display:grid; grid-template-columns:320px 1fr; gap:20px; align-items:start; }
+    .sidebar-card { padding:22px; position:sticky; top:96px; }
+    .sidebar-stat { padding:14px 0; border-top:1px solid var(--line); }
+    .sidebar-stat:first-of-type { border-top:0; padding-top:0; }
+    .sidebar-stat .hint { margin-top:6px; color:var(--muted-2); font-size:12px; line-height:1.55; }
+    .dashboard-main { display:grid; gap:18px; }
+    .lux-panel { padding:26px; border-radius:34px; background:linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.84) 100%); border:1px solid rgba(17,17,17,.08); box-shadow:var(--shadow-strong); backdrop-filter: blur(12px); }
+    .metric-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .metric-card { padding:18px; border-radius:24px; background:linear-gradient(180deg, rgba(255,255,255,.94) 0%, rgba(255,255,255,.78) 100%); border:1px solid var(--line); box-shadow: 0 10px 26px rgba(0,0,0,.04); }
+    .metric-card strong { display:block; font-size:34px; letter-spacing:-.05em; }
+    .metric-card span { display:block; margin-top:6px; color:var(--muted); font-size:13px; }
+    .owner-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; }
+    .owner-stat { padding:22px; border-radius:28px; background:linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.86) 100%); border:1px solid rgba(17,17,17,.08); box-shadow:var(--shadow); }
+    .status-flow { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .status-step { padding:10px 12px; border-radius:16px; border:1px solid var(--line); background:#fff; color:var(--muted); font-size:12px; font-weight:700; letter-spacing:.04em; }
+    .status-step.active { background:rgba(183,152,99,.12); border-color:rgba(183,152,99,.28); color:#6f572b; }
+    .status-step.done { background:rgba(10,127,57,.10); border-color:rgba(10,127,57,.24); color:var(--success); }
+    .owner-stat strong { display:block; font-size:42px; letter-spacing:-.06em; }
+    .owner-stat span { display:block; margin-top:6px; color:var(--muted); }
+    .table { overflow:hidden; border-radius:24px; border:1px solid var(--line); }
     .table-head, .table-row { display:grid; grid-template-columns:1fr 1fr 1fr .8fr; gap:14px; padding:14px 16px; }
     .table-head { font-size:12px; text-transform:uppercase; letter-spacing:.18em; color:var(--muted-2); background:rgba(0,0,0,.03); }
     .table-row { border-top:1px solid var(--line); font-size:14px; color:var(--muted); }
-    .footer { border-top:1px solid var(--line); background:rgba(255,255,255,.72); }
-    .footer-grid { display:grid; grid-template-columns:1fr .95fr; gap:28px; padding:44px 0; }
-    .legal-links { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-    .legal-link { text-align:left; padding:14px; border-radius:18px; border:1px solid var(--line); background:#fff; color:var(--muted); }
-    .drawer-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.30); display:none; z-index:90; }
-    .drawer-backdrop.open { display:block; }
-    .drawer { position:fixed; top:0; right:-520px; width:min(520px,100%); height:100%; background:#f7f4ee; border-left:1px solid var(--line); box-shadow:-20px 0 60px rgba(0,0,0,.14); z-index:91; transition:right .25s ease; padding:18px; overflow-y:auto; }
-    .drawer.open { right:0; }
-    .drawer-head { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px; }
-    .icon-btn { width:40px; height:40px; border-radius:14px; border:1px solid var(--line); background:#fff; cursor:pointer; }
-    .status-banner { margin:14px auto 0; max-width:1180px; padding:0 20px; }
-    .status-banner .notice { background:#fff7e8; color:#5b4b12; }
-    .hidden { display:none !important; }
-    .dashboard-screen { position:fixed; inset:0; z-index:80; background:var(--bg); overflow:auto; display:none; }
-    .dashboard-screen.active { display:block; }
-    .dashboard-head { position:sticky; top:0; z-index:4; backdrop-filter: blur(12px); background:rgba(243,241,236,.92); border-bottom:1px solid var(--line); }
-    .dashboard-head-inner { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:18px 0; }
-    @media (max-width: 980px) {
-      .hero-grid, .section-head, .catalog-controls, .grid-4, .grid-3, .grid-2, .footer-grid { grid-template-columns:1fr; }
+    @media (max-width: 1120px) {
+      .hero-grid, .section-head, .catalog-controls, .grid-4, .grid-3, .grid-2, .footer-grid, .dashboard-shell, .metric-grid, .owner-stats { grid-template-columns:1fr; }
       .stats { grid-template-columns:1fr; }
+      .sidebar-card { position:static; }
+    }
+    @media (max-width: 980px) {
       .nav { display:none; }
-      .hero { min-height:auto; }
       .table-head, .table-row { grid-template-columns:1fr; }
       .course-bottom { flex-direction:column; align-items:start; }
+      .topbar-inner { flex-wrap:wrap; }
+      .profile-meta { display:none; }
     }
   </style>
 </head>
@@ -121,22 +176,38 @@
       <div>
         <div class="brand-kicker">Pre-launch platform</div>
         <div class="brand-title">Lectaro · Архитекторы реальности</div>
+        <div style="margin-top:6px; color:var(--muted-2); font-size:12px; letter-spacing:.08em; text-transform:uppercase;">Premium AI learning platform</div>
       </div>
       <nav class="nav">
         <a href="#home">Платформа</a>
         <a href="#catalog">Каталог</a>
         <a href="#auth">Регистрация</a>
+        <a href="#legalSection">Legal</a>
         <a href="#faq">FAQ</a>
       </nav>
-      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <div id="topbarGuestActions" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
         <button class="btn secondary" id="openAuthBtn">Войти</button>
         <button class="btn primary" id="openWaitlistBtn">Лист ожидания</button>
+      </div>
+      <div id="topbarUserActions" class="hidden" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <div class="profile-chip">
+          <div class="avatar" id="topbarAvatar">LC</div>
+          <div class="profile-meta">
+            <div class="profile-name" id="topbarUserName">Пользователь</div>
+            <div class="profile-role" id="topbarUserRole">Student</div>
+          </div>
+        </div>
+        <button class="btn secondary" id="openFavoritesBtn">Избранное: <span id="topbarFavoritesCount">0</span></button>
+        <button class="btn secondary" id="openCabinetBtn">Кабинет</button>
+        <button class="btn secondary hidden" id="openAdminBtn">Owner</button>
+        <button class="btn primary" id="openWaitlistLoggedBtn">Мои заявки: <span id="topbarWaitlistCount">0</span></button>
       </div>
     </div>
   </header>
 
   <div class="status-banner">
-    <div class="notice" id="configBanner">Сайт работает как pre-launch версия. Можно регистрироваться, вставать в лист ожидания и сохранять профиль.</div>
+    <div class="notice warm" id="configBanner">Pre-version readiness. Public, legal, cabinet, orders и access собраны в одну стабильную систему.</div>
+    <div id="regressionBanner" class="notice hidden" style="margin-top:10px;"></div>
   </div>
 
   <main>
@@ -145,37 +216,52 @@
         <div>
           <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;">
             <span class="pill">Premium EdTech</span>
-            <span class="pill">Лист ожидания открыт</span>
-            <span class="pill">Личные кабинеты работают</span>
+            <span class="pill">Pre-version</span>
+            <span class="pill">Legal restored</span>
           </div>
           <h1>Архитекторы<br />реальности</h1>
-          <div class="hero-text">Платформа Lectaro для будущих курсов по нейросетям. Сейчас открыт ранний доступ: можно создать кабинет, выбрать интересующие программы и встать в лист ожидания.</div>
+          <div class="hero-text">Платформа Lectaro для будущих курсов по нейросетям. Сейчас уже собраны стабильное ядро, регистрация, waitlist, pre-sale checkout, кабинет, owner dashboard и первичная логика доступа.</div>
           <div class="hero-actions">
             <a class="btn primary" href="#catalog">Открыть каталог</a>
             <a class="btn secondary" href="#auth">Регистрация</a>
           </div>
+          <div class="hero-proof">
+            <div class="hero-proof-item"><strong style="display:block; color:var(--text); margin-bottom:6px;">Каталог + waitlist</strong> Путь интереса уже собран и не разваливает public shell.</div>
+            <div class="hero-proof-item"><strong style="display:block; color:var(--text); margin-bottom:6px;">Orders + access</strong> Pre-sale заказ и будущая выдача доступа уже видны в логике продукта.</div>
+            <div class="hero-proof-item"><strong style="display:block; color:var(--text); margin-bottom:6px;">Owner control</strong> Владелец уже видит сигналы, заказы, статусы и доступы в одном экране.</div>
+          </div>
           <div class="stats">
-            <div class="card stat"><strong>4</strong><span>курса уже на витрине</span></div>
-            <div class="card stat"><strong id="heroWaitlistCount">0</strong><span>заявок в лист ожидания</span></div>
-            <div class="card stat"><strong id="heroProfilesCount">0</strong><span>профилей в системе</span></div>
+            <div class="card glass stat"><strong>4</strong><span>курса уже на витрине</span></div>
+            <div class="card glass stat"><strong id="heroWaitlistCount">0</strong><span>заявок в лист ожидания</span></div>
+            <div class="card glass stat"><strong id="heroProfilesCount">0</strong><span>профилей в системе</span></div>
+          </div>
+          <div class="card glass" style="margin-top:18px; padding:16px 18px; display:grid; gap:10px;">
+            <div class="kicker">Почему это выглядит как продукт, а не как случайный сайт</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <span class="pill">Self-paced online</span>
+              <span class="pill">Чистый legal-контур</span>
+              <span class="pill">Личный кабинет</span>
+              <span class="pill gold">Premium pre-launch</span>
+            </div>
+            <div style="color:var(--muted); line-height:1.6; font-size:14px;">Следующий слой строится на доверии, чистой навигации и сильной продуктовой логике, а не на шуме и дешёвых триггерах.</div>
           </div>
         </div>
         <div>
-          <div class="card dark-panel">
+          <div class="card dark-panel glass">
             <div class="inner">
               <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
                 <div>
-                  <div class="kicker" style="color:rgba(255,255,255,.55)">Что уже работает</div>
-                  <div style="font-size:30px; letter-spacing:-0.04em; font-weight:700; margin-top:8px;">First live version</div>
+                  <div class="kicker" style="color:rgba(255,255,255,.55)">Что уже есть</div>
+                  <div style="font-size:30px; letter-spacing:-0.04em; font-weight:700; margin-top:8px;">Polished Pre-version</div>
                 </div>
-                <span class="pill dark">Waitlist</span>
+                <span class="pill dark">Stage 2</span>
               </div>
               <div class="grid">
-                <div class="item">Каталог со статусами «Скоро релиз»</div>
+                <div class="item">Каталог со статусами и кнопкой покупки</div>
                 <div class="item">Регистрация и вход пользователей</div>
                 <div class="item">Отдельный кабинет пользователя</div>
                 <div class="item">Лист ожидания по каждому курсу</div>
-                <div class="item">Lead center для владельца</div>
+                <div class="item">Checkout, заказы и owner control</div>
                 <div class="item">Готовый юридический контур сайта</div>
               </div>
             </div>
@@ -189,26 +275,26 @@
         <div class="section-head">
           <div>
             <div class="eyebrow">Как это работает</div>
-            <h2>Собираем базу и спрос ещё до запуска курсов</h2>
-            <div class="section-desc">Сайт уже можно использовать как рабочую pre-launch платформу: пользователь регистрируется, получает кабинет, выбирает курсы и оставляет заявку на релиз.</div>
+            <h2>Собираем сильную pre-version основу</h2>
+            <div class="section-desc">Сначала вернули стабильное ядро. Теперь продукт уже умеет вести пользователя через каталог, регистрацию, waitlist, покупку, статусы заказа и будущую выдачу доступа.</div>
           </div>
-          <div class="card dark-panel">
+          <div class="card dark-panel glass">
             <div class="inner">
               <div class="kicker" style="color:rgba(255,255,255,.55)">Что получает владелец</div>
               <div class="grid" style="margin-top:14px;">
-                <div class="item">Email и профиль пользователя</div>
-                <div class="item">Лиды по каждому курсу</div>
-                <div class="item">Базу для запуска продаж</div>
-                <div class="item">Правовую готовность для доверия</div>
+                <div class="item">Стабильный каталог</div>
+                <div class="item">Рабочий legal-контур</div>
+                <div class="item">Живой кабинет пользователя</div>
+                <div class="item">Управляемый путь signal → money → access</div>
               </div>
             </div>
           </div>
         </div>
         <div class="grid-4">
-          <div class="card feature"><div class="kicker">Витрина</div><h3>Курсы уже на сайте</h3><div class="muted">Все программы показаны как будущие релизы. Это уже формирует интерес и структуру каталога.</div></div>
-          <div class="card feature"><div class="kicker">Регистрация</div><h3>Профиль пользователя</h3><div class="muted">Собираются имя, email, телефон, город и род занятий, чтобы сегментировать аудиторию и строить коммуникации.</div></div>
-          <div class="card feature"><div class="kicker">Кабинет</div><h3>Отдельный dashboard</h3><div class="muted">Пользователь видит кабинет в отдельном экране, а не внизу лендинга.</div></div>
-          <div class="card feature"><div class="kicker">Lead center</div><h3>Управление лидами</h3><div class="muted">Владелец видит все waitlist-заявки в одном месте и готовит запуск без ручного хаоса.</div></div>
+          <div class="card glass feature"><div class="kicker">Public shell</div><h3>Hero и секции</h3><div class="muted">Все ключевые публичные блоки живут одновременно и не исчезают после правок.</div></div>
+          <div class="card glass feature"><div class="kicker">Каталог</div><h3>Курсы на месте</h3><div class="muted">Каталог — неприкосновенное ядро. Он не должен пустеть после любых следующих доработок.</div></div>
+          <div class="card glass feature"><div class="kicker">Legal</div><h3>Документы работают</h3><div class="muted">Юридический контур снова открыт и доступен как из основного блока, так и из футера.</div></div>
+          <div class="card glass feature"><div class="kicker">Dashboard</div><h3>Кабинет и owner</h3><div class="muted">Оба экрана восстановлены как отдельные рабочие слои, а не как случайные блоки на странице.</div></div>
         </div>
       </div>
     </section>
@@ -218,26 +304,46 @@
         <div class="section-head">
           <div>
             <div class="eyebrow">Каталог</div>
-            <h2>Все курсы уже стоят на витрине как будущие релизы</h2>
-            <div class="section-desc">У каждого курса один ясный путь: человек видит ценность, добавляет в избранное и встаёт в лист ожидания.</div>
+            <h2>Все курсы стоят на витрине и ведут к действию</h2>
+            <div class="section-desc">Каталог уже умеет вести пользователя либо в waitlist, либо в pre-sale checkout. Это не пустая витрина, а рабочий продуктовый экран.</div>
           </div>
-          <div class="card" style="padding:18px 20px;">
+          <div class="card glass" style="padding:18px 20px;">
             <div class="kicker">Курс в фокусе</div>
             <div id="focusCourseTitle" style="margin-top:10px; font-size:28px; letter-spacing:-0.04em; font-weight:700;">Архитекторы реальности</div>
             <div class="muted" style="margin-top:10px; line-height:1.6;">Заявок по этому курсу: <span id="focusCourseCount">0</span></div>
           </div>
         </div>
         <div class="catalog-controls">
-          <div class="card" style="padding:18px;">
+          <div class="card glass" style="padding:18px;">
             <div class="search"><span>🔎</span><input id="catalogSearch" type="text" placeholder="Поиск по курсам" /></div>
           </div>
-          <div class="card" style="padding:18px;">
+          <div class="card glass" style="padding:18px;">
             <div class="kicker">Статус платформы</div>
-            <div style="margin-top:10px; font-size:22px; letter-spacing:-0.03em; font-weight:700;">Pre-launch build</div>
-            <div class="muted" style="margin-top:8px; line-height:1.6;">Курсы ещё не продаются. Сейчас задача — собирать регистрацию и спрос.</div>
+            <div style="margin-top:10px; font-size:22px; letter-spacing:-0.03em; font-weight:700;">Polished Pre-version Build</div>
+            <div class="muted" style="margin-top:8px; line-height:1.6;">Сейчас задача — стабильно показывать ядро, заказы, доступы и owner control без распада продукта.</div>
+          </div>
+        </div>
+        <div class="card glass" style="padding:18px 20px; margin-bottom:16px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center; border-radius:26px;">
+          <div>
+            <div class="kicker">Каталог как продающий продуктовый экран</div>
+            <div style="margin-top:6px; font-size:22px; font-weight:700; letter-spacing:-.03em;">Быстро объясняет ценность, снимает тревожность и подводит к действию.</div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <span class="pill">Beginner-friendly</span>
+            <span class="pill">Без визуального шума</span>
+            <span class="pill gold">High-trust catalog</span>
           </div>
         </div>
         <div class="grid-3" id="coursesGrid"></div>
+        <div class="card glass" style="margin-top:18px; padding:18px 20px;">
+          <div class="kicker">Release readiness</div>
+          <div style="margin-top:10px; font-size:24px; font-weight:700; letter-spacing:-.03em;">Что обязательно должно пережить выкладку</div>
+          <div class="release-checklist" style="margin-top:14px;">
+            <div class="release-check"><div><strong>Каталог и hero</strong><span style="display:block; margin-top:4px;">Не исчезают, не пустеют, не ломают сетку.</span></div><span class="pill success">ok</span></div>
+            <div class="release-check"><div><strong>Legal</strong><span style="display:block; margin-top:4px;">Открывается и из блока, и из футера.</span></div><span class="pill success">ok</span></div>
+            <div class="release-check"><div><strong>Cabinet / Owner</strong><span style="display:block; margin-top:4px;">Открываются как отдельные полноценные экраны.</span></div><span class="pill success">ok</span></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -247,22 +353,22 @@
           <div>
             <div class="eyebrow">Регистрация / вход</div>
             <h2>Создать кабинет и сохранить интерес пользователя</h2>
-            <div class="section-desc">Первая живая версия сайта уже умеет вести человека от регистрации к кабинету и waitlist.</div>
+            <div class="section-desc">Auth должен работать стабильно и не ломать остальные секции сайта. После входа пользователь видит избранное, заявки, покупки, доступ и уведомления.</div>
           </div>
-          <div class="card dark-panel">
+          <div class="card dark-panel glass">
             <div class="inner">
-              <div class="kicker" style="color:rgba(255,255,255,.55)">Какие данные собираются</div>
+              <div class="kicker" style="color:rgba(255,255,255,.55)">Что уже сохраняется</div>
               <div class="grid" style="margin-top:14px;">
                 <div class="item">Имя и email — для кабинета и уведомлений</div>
-                <div class="item">Телефон — для ручной связи и приоритетных запусков</div>
-                <div class="item">Город и род занятий — для сегментации</div>
-                <div class="item">История waitlist — прямо в кабинете</div>
+                <div class="item">Телефон — для связи и листа ожидания</div>
+                <div class="item">Избранное — в state и кабинете</div>
+                <div class="item">История waitlist, orders и access — в кабинете и owner dashboard</div>
               </div>
             </div>
           </div>
         </div>
         <div class="grid-2">
-          <div class="card" style="padding:22px;">
+          <div class="card card-strong glass" style="padding:22px;">
             <div class="tabs">
               <button class="tab-btn active" id="tabRegister">Регистрация</button>
               <button class="tab-btn" id="tabLogin">Вход</button>
@@ -284,15 +390,15 @@
               <a class="btn secondary" href="#catalog">К каталогу</a>
             </div>
             <div class="message hidden" id="authMessage" style="margin-top:14px;"></div>
-            <div class="notice" style="margin-top:14px;">Продолжая регистрацию, пользователь подтверждает ознакомление с политикой конфиденциальности, согласием на обработку персональных данных и иными документами правового контура, размещёнными на сайте.</div>
+            <div class="notice soft" style="margin-top:14px;">Продолжая регистрацию, пользователь подтверждает ознакомление с политикой конфиденциальности, согласием на обработку персональных данных и иными документами правового контура, размещёнными на сайте.</div>
           </div>
-          <div class="card" style="padding:22px;">
+          <div class="card glass" style="padding:22px;">
             <div class="kicker">Текущий режим</div>
-            <div style="margin-top:10px; font-size:30px; letter-spacing:-0.04em; font-weight:700;">Pre-launch</div>
-            <div class="muted" style="margin-top:12px; line-height:1.7;">На этом этапе кабинет нужен не для просмотра уроков, а для фиксации интереса, сбора базы и возврата пользователя к будущим продуктам.</div>
-            <div class="grid" style="display:grid; gap:12px; margin-top:18px;">
-              <div class="notice">Регистрация уже может быть боевой, если подключены база и email-шлюз.</div>
-              <div class="notice">Если база ещё донастраивается, waitlist всё равно не ломается: заявка сохраняется и уходит владельцу.</div>
+            <div style="margin-top:10px; font-size:30px; letter-spacing:-0.04em; font-weight:700;">Core first</div>
+            <div class="muted" style="margin-top:12px; line-height:1.7;">Регистрация уже должна работать, но главное — не разрушать ни каталог, ни legal, ни кабинет. Это базовый критерий текущей сборки.</div>
+            <div style="display:grid; gap:12px; margin-top:18px;">
+              <div class="notice soft">Сначала стабилизируем ядро.</div>
+              <div class="notice soft">Потом развиваем monetization и доступы.</div>
             </div>
           </div>
         </div>
@@ -305,13 +411,13 @@
           <div>
             <div class="eyebrow">Legal</div>
             <h2>Юридический контур сайта</h2>
-            <div class="section-desc">На сайте размещён типовой комплект документов под pre-launch платформу и статус самозанятого.</div>
+            <div class="section-desc">На этапе pre-version юридический контур является обязательным публичным слоем. Он не может быть пустым, скрытым или нестабильным.</div>
           </div>
-          <div class="card"><div class="kicker">Продавец</div><div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">Дмитриев Михаил Александрович</div><div class="muted" style="margin-top:8px; line-height:1.6;">Статус: самозанятый. ИНН: 772453231807. Контакт: mikhsan@yandex.ru.</div></div>
+          <div class="card glass"><div class="kicker">Продавец</div><div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">Дмитриев Михаил Александрович</div><div class="muted" style="margin-top:8px; line-height:1.6;">Статус: самозанятый. ИНН: 772453231807. Контакт: mikhsan@yandex.ru.</div></div>
         </div>
         <div class="grid-2">
-          <div class="card" style="padding:18px;" id="legalList"></div>
-          <div class="card" style="padding:22px;">
+          <div class="card card-strong glass" style="padding:18px;" id="legalList"></div>
+          <div class="card card-strong glass" style="padding:22px;">
             <div class="kicker" id="legalTitle">Пользовательское соглашение / оферта</div>
             <div id="legalText" style="margin-top:14px; white-space:pre-wrap; line-height:1.75; color:var(--muted);"></div>
           </div>
@@ -325,19 +431,19 @@
           <div>
             <div class="eyebrow">FAQ</div>
             <h2>Что уже работает прямо сейчас</h2>
-            <div class="section-desc">Сейчас сайт — это живая предзапусковая версия: не просто лендинг, а инструмент сбора аудитории и базы перед запуском курсов.</div>
+            <div class="section-desc">Сейчас сайт — это стабилизируемая pre-launch версия: публичная витрина, legal, auth, кабинет, waitlist, checkout, доступы и owner-layer.</div>
           </div>
-          <div class="card"><div class="kicker">Статус</div><div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">Pre-launch build</div><div class="muted" style="margin-top:8px; line-height:1.6;">Курсы пока не продаются. Все карточки ведут в лист ожидания. Регистрация, кабинет и правовой контур уже готовы.</div></div>
+          <div class="card glass"><div class="kicker">Статус</div><div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">Polished Pre-version</div><div class="muted" style="margin-top:8px; line-height:1.6;">Сначала возвращаем стабильность. Затем доводим UX, waitlist, checkout, access и owner control.</div></div>
         </div>
         <div class="grid-2">
-          <div class="card" style="padding:20px;" id="faqList"></div>
-          <div class="card" style="padding:20px;">
-            <div class="kicker">Что ещё осталось</div>
-            <div class="grid" style="display:grid; gap:10px; margin-top:14px;">
-              <div class="notice">Финальный тест домена</div>
-              <div class="notice">Живой проход waitlist и почты</div>
-              <div class="notice">Дожать контент кабинета</div>
-              <div class="notice">Подготовить checkout и запуск продаж</div>
+          <div class="card glass" style="padding:20px;" id="faqList"></div>
+          <div class="card glass" style="padding:20px;">
+            <div class="kicker">Что дальше</div>
+            <div style="display:grid; gap:10px; margin-top:14px;">
+              <div class="notice soft">State stabilization</div>
+              <div class="notice soft">Persistent auth</div>
+              <div class="notice soft">Visual hardening</div>
+              <div class="notice warm">Checkout / access / owner control</div>
             </div>
           </div>
         </div>
@@ -351,11 +457,15 @@
         <div class="kicker">Seller transparency</div>
         <div style="margin-top:14px; font-size:32px; letter-spacing:-0.04em; font-weight:700;">Дмитриев Михаил Александрович</div>
         <div class="muted" style="margin-top:8px;">Самозанятый · ИНН 772453231807</div>
-        <div class="muted" style="margin-top:14px; line-height:1.7; max-width:720px;">Lectaro — это pre-launch платформа для будущих образовательных продуктов. Сейчас она уже собирает базу пользователей, интерес к курсам и заявки на запуск.</div>
+        <div class="muted" style="margin-top:14px; line-height:1.7; max-width:720px;">Lectaro — это pre-launch платформа для будущих образовательных продуктов. Сейчас задача — собрать стабильное ядро продукта без пропадающих блоков, пустых секций и случайных UX-поломок.</div>
       </div>
       <div>
         <div class="kicker">Legal / support</div>
         <div class="legal-links" id="footerLegalLinks" style="margin-top:14px;"></div>
+        <div class="card glass" style="margin-top:14px; padding:14px 16px;">
+          <div class="kicker">Trust layer</div>
+          <div style="margin-top:8px; color:var(--muted); line-height:1.6; font-size:14px;">Прозрачность продавца, понятные условия, аккуратный legal и чистая коммуникация — один из ключевых KPI платформы.</div>
+        </div>
       </div>
     </div>
   </footer>
@@ -374,28 +484,48 @@
       </div>
     </div>
     <div class="container" style="padding-top:26px; padding-bottom:40px;">
-      <div class="section-head">
-        <div>
-          <div class="eyebrow">Личный кабинет</div>
-          <h2>Отдельный экран пользователя</h2>
-          <div class="section-desc">После входа пользователь видит кабинет как отдельный дашборд, а не как случайный блок на лендинге.</div>
-        </div>
-        <div class="card dark-panel">
-          <div class="inner">
-            <div class="kicker" style="color:rgba(255,255,255,.55)">Пользователь</div>
-            <div id="cabinetUserName" style="margin-top:10px; font-size:30px; letter-spacing:-0.04em; font-weight:700;">Гость</div>
-            <div id="cabinetUserEmail" style="margin-top:8px; color:rgba(255,255,255,.72)">Войдите, чтобы открыть кабинет</div>
+      <div class="dashboard-shell">
+        <aside class="card card-strong glass sidebar-card" style="background:linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.86) 100%);">
+          <div class="kicker">Private profile</div>
+          <div style="display:flex; align-items:center; gap:14px; margin-top:16px;">
+            <div class="avatar" id="cabinetAvatar" style="width:58px; height:58px; font-size:18px;">LC</div>
+            <div>
+              <div id="cabinetUserName" style="font-size:26px; letter-spacing:-0.04em; font-weight:700;">Гость</div>
+              <div id="cabinetUserEmail" style="margin-top:6px; color:var(--muted);">Войдите, чтобы открыть кабинет</div>
+            </div>
           </div>
+          <div class="sidebar-stat"><div class="kicker">Статус</div><div style="margin-top:6px; color:var(--muted);">Pre-launch member</div><div class="hint">Профиль уже включён в систему ожидания, заказов и будущих доступов.</div></div>
+          <div class="sidebar-stat"><div class="kicker">Избранное</div><div id="sidebarFavoritesCount" style="margin-top:6px; font-size:28px; font-weight:700;">0</div><div class="hint">Короткий список ключевых программ, к которым пользователь хочет вернуться.</div></div>
+          <div class="sidebar-stat"><div class="kicker">Мои заявки</div><div id="sidebarWaitlistCount" style="margin-top:6px; font-size:28px; font-weight:700;">0</div><div class="hint">Все сигналы интереса к продуктам собраны в одном месте.</div></div>
+        </aside>
+        <div class="dashboard-main">
+          <div class="lux-panel" style="position:relative; overflow:hidden;">
+            <div style="position:absolute; right:-40px; top:-40px; width:180px; height:180px; border-radius:50%; background:rgba(183,152,99,.10);"></div>
+            <div class="section-head" style="margin-bottom:0; grid-template-columns:1.2fr .8fr; position:relative;">
+              <div>
+                <div class="eyebrow">Личный кабинет</div>
+                <h2>Private dashboard</h2>
+                <div class="section-desc">Кабинет должен быть стабильным, читаемым и не ломать публичную страницу. Он уже включает профиль, избранное, заявки, покупки, доступ и уведомления.</div>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card"><strong id="cabinetMetricFavorites">0</strong><span>в избранном</span></div>
+                <div class="metric-card"><strong id="cabinetMetricWaitlist">0</strong><span>заявок</span></div>
+                <div class="metric-card"><strong id="cabinetMetricNotes">0</strong><span>уведомлений</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="tabs">
+            <button class="tab-btn active" data-cabinet-tab="overview">Обзор</button>
+            <button class="tab-btn" data-cabinet-tab="profile">Профиль</button>
+            <button class="tab-btn" data-cabinet-tab="waitlist">Лист ожидания</button>
+            <button class="tab-btn" data-cabinet-tab="favorites">Избранное</button>
+            <button class="tab-btn" data-cabinet-tab="orders">Покупки</button>
+            <button class="tab-btn" data-cabinet-tab="access">Доступ</button>
+            <button class="tab-btn" data-cabinet-tab="notifications">Уведомления</button>
+          </div>
+          <div id="cabinetContent"></div>
         </div>
       </div>
-      <div class="tabs">
-        <button class="tab-btn active" data-cabinet-tab="overview">Обзор</button>
-        <button class="tab-btn" data-cabinet-tab="profile">Профиль</button>
-        <button class="tab-btn" data-cabinet-tab="waitlist">Лист ожидания</button>
-        <button class="tab-btn" data-cabinet-tab="favorites">Избранное</button>
-        <button class="tab-btn" data-cabinet-tab="notifications">Уведомления</button>
-      </div>
-      <div id="cabinetContent"></div>
     </div>
   </div>
 
@@ -413,18 +543,44 @@
       <div class="section-head">
         <div>
           <div class="eyebrow">Lead center</div>
-          <h2>Панель владельца</h2>
-          <div class="section-desc">Здесь видны регистрации, избранное, заявки в лист ожидания и общая готовность инфраструктуры.</div>
+          <h2>Owner operating room</h2>
+          <div class="section-desc">Owner dashboard должен показывать базовые метрики, лиды, заказы, статусы и будущие доступы без деградации public shell.</div>
         </div>
-        <div class="card">
+        <div class="card card-strong glass" style="padding:24px; background:linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.86) 100%);">
           <div class="kicker">Owner email</div>
           <div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">mikhsan@yandex.ru</div>
-          <div class="muted" style="margin-top:8px; line-height:1.6;">После подключения webhook каждая новая заявка может автоматически приходить на почту владельца.</div>
+          <div style="margin-top:8px; color:var(--muted); line-height:1.6;">На этом этапе owner dashboard должен быть стабильным, красивым и управленчески полезным.</div>
         </div>
       </div>
-      <div class="grid-4" id="adminStats"></div>
+      <div class="card glass" style="padding:18px 20px; margin-bottom:16px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center; border-radius:26px;">
+        <div>
+          <div class="kicker">Owner operating logic</div>
+          <div style="margin-top:8px;" class="status-flow">
+            <span class="status-step done">signal</span>
+            <span class="status-step active">money</span>
+            <span class="status-step">access</span>
+          </div>
+          <div style="margin-top:8px; font-size:22px; font-weight:700; letter-spacing:-.03em;">Сначала видеть, где спрос. Потом — где деньги. Потом — где доступы.</div>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="pill">Registrations</span>
+          <span class="pill">Waitlist</span>
+          <span class="pill gold">Signals first</span>
+        </div>
+      </div>
+      <div class="card card-strong glass" style="padding:18px 20px; margin-bottom:16px;">
+        <div class="kicker">Order lifecycle</div>
+        <div style="margin-top:10px; font-size:24px; font-weight:700; letter-spacing:-.03em;">От pre-sale намерения к выдаче доступа</div>
+        <div style="margin-top:12px;" class="status-flow">
+          <span class="status-step done">pending_payment</span>
+          <span class="status-step active">awaiting_confirmation</span>
+          <span class="status-step">paid</span>
+          <span class="status-step">access_granted</span>
+        </div>
+      </div>
+      <div class="owner-stats" id="adminStats"></div>
       <div class="grid-2" style="margin-top:18px; align-items:start;">
-        <div class="card" style="padding:20px;">
+        <div class="card card-strong glass" style="padding:20px; background:linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.88) 100%);">
           <div class="kicker">Waitlist leads</div>
           <div style="margin-top:10px; font-size:28px; letter-spacing:-0.04em; font-weight:700;">Все заявки</div>
           <div class="table" style="margin-top:16px;">
@@ -432,213 +588,164 @@
             <div id="adminLeadsTable"></div>
           </div>
         </div>
-        <div style="display:grid; gap:16px;">
-          <div class="card" style="padding:20px;">
-            <div class="kicker">Последние события</div>
-            <div id="adminEventsList" style="display:grid; gap:10px; margin-top:14px;"></div>
-          </div>
+        <div class="card card-strong glass" style="padding:20px; background:linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.88) 100%);">
+          <div class="kicker">Последние события</div>
+          <div style="margin-top:8px; color:var(--muted); line-height:1.6; font-size:14px;">Owner должен видеть новые сигналы интереса, заказы и статусы сразу, без ручного поиска по системе.</div>
+          <div id="adminEventsList" style="display:grid; gap:10px; margin-top:14px;"></div>
         </div>
       </div>
     </div>
   </div>
 
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="checkout-drawer" id="checkoutDrawer">
+    <div class="drawer-head">
+      <div>
+        <div class="kicker">Checkout / pre-sale</div>
+        <div style="margin-top:8px; color:var(--muted); font-size:14px; line-height:1.6; max-width:420px;">Оформление должно быть тихим, уверенным и понятным. Без давления, но с сильным ощущением продукта.</div>
+        <div style="font-size:30px; letter-spacing:-0.04em; font-weight:700; margin-top:10px;" id="checkoutTitle">Оформление заказа</div>
+      </div>
+      <button class="icon-btn" id="closeCheckoutBtn">✕</button>
+    </div>
+    <div class="card card-strong glass" style="padding:20px;">
+      <div class="checkout-note">Покупка фиксируется как pre-sale заказ. После оформления он сразу появится в кабинете и owner-layer.</div>
+      <div style="margin-top:18px;" id="checkoutSummary"></div>
+      <div class="form-grid" style="margin-top:18px;">
+        <div class="field"><label>Email для заказа</label><input class="input" id="checkoutEmail" /></div>
+        <div class="field"><label>Комментарий к заказу</label><textarea class="input" id="checkoutComment" placeholder="Например: нужен самый полный тариф"></textarea></div>
+        <button class="btn primary" id="submitCheckoutBtn">Оформить заказ</button>
+        <div class="message hidden" id="checkoutMessage"></div>
+      </div>
+    </div>
+  </aside>
   <aside class="drawer" id="waitlistDrawer">
     <div class="drawer-head">
       <div style="font-size:28px; letter-spacing:-0.04em; font-weight:700;" id="drawerTitle">Лист ожидания</div>
       <button class="icon-btn" id="closeDrawerBtn">✕</button>
     </div>
-    <div class="card" style="padding:20px;">
-      <div id="drawerIntro" class="muted" style="line-height:1.7;">Оставь заявку, и мы сохраним тебя в базе релиза.</div>
+    <div class="card card-strong glass" style="padding:20px;">
+      <div class="notice soft">На этапе pre-version сохраняем рабочий waitlist без дублей, с отражением в кабинете и owner-layer.</div>
       <div id="drawerAuthGuard" class="hidden" style="margin-top:16px;">
-        <div class="notice">Чтобы встать в лист ожидания и сохранить заявку, сначала войди или зарегистрируйся.</div>
+        <div class="notice soft">Чтобы встать в лист ожидания, сначала войди или зарегистрируйся.</div>
         <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
           <button class="btn primary" id="drawerRegisterBtn">Регистрация</button>
           <button class="btn secondary" id="drawerLoginBtn">Войти</button>
         </div>
       </div>
       <div id="drawerFormWrap" class="form-grid" style="margin-top:16px;">
+        <div id="waitlistStatusBadges" style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="pill">Сохраним интерес</span>
+          <span class="pill gold">Без дублей</span>
+        </div>
         <div class="field"><label>Имя</label><input class="input" id="waitlistName" readonly /></div>
         <div class="field"><label>Email</label><input class="input" id="waitlistEmail" readonly /></div>
         <div class="field"><label>Телефон</label><input class="input" id="waitlistPhone" /></div>
-        <div class="field"><label>Комментарий</label><textarea class="input" id="waitlistNote" placeholder="Например: хочу первым, нужен корпоративный тариф"></textarea></div>
-        <button class="btn primary" id="submitWaitlistBtn">Встать в лист ожидания</button>
+        <div class="field"><label>Комментарий</label><textarea class="input" id="waitlistNote" placeholder="Например: хочу первым"></textarea></div>
+        <button class="btn gold" id="submitWaitlistBtn">Встать в лист ожидания</button>
         <div class="message hidden" id="waitlistMessage"></div>
-        <div class="notice">Отправляя заявку, пользователь подтверждает ознакомление с политикой конфиденциальности, согласием на обработку персональных данных и правилами работы с листом ожидания.</div>
       </div>
     </div>
   </aside>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = "https://vbomuwdabjtcnvvwfxtt.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_qMSROQdi856dh55hmv3lKg_DDeiY6Ib";
-    const WAITLIST_WEBHOOK_URL = "https://vbomuwdabjtcnvvwfxtt.supabase.co/functions/v1/hyper-task";
-    const OWNER_NOTIFICATION_EMAIL = "mikhsan@yandex.ru";
+    const tariffMatrix = {
+      'architectors-reality': [
+        { id: 'start', name: 'Старт', price: 990, note: 'Полный курс, 16 уроков, чек-листы и рабочая тетрадь.' },
+        { id: 'practice', name: 'Практика', price: 2490, note: 'Всё из «Старт» + закрытый клуб, база знаний и обновления.' },
+        { id: 'maximum', name: 'Максимум', price: 4990, note: 'Всё из «Практика» + расширенный набор промптов и быстрый старт-план.' }
+      ],
+      'workflow-ai': [{ id: 'base', name: 'Base', price: 3490, note: 'Полный курс по встраиванию AI в рабочий процесс.' }],
+      'visual-ai': [{ id: 'creator', name: 'Creator', price: 1990, note: 'Визуальный AI-пакет с быстрым стартом.' }],
+      'prompts-pro': [{ id: 'pro', name: 'Pro', price: 4990, note: 'Продвинутый набор для бизнес-применения промптов.' }]
+    };
 
     const courses = [
-      { id: "architectors-reality", title: "Архитекторы реальности", subtitle: "Практический курс по нейросетям для жизни и работы", level: "Beginner", format: "Онлайн", lessons: 16, modules: 5, priceFrom: 990, badge: "Скоро релиз", shortDescription: "Стартовая система по нейросетям: понимание, инструменты, промпты, практика и ежедневное применение.", waitlistLabel: "Встать в лист ожидания" },
-      { id: "workflow-ai", title: "AI-система для продуктивности", subtitle: "Как встроить AI в рабочий день, встречи, документы и задачи", level: "Intermediate", format: "Онлайн", lessons: 12, modules: 4, priceFrom: 3490, badge: "Скоро релиз", shortDescription: "Практический продукт для тех, кто хочет превратить AI в рабочую систему, а не в разовый эксперимент.", waitlistLabel: "Жду запуск" },
-      { id: "visual-ai", title: "Визуал и обложки с AI", subtitle: "Быстрый визуальный продакшн для контента, идей и креативов", level: "Beginner", format: "Онлайн", lessons: 10, modules: 4, priceFrom: 1990, badge: "Скоро релиз", shortDescription: "Курс про визуальные сценарии: референсы, обложки, промо-материалы и креативные концепты.", waitlistLabel: "Хочу первым" },
-      { id: "prompts-pro", title: "Промпты для бизнеса", subtitle: "Сильные запросы для команд, продукта, продаж и коммуникаций", level: "Advanced", format: "Онлайн", lessons: 14, modules: 5, priceFrom: 4990, badge: "Скоро релиз", shortDescription: "Продвинутый курс про постановку задач нейросетям на уровне бизнес-результата.", waitlistLabel: "Записаться в waitlist" },
+      { id: 'architectors-reality', title: 'Архитекторы реальности', subtitle: 'Практический курс по нейросетям для жизни и работы', level: 'Beginner', format: 'Онлайн', lessons: 16, priceFrom: 990, badge: 'Скоро релиз', shortDescription: 'Стартовая система по нейросетям: понимание, инструменты, промпты, практика и ежедневное применение.', waitlistLabel: 'Встать в лист ожидания' },
+      { id: 'workflow-ai', title: 'AI-система для продуктивности', subtitle: 'Как встроить AI в рабочий день, встречи, документы и задачи', level: 'Intermediate', format: 'Онлайн', lessons: 12, priceFrom: 3490, badge: 'Скоро релиз', shortDescription: 'Практический продукт для тех, кто хочет превратить AI в рабочую систему, а не в разовый эксперимент.', waitlistLabel: 'Жду запуск' },
+      { id: 'visual-ai', title: 'Визуал и обложки с AI', subtitle: 'Быстрый визуальный продакшн для контента, идей и креативов', level: 'Beginner', format: 'Онлайн', lessons: 10, priceFrom: 1990, badge: 'Скоро релиз', shortDescription: 'Курс про визуальные сценарии: референсы, обложки, промо-материалы и креативные концепты.', waitlistLabel: 'Хочу первым' },
+      { id: 'prompts-pro', title: 'Промпты для бизнеса', subtitle: 'Сильные запросы для команд, продукта, продаж и коммуникаций', level: 'Advanced', format: 'Онлайн', lessons: 14, priceFrom: 4990, badge: 'Скоро релиз', shortDescription: 'Продвинутый курс про постановку задач нейросетям на уровне бизнес-результата.', waitlistLabel: 'Записаться в waitlist' }
     ];
 
     const legalPages = [
-      { id: "offer", title: "Пользовательское соглашение / оферта", text: "Настоящий сайт lectaro.ru используется для информирования о проекте «Архитекторы реальности», регистрации пользователей, создания личных кабинетов и сбора заявок в лист ожидания. Владелец сайта: Дмитриев Михаил Александрович, статус: самозанятый, ИНН: 772453231807, email: mikhsan@yandex.ru. На текущем этапе сайт работает в pre-launch режиме: карточки курсов и цены носят информационный характер, а доступ к учебным материалам будет предоставляться после официального запуска соответствующих продуктов." },
-      { id: "privacy", title: "Политика конфиденциальности", text: "Оператор обрабатывает имя, email, телефон, город, род занятий, сведения о выбранных курсах и историю заявок в лист ожидания для регистрации пользователя, ведения личного кабинета, обратной связи, уведомлений о запуске курсов и улучшения работы сайта. Пользователь вправе запросить сведения об обработке, уточнение или удаление данных по адресу mikhsan@yandex.ru." },
-      { id: "consent", title: "Согласие на обработку персональных данных", text: "Оставляя данные на сайте lectaro.ru, пользователь выражает согласие Дмитриеву Михаилу Александровичу на сбор, запись, хранение, использование, уточнение и удаление переданных персональных данных в целях регистрации, ведения кабинета, обработки заявок, обратной связи и направления технических уведомлений." },
-      { id: "cookies", title: "Политика использования cookie", text: "Сайт может использовать cookie и иные аналогичные технологии для сохранения пользовательской сессии, улучшения работы интерфейса, аналитики и безопасности. Пользователь может ограничить cookie в настройках браузера, однако это может повлиять на корректность отдельных функций сайта." },
-      { id: "marketing", title: "Согласие на информационные и рекламные сообщения", text: "Пользователь может дать отдельное согласие на получение информационных и рекламных сообщений о запуске курсов, вебинарах, специальных предложениях и обновлениях проекта. От такого согласия можно отказаться в любой момент, написав на mikhsan@yandex.ru." },
-      { id: "seller", title: "Сведения о продавце", text: "Продавец / оператор сайта: Дмитриев Михаил Александрович. Статус: самозанятый. ИНН: 772453231807. Контактный email: mikhsan@yandex.ru." },
-      { id: "payment", title: "Условия оплаты", text: "До запуска продаж сайт используется для информирования и сбора заявок. После запуска продаж на сайте будут размещены актуальные условия оплаты, порядок оформления заказа, способы оплаты и правила предоставления электронных чеков." },
-      { id: "refund", title: "Условия возврата", text: "До запуска продаж сайт не формирует денежных обязательств пользователя в части образовательных продуктов. После запуска продаж на сайте будут размещены условия возврата и порядок рассмотрения обращений." },
-      { id: "access", title: "Порядок предоставления доступа", text: "В pre-launch режиме пользователю предоставляется доступ к информационным разделам сайта и личному кабинету. Доступ к учебным материалам будет открыт после официального запуска конкретного продукта и, при необходимости, после выполнения условий оплаты." },
-      { id: "support", title: "Контакты поддержки", text: "По вопросам регистрации, кабинета, удаления персональных данных, листа ожидания и правовых документов можно обращаться по адресу mikhsan@yandex.ru." },
+      { id: 'offer', title: 'Пользовательское соглашение / оферта', text: 'Настоящий сайт lectaro.ru используется для информирования о проекте «Архитекторы реальности», регистрации пользователей, создания личных кабинетов и сбора заявок в лист ожидания. Владелец сайта: Дмитриев Михаил Александрович, статус: самозанятый, ИНН: 772453231807, email: mikhsan@yandex.ru. На текущем этапе сайт работает в pre-launch режиме: карточки курсов и цены носят информационный характер, а доступ к учебным материалам будет предоставляться после официального запуска соответствующих продуктов.' },
+      { id: 'privacy', title: 'Политика конфиденциальности', text: 'Оператор обрабатывает имя, email, телефон, город, род занятий, сведения о выбранных курсах и историю заявок в лист ожидания для регистрации пользователя, ведения личного кабинета, обратной связи, уведомлений о запуске курсов и улучшения работы сайта. Пользователь вправе запросить сведения об обработке, уточнение или удаление данных по адресу mikhsan@yandex.ru.' },
+      { id: 'consent', title: 'Согласие на обработку персональных данных', text: 'Оставляя данные на сайте lectaro.ru, пользователь выражает согласие Дмитриеву Михаилу Александровичу на сбор, запись, хранение, использование, уточнение и удаление переданных персональных данных в целях регистрации, ведения кабинета, обработки заявок, обратной связи и направления технических уведомлений.' },
+      { id: 'cookies', title: 'Политика использования cookie', text: 'Сайт может использовать cookie и иные аналогичные технологии для сохранения пользовательской сессии, улучшения работы интерфейса, аналитики и безопасности. Пользователь может ограничить cookie в настройках браузера, однако это может повлиять на корректность отдельных функций сайта.' },
+      { id: 'marketing', title: 'Согласие на информационные и рекламные сообщения', text: 'Пользователь может дать отдельное согласие на получение информационных и рекламных сообщений о запуске курсов, вебинарах, специальных предложениях и обновлениях проекта. От такого согласия можно отказаться в любой момент, написав на mikhsan@yandex.ru.' },
+      { id: 'seller', title: 'Сведения о продавце', text: 'Продавец / оператор сайта: Дмитриев Михаил Александрович. Статус: самозанятый. ИНН: 772453231807. Контактный email: mikhsan@yandex.ru.' },
+      { id: 'payment', title: 'Условия оплаты', text: 'До запуска продаж сайт используется для информирования и сбора заявок. После запуска продаж на сайте будут размещены актуальные условия оплаты, порядок оформления заказа, способы оплаты и правила предоставления электронных чеков.' },
+      { id: 'refund', title: 'Условия возврата', text: 'До запуска продаж сайт не формирует денежных обязательств пользователя в части образовательных продуктов. После запуска продаж на сайте будут размещены условия возврата и порядок рассмотрения обращений.' },
+      { id: 'access', title: 'Порядок предоставления доступа', text: 'В pre-launch режиме пользователю предоставляется доступ к информационным разделам сайта и личному кабинету. Доступ к учебным материалам будет открыт после официального запуска конкретного продукта и, при необходимости, после выполнения условий оплаты.' },
+      { id: 'support', title: 'Контакты поддержки', text: 'По вопросам регистрации, кабинета, удаления персональных данных, листа ожидания и правовых документов можно обращаться по адресу mikhsan@yandex.ru.' }
     ];
 
     const faqs = [
-      { q: "Когда откроется доступ к курсам?", a: "Сейчас курсы собирают лист ожидания. После релиза участники waitlist получат письмо первыми." },
-      { q: "Какие документы уже размещены на сайте?", a: "На сайте размещены пользовательское соглашение, политика конфиденциальности, согласие на обработку персональных данных, политика cookie, сведения о продавце, условия оплаты, возврата, доступа и контакты поддержки." },
-      { q: "Что работает уже сейчас?", a: "Работают витрина, каталог, регистрация, логин, отдельный кабинет, лист ожидания, сбор заявок и lead center." },
-      { q: "Будут ли мне писать после релиза?", a: "Технические уведомления о выбранном курсе возможны в рамках работы с листом ожидания. Для рекламных рассылок лучше использовать отдельное согласие пользователя." },
+      { q: 'Когда откроется доступ к курсам?', a: 'Сейчас курсы собирают лист ожидания. После релиза участники waitlist получат письмо первыми.' },
+      { q: 'Какие документы уже размещены на сайте?', a: 'На сайте размещены пользовательское соглашение, политика конфиденциальности, согласие на обработку персональных данных, политика cookie, сведения о продавце, условия оплаты, возврата, доступа и контакты поддержки.' },
+      { q: 'Что работает уже сейчас?', a: 'Работают витрина, каталог, регистрация, логин, отдельный кабинет, лист ожидания, сбор заявок, checkout, заказы и lead center.' },
+      { q: 'Будут ли мне писать после релиза?', a: 'Технические уведомления о выбранном курсе возможны в рамках работы с листом ожидания, заказа и статусов доступа. Для рекламных рассылок лучше использовать отдельное согласие пользователя.' }
     ];
 
     const state = {
       authMode: 'register',
-      currentUser: null,
+      currentUser: { id: 'preview-admin', email: 'mikhsan@yandex.ru', name: 'Михаил', phone: '+7 903 004-32-22', city: 'Москва', occupation: 'Founder', role: 'admin' },
       selectedCourse: courses[0],
+      selectedTariff: null,
       legalPageId: 'offer',
       cabinetTab: 'overview',
-      waitlistEntries: [],
-      notifications: [],
-      favorites: [],
-      profilesCount: 0,
-      lastEvents: [],
-      adminMode: false,
-      supabase: null,
-      dbReady: false,
-      webhookReady: Boolean(WAITLIST_WEBHOOK_URL),
-      view: 'site',
+      waitlistEntries: [
+        { id: 'w1', user_id: 'preview-admin', course_id: 'architectors-reality', course_title: 'Архитекторы реальности', name: 'Михаил', email: 'mikhsan@yandex.ru', phone: '+7 903 004-32-22', note: 'Хочу тестировать первым', status: 'new', created_at: new Date().toISOString() },
+        { id: 'w2', user_id: 'demo-2', course_id: 'workflow-ai', course_title: 'AI-система для продуктивности', name: 'Анна', email: 'anna@example.com', phone: '+7 900 000-00-00', note: 'Жду ранний доступ', status: 'new', created_at: new Date().toISOString() }
+      ],
+      orders: [
+        { id: 'o1', user_id: 'preview-admin', email: 'mikhsan@yandex.ru', course_id: 'architectors-reality', course_title: 'Архитекторы реальности', tariff_id: 'maximum', tariff_name: 'Максимум', amount: 4990, status: 'awaiting_confirmation', created_at: new Date().toISOString() },
+        { id: 'o2', user_id: 'demo-2', email: 'anna@example.com', course_id: 'workflow-ai', course_title: 'AI-система для продуктивности', tariff_id: 'base', tariff_name: 'Base', amount: 3490, status: 'paid', created_at: new Date().toISOString() }
+      ],
+      accessItems: [],
+      notifications: [
+        { title: 'Заказ создан', body: 'Мы создали заказ на тариф «Максимум» по курсу «Архитекторы реальности».', created_at: new Date().toISOString() },
+        { title: 'Аккаунт создан', body: 'Кабинет активирован. Можно вставать в лист ожидания.', created_at: new Date().toISOString() }
+      ],
+      favorites: ['architectors-reality', 'visual-ai'],
+      profilesCount: 24,
+      lastEvents: [
+        { event_name: 'order_created', payload: { courseId: 'architectors-reality', tariffId: 'maximum', amount: 4990 }, created_at: new Date().toISOString() },
+        { event_name: 'waitlist_joined', payload: { courseId: 'workflow-ai', email: 'anna@example.com' }, created_at: new Date().toISOString() }
+      ],
+      dbReady: true,
+      currentView: 'site',
+      waitlistStatus: 'idle',
+      waitlistStatusMap: {}
     };
 
-    const els = {
-      configBanner: document.getElementById('configBanner'),
-      coursesGrid: document.getElementById('coursesGrid'),
-      catalogSearch: document.getElementById('catalogSearch'),
-      heroWaitlistCount: document.getElementById('heroWaitlistCount'),
-      heroProfilesCount: document.getElementById('heroProfilesCount'),
-      focusCourseTitle: document.getElementById('focusCourseTitle'),
-      focusCourseCount: document.getElementById('focusCourseCount'),
-      openWaitlistBtn: document.getElementById('openWaitlistBtn'),
-      openAuthBtn: document.getElementById('openAuthBtn'),
-      tabRegister: document.getElementById('tabRegister'),
-      tabLogin: document.getElementById('tabLogin'),
-      registerFields: document.getElementById('registerFields'),
-      authSubmitBtn: document.getElementById('authSubmitBtn'),
-      authMessage: document.getElementById('authMessage'),
-      regName: document.getElementById('regName'),
-      regPhone: document.getElementById('regPhone'),
-      regCity: document.getElementById('regCity'),
-      regOccupation: document.getElementById('regOccupation'),
-      authEmail: document.getElementById('authEmail'),
-      authPassword: document.getElementById('authPassword'),
-      cabinetScreen: document.getElementById('cabinetScreen'),
-      adminScreen: document.getElementById('adminScreen'),
-      cabinetBackBtn: document.getElementById('cabinetBackBtn'),
-      cabinetLogoutBtn: document.getElementById('cabinetLogoutBtn'),
-      adminBackBtn: document.getElementById('adminBackBtn'),
-      cabinetUserName: document.getElementById('cabinetUserName'),
-      cabinetUserEmail: document.getElementById('cabinetUserEmail'),
-      cabinetContent: document.getElementById('cabinetContent'),
-      adminStats: document.getElementById('adminStats'),
-      adminLeadsTable: document.getElementById('adminLeadsTable'),
-      adminEventsList: document.getElementById('adminEventsList'),
-      legalList: document.getElementById('legalList'),
-      legalTitle: document.getElementById('legalTitle'),
-      legalText: document.getElementById('legalText'),
-      faqList: document.getElementById('faqList'),
-      footerLegalLinks: document.getElementById('footerLegalLinks'),
-      drawerBackdrop: document.getElementById('drawerBackdrop'),
-      waitlistDrawer: document.getElementById('waitlistDrawer'),
-      closeDrawerBtn: document.getElementById('closeDrawerBtn'),
-      drawerTitle: document.getElementById('drawerTitle'),
-      drawerAuthGuard: document.getElementById('drawerAuthGuard'),
-      drawerFormWrap: document.getElementById('drawerFormWrap'),
-      drawerRegisterBtn: document.getElementById('drawerRegisterBtn'),
-      drawerLoginBtn: document.getElementById('drawerLoginBtn'),
-      waitlistName: document.getElementById('waitlistName'),
-      waitlistEmail: document.getElementById('waitlistEmail'),
-      waitlistPhone: document.getElementById('waitlistPhone'),
-      waitlistNote: document.getElementById('waitlistNote'),
-      submitWaitlistBtn: document.getElementById('submitWaitlistBtn'),
-      waitlistMessage: document.getElementById('waitlistMessage'),
-    };
+    const els = {};
+    document.querySelectorAll('[id]').forEach(el => els[el.id] = el);
 
+    function initials(name = 'LC') { return name.split(' ').filter(Boolean).slice(0, 2).map(x => x[0]?.toUpperCase() || '').join('') || 'LC'; }
     function formatPrice(v) { return new Intl.NumberFormat('ru-RU').format(v) + ' ₽'; }
     function formatDate(v) { return new Intl.DateTimeFormat('ru-RU').format(v instanceof Date ? v : new Date(v)); }
-    function setMessage(el, text) { if (!text) { el.classList.add('hidden'); el.textContent=''; } else { el.classList.remove('hidden'); el.textContent=text; } }
-    function runChecks() { console.assert(courses.length === 4, 'courses broken'); console.assert(legalPages.length >= 8, 'legal broken'); }
-
-    function openWaitlistDrawer() {
-      els.drawerBackdrop.classList.add('open');
-      els.waitlistDrawer.classList.add('open');
-      syncWaitlistDrawer();
-    }
-    function closeWaitlistDrawer() {
-      els.drawerBackdrop.classList.remove('open');
-      els.waitlistDrawer.classList.remove('open');
-      setMessage(els.waitlistMessage, '');
-    }
-    function syncWaitlistDrawer() {
-      els.drawerTitle.textContent = `Лист ожидания · ${state.selectedCourse.title}`;
-      if (!state.currentUser) {
-        els.drawerAuthGuard.classList.remove('hidden');
-        els.drawerFormWrap.classList.add('hidden');
-        return;
-      }
-      els.drawerAuthGuard.classList.add('hidden');
-      els.drawerFormWrap.classList.remove('hidden');
-      els.waitlistName.value = state.currentUser.name || '';
-      els.waitlistEmail.value = state.currentUser.email || '';
-      els.waitlistPhone.value = state.currentUser.phone || '';
-      els.waitlistNote.value = '';
-    }
-
-    function openCabinet() {
-      state.view = 'cabinet';
-      els.cabinetScreen.classList.add('active');
-      els.adminScreen.classList.remove('active');
-      document.body.classList.add('locked');
-      renderCabinet();
-    }
-    function openAdmin() {
-      state.view = 'admin';
-      els.adminScreen.classList.add('active');
-      els.cabinetScreen.classList.remove('active');
-      document.body.classList.add('locked');
-      renderAdmin();
-    }
-    function closeDashboards() {
-      state.view = 'site';
-      els.cabinetScreen.classList.remove('active');
-      els.adminScreen.classList.remove('active');
-      document.body.classList.remove('locked');
-    }
-
-    function setActiveAuth(mode) {
-      state.authMode = mode;
-      const reg = mode === 'register';
-      els.tabRegister.classList.toggle('active', reg);
-      els.tabLogin.classList.toggle('active', !reg);
-      els.registerFields.classList.toggle('hidden', !reg);
-      els.authSubmitBtn.textContent = reg ? 'Создать кабинет' : 'Войти';
-    }
+    function setMessage(el, text, type = '') { el.classList.remove('success'); if (!text) { el.classList.add('hidden'); el.textContent = ''; return; } el.classList.remove('hidden'); if (type === 'success') el.classList.add('success'); el.textContent = text; }
+    function myWaitlist() { return state.currentUser ? state.waitlistEntries.filter(x => (x.user_id || x.userId) === state.currentUser.id || x.email === state.currentUser.email) : []; }
+    function getEntryCourseId(entry) { return entry.course_id || entry.courseId; }
+    function getEntryUserId(entry) { return entry.user_id || entry.userId || entry.email || 'guest'; }
+    function getEntryCourseTitle(entry) { return entry.course_title || entry.courseTitle || 'Курс'; }
+    function buildWaitlistKey(userId, courseId) { return `${userId}::${courseId}`; }
+    function rebuildWaitlistStatusMap() { const next = {}; state.waitlistEntries.forEach(entry => { next[buildWaitlistKey(getEntryUserId(entry), getEntryCourseId(entry))] = entry.status || 'new'; }); state.waitlistStatusMap = next; }
+    function getCurrentCourseWaitlistStatus(courseId) { if (!state.currentUser) return null; return state.waitlistStatusMap[buildWaitlistKey(state.currentUser.id || state.currentUser.email, courseId)] || null; }
+    function getTariffsForCourse(courseId) { return tariffMatrix[courseId] || [{ id: 'pre', name: 'Предзаказ', price: 990, note: 'Предварительное бронирование курса.' }]; }
+    function getOrdersForCurrentUser() { if (!state.currentUser) return []; return state.orders.filter(x => (x.user_id || x.userId) === state.currentUser.id || x.email === state.currentUser.email); }
+    function getAccessForCurrentUser() { if (!state.currentUser) return []; return state.accessItems.filter(x => (x.user_id || x.userId) === state.currentUser.id || x.email === state.currentUser.email); }
+    function syncAccessFromOrders() { state.accessItems = state.orders.filter(order => ['paid', 'access_granted'].includes(order.status)).map(order => ({ id: order.id, user_id: order.user_id || order.userId, email: order.email, course_id: order.course_id || order.courseId, course_title: order.course_title || order.courseTitle, tariff_name: order.tariff_name || order.tariffName, status: order.status === 'paid' ? 'ready_for_access' : 'access_granted', created_at: order.created_at || order.createdAt || new Date().toISOString() })); }
 
     function renderCatalog() {
-      const q = els.catalogSearch.value.trim().toLowerCase();
+      const q = (els.catalogSearch.value || '').trim().toLowerCase();
       const filtered = courses.filter(course => !q || `${course.title} ${course.subtitle} ${course.shortDescription}`.toLowerCase().includes(q));
-      els.coursesGrid.innerHTML = filtered.map(course => `
-        <div class="card course-card">
+      els.coursesGrid.innerHTML = filtered.map(course => {
+        const joinedStatus = getCurrentCourseWaitlistStatus(course.id);
+        const waitlistLabel = joinedStatus ? 'В листе ожидания' : course.waitlistLabel;
+        const baseTariff = getTariffsForCourse(course.id)[0];
+        return `
+        <div class="card card-strong glass course-card">
           <div style="display:flex; align-items:start; justify-content:space-between; gap:12px;">
             <div>
               <span class="pill dark">${course.badge}</span>
@@ -646,305 +753,221 @@
             </div>
             <div style="color:var(--muted-2); font-size:20px;">🔒</div>
           </div>
-          <div class="muted" style="margin-top:10px;">${course.subtitle}</div>
-          <div class="muted" style="margin-top:14px; line-height:1.7;">${course.shortDescription}</div>
+          <div style="margin-top:10px; color:var(--muted);">${course.subtitle}</div>
+          <div style="margin-top:14px; color:var(--muted); line-height:1.7;">${course.shortDescription}</div>
+          <div class="course-subgrid">
+            <div class="course-mini"><div class="label">Формат</div><div class="value">${course.format}</div></div>
+            <div class="course-mini"><div class="label">Уровень</div><div class="value">${course.level}</div></div>
+          </div>
           <div class="tags">
             <span class="pill">${course.level}</span>
             <span class="pill">${course.format}</span>
             <span class="pill">${course.lessons} уроков</span>
-            ${state.favorites.includes(course.id) ? '<span class="pill">В избранном</span>' : ''}
+            ${state.favorites.includes(course.id) ? '<span class="pill gold">В избранном</span>' : ''}
+            ${joinedStatus ? `<span class="pill success">waitlist: ${joinedStatus}</span>` : ''}
           </div>
           <div class="course-bottom">
             <div>
-              <small style="display:block; font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--muted-2);">Цена от</small>
+              <div class="kicker">Цена от</div>
               <div class="price">${formatPrice(course.priceFrom)}</div>
             </div>
             <div class="course-actions">
               <button class="btn secondary" data-fav="${course.id}">${state.favorites.includes(course.id) ? 'Убрать' : 'В избранное'}</button>
-              <button class="btn primary" data-waitlist="${course.id}">${course.waitlistLabel}</button>
+              <button class="btn secondary" data-checkout="${course.id}">Купить от ${formatPrice(baseTariff.price)}</button>
+              <button class="btn primary" data-waitlist="${course.id}">${waitlistLabel}</button>
             </div>
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
       els.coursesGrid.querySelectorAll('[data-fav]').forEach(btn => btn.addEventListener('click', () => toggleFavorite(btn.getAttribute('data-fav'))));
-      els.coursesGrid.querySelectorAll('[data-waitlist]').forEach(btn => btn.addEventListener('click', () => {
-        const courseId = btn.getAttribute('data-waitlist');
-        state.selectedCourse = courses.find(c => c.id === courseId) || courses[0];
-        openWaitlistDrawer();
-        updateCounters();
-      }));
+      els.coursesGrid.querySelectorAll('[data-checkout]').forEach(btn => btn.addEventListener('click', () => openCheckout(btn.getAttribute('data-checkout'))));
+      els.coursesGrid.querySelectorAll('[data-waitlist]').forEach(btn => btn.addEventListener('click', () => { state.selectedCourse = courses.find(c => c.id === btn.getAttribute('data-waitlist')) || courses[0]; openWaitlistDrawer(); updateCounters(); }));
     }
 
     function renderLegal() {
-      els.legalList.innerHTML = legalPages.map(item => `<button class="legal-link" data-legal="${item.id}" style="display:flex; justify-content:space-between; align-items:center; ${state.legalPageId === item.id ? 'background:#111111;color:#fff;border-color:#111111;' : ''}"><span>${item.title}</span><span>›</span></button>`).join('');
-      const active = legalPages.find(x => x.id === state.legalPageId) || legalPages[0];
+      const activeId = legalPages.some(x => x.id === state.legalPageId) ? state.legalPageId : 'offer';
+      const active = legalPages.find(x => x.id === activeId) || legalPages[0];
+      els.legalList.innerHTML = legalPages.map(item => `<button class="legal-link ${activeId === item.id ? 'active' : ''}" data-legal="${item.id}"><div style="display:flex; justify-content:space-between; gap:10px; align-items:center;"><span>${item.title}</span><span>›</span></div></button>`).join('');
       els.legalTitle.textContent = active.title;
       els.legalText.textContent = active.text;
-      els.legalList.querySelectorAll('[data-legal]').forEach(btn => btn.addEventListener('click', () => { state.legalPageId = btn.getAttribute('data-legal'); renderLegal(); }));
       els.footerLegalLinks.innerHTML = legalPages.map(item => `<button class="legal-link" data-footer-legal="${item.id}">${item.title}</button>`).join('');
+      els.legalList.querySelectorAll('[data-legal]').forEach(btn => btn.addEventListener('click', () => { state.legalPageId = btn.getAttribute('data-legal'); renderLegal(); }));
       els.footerLegalLinks.querySelectorAll('[data-footer-legal]').forEach(btn => btn.addEventListener('click', () => { state.legalPageId = btn.getAttribute('data-footer-legal'); document.getElementById('legalSection').scrollIntoView({ behavior: 'smooth' }); renderLegal(); }));
     }
 
     function renderFaq() {
-      els.faqList.innerHTML = faqs.map(item => `<div class="card" style="padding:18px;"><div style="font-weight:700;">${item.q}</div><div class="muted" style="margin-top:10px; line-height:1.7;">${item.a}</div></div>`).join('');
+      els.faqList.innerHTML = faqs.map(item => `<div class="card glass" style="padding:18px;"><div style="font-weight:700;">${item.q}</div><div style="margin-top:10px; color:var(--muted); line-height:1.7;">${item.a}</div></div>`).join('');
     }
 
     function renderCabinet() {
-      if (!state.currentUser) {
-        els.cabinetUserName.textContent = 'Гость';
-        els.cabinetUserEmail.textContent = 'Войдите, чтобы открыть кабинет';
-        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="notice">Сейчас кабинет скрыт, потому что пользователь не вошёл в систему.</div></div>`;
-        return;
-      }
+      const waitlistMine = myWaitlist();
       els.cabinetUserName.textContent = state.currentUser.name || state.currentUser.email;
       els.cabinetUserEmail.textContent = state.currentUser.email || '';
-      const myWaitlist = state.waitlistEntries.filter(x => (x.user_id || x.userId) === state.currentUser.id || x.email === state.currentUser.email);
-
-      if (state.cabinetTab === 'profile') {
-        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="kicker">Данные профиля</div><div class="grid-2" style="margin-top:16px;">${[
-          ['Имя', state.currentUser.name || '—'],
-          ['Email', state.currentUser.email || '—'],
-          ['Телефон', state.currentUser.phone || '—'],
-          ['Город', state.currentUser.city || '—'],
-          ['Род занятий', state.currentUser.occupation || '—']
-        ].map(([label, value]) => `<div class="card" style="padding:18px;"><div class="kicker">${label}</div><div style="margin-top:8px; line-height:1.6;">${value}</div></div>`).join('')}</div></div>`;
-      } else if (state.cabinetTab === 'waitlist') {
-        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="kicker">Мои заявки</div><div style="display:grid; gap:12px; margin-top:16px;">${myWaitlist.length ? myWaitlist.map(entry => `<div class="card" style="padding:18px; box-shadow:none;"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700;">${entry.courseTitle || entry.course_title}</div><div class="muted" style="margin-top:6px;">${formatDate(entry.createdAt || entry.created_at)}</div></div><span class="pill">${entry.status || 'new'}</span></div><div class="muted" style="margin-top:12px; line-height:1.7;">${entry.note || 'Без комментария'}</div></div>`).join('') : '<div class="notice">Пока заявок нет.</div>'}</div></div>`;
-      } else if (state.cabinetTab === 'favorites') {
+      const activeTab = ['overview','profile','waitlist','favorites','orders','access','notifications'].includes(state.cabinetTab) ? state.cabinetTab : 'overview';
+      document.querySelectorAll('[data-cabinet-tab]').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-cabinet-tab') === activeTab));
+      if (activeTab === 'profile') {
+        els.cabinetContent.innerHTML = `<div class="lux-panel"><div class="kicker">Данные профиля</div><div class="grid-2" style="margin-top:16px;">${[['Имя', state.currentUser.name || '—'],['Email', state.currentUser.email || '—'],['Телефон', state.currentUser.phone || '—'],['Город', state.currentUser.city || '—'],['Род занятий', state.currentUser.occupation || '—']].map(([label, value]) => `<div class="metric-card"><div class="kicker">${label}</div><div style="margin-top:8px; line-height:1.6; font-size:16px; color:var(--text);">${value}</div></div>`).join('')}</div></div>`;
+      } else if (activeTab === 'waitlist') {
+        els.cabinetContent.innerHTML = `<div class="lux-panel"><div class="kicker">Мои заявки</div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">Твой личный список интереса к продуктам. Здесь не должно быть хаоса, только понятные сигналы и статусы.</div><div style="display:grid; gap:12px; margin-top:16px;">${waitlistMine.length ? waitlistMine.map(entry => `<div class="metric-card"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700; font-size:18px;">${entry.course_title || entry.courseTitle}</div><div style="margin-top:6px; color:var(--muted);">${formatDate(entry.created_at || entry.createdAt)}</div></div><span class="pill gold">${entry.status || 'new'}</span></div><div style="margin-top:12px; color:var(--muted); line-height:1.7;">${entry.note || 'Без комментария'}</div></div>`).join('') : '<div class="notice soft">Пока заявок нет.</div>'}</div></div>`;
+      } else if (activeTab === 'favorites') {
         const favCourses = courses.filter(c => state.favorites.includes(c.id));
-        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="kicker">Избранные курсы</div><div style="display:grid; gap:12px; margin-top:16px;">${favCourses.length ? favCourses.map(course => `<div class="card" style="padding:18px; box-shadow:none;"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700;">${course.title}</div><div class="muted" style="margin-top:6px;">${course.subtitle}</div></div><div style="display:flex; gap:10px; flex-wrap:wrap;"><button class="btn secondary" data-remove-fav="${course.id}">Убрать</button><button class="btn primary" data-go-waitlist="${course.id}">В waitlist</button></div></div></div>`).join('') : '<div class="notice">Пока ничего не добавлено.</div>'}</div></div>`;
+        els.cabinetContent.innerHTML = `<div class="lux-panel"><div class="kicker">Избранные курсы</div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">Избранное — это твой shortlist.</div><div style="display:grid; gap:12px; margin-top:16px;">${favCourses.length ? favCourses.map(course => `<div class="metric-card"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700; font-size:18px;">${course.title}</div><div style="margin-top:6px; color:var(--muted);">${course.subtitle}</div></div><button class="btn secondary" data-remove-fav="${course.id}">Убрать</button></div></div>`).join('') : '<div class="notice soft">Пока ничего не добавлено.</div>'}</div></div>`;
         els.cabinetContent.querySelectorAll('[data-remove-fav]').forEach(btn => btn.addEventListener('click', () => toggleFavorite(btn.getAttribute('data-remove-fav'))));
-        els.cabinetContent.querySelectorAll('[data-go-waitlist]').forEach(btn => btn.addEventListener('click', () => { state.selectedCourse = courses.find(c => c.id === btn.getAttribute('data-go-waitlist')) || courses[0]; openWaitlistDrawer(); }));
-      } else if (state.cabinetTab === 'notifications') {
-        els.cabinetContent.innerHTML = `<div class="card" style="padding:22px;"><div class="kicker">Уведомления</div><div style="display:grid; gap:12px; margin-top:16px;">${state.notifications.length ? state.notifications.map(note => `<div class="card" style="padding:18px; box-shadow:none;"><div style="font-weight:700;">${note.title}</div><div class="muted" style="margin-top:8px; line-height:1.7;">${note.body}</div><div class="muted" style="margin-top:8px; font-size:13px;">${formatDate(note.created_at || note.createdAt)}</div></div>`).join('') : '<div class="notice">Пока уведомлений нет.</div>'}</div></div>`;
+      } else if (activeTab === 'orders') {
+        const myOrders = getOrdersForCurrentUser();
+        els.cabinetContent.innerHTML = `<div class="lux-panel"><div class="kicker">Покупки</div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">Здесь отображаются все pre-sale заказы и дальнейшие статусы доступа.</div><div style="display:grid; gap:12px; margin-top:16px;">${myOrders.length ? myOrders.map(order => `<div class="metric-card"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700; font-size:18px;">${order.course_title || order.courseTitle}</div><div style="margin-top:6px; color:var(--muted);">${order.tariff_name || order.tariffName} · ${formatPrice(order.amount || 0)}</div></div><span class="pill gold">${order.status || 'pending_payment'}</span></div><div class="status-flow" style="margin-top:12px;"><span class="status-step ${['pending_payment','awaiting_confirmation','paid','access_granted'].includes(order.status) ? 'done' : ''}">pending_payment</span><span class="status-step ${['awaiting_confirmation'].includes(order.status) ? 'active' : ['paid','access_granted'].includes(order.status) ? 'done' : ''}">awaiting_confirmation</span><span class="status-step ${['paid'].includes(order.status) ? 'active' : ['access_granted'].includes(order.status) ? 'done' : ''}">paid</span><span class="status-step ${['access_granted'].includes(order.status) ? 'active' : ''}">access_granted</span></div><div style="margin-top:10px; color:var(--muted); font-size:13px;">${formatDate(order.created_at || order.createdAt)}</div></div>`).join('') : '<div class="notice soft">Пока заказов нет.</div>'}</div></div>`;
+      } else if (activeTab === 'access') {
+        const myAccess = getAccessForCurrentUser();
+        els.cabinetContent.innerHTML = `<div class="lux-panel" style="position:relative; overflow:hidden;"><div style="position:absolute; right:-30px; top:-30px; width:160px; height:160px; border-radius:50%; background:rgba(10,127,57,.08);"></div><div class="kicker">Доступ</div><div style="margin-top:10px;" class="status-flow"><span class="status-step done">paid</span><span class="status-step active">access_granted</span><span class="status-step">course_entry</span></div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">После подтверждения оплаты и выдачи доступа курс появится здесь как активный продукт.</div><div style="display:grid; gap:12px; margin-top:16px;">${myAccess.length ? myAccess.map(item => `<div class="metric-card"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700; font-size:18px;">${item.course_title || item.courseTitle}</div><div style="margin-top:6px; color:var(--muted);">${item.tariff_name || item.tariffName || 'Тариф'}</div></div><span class="pill success">${item.status}</span></div><div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;"><button class="btn secondary" ${item.status === 'access_granted' ? '' : 'disabled style="cursor:default; opacity:.85;"'}>${item.status === 'access_granted' ? 'Открыть курс' : 'Вход в курс скоро'}</button><span class="pill success">готово к выдаче</span></div><div style="margin-top:10px; color:var(--muted); font-size:13px;">${formatDate(item.created_at || item.createdAt)}</div></div>`).join('') : '<div class="notice soft">Пока доступы не выданы. После статуса paid или access_granted курс появится здесь.</div>'}</div></div>`;
+      } else if (activeTab === 'notifications') {
+        els.cabinetContent.innerHTML = `<div class="lux-panel"><div class="kicker">Уведомления</div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">Здесь собираются только важные сигналы.</div><div style="display:grid; gap:12px; margin-top:16px;">${state.notifications.length ? state.notifications.map(note => `<div class="metric-card"><div style="font-weight:700; font-size:18px;">${note.title}</div><div style="margin-top:8px; color:var(--muted); line-height:1.7;">${note.body}</div><div style="margin-top:8px; color:var(--muted); font-size:13px;">${formatDate(note.created_at || note.createdAt)}</div></div>`).join('') : '<div class="notice soft">Пока уведомлений нет.</div>'}</div></div>`;
       } else {
-        els.cabinetContent.innerHTML = `<div class="card dark-panel"><div class="inner"><div style="display:flex; align-items:start; justify-content:space-between; gap:14px;"><div><div class="kicker" style="color:rgba(255,255,255,.55)">Личный кабинет</div><div style="margin-top:8px; font-size:34px; letter-spacing:-0.05em; font-weight:700;">${state.currentUser.name || state.currentUser.email}</div><div style="margin-top:8px; color:rgba(255,255,255,.72); line-height:1.6;">Профиль, избранные курсы и заявки в лист ожидания теперь подгружаются как отдельный дашборд пользователя.</div></div><span class="pill dark">${myWaitlist.length} заявок</span></div><div class="grid-3" style="margin-top:18px;"><div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Курсов в избранном</div><div style="margin-top:8px; font-size:28px; font-weight:700;">${state.favorites.length}</div></div><div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Моих waitlist-заявок</div><div style="margin-top:8px; font-size:28px; font-weight:700;">${myWaitlist.length}</div></div><div class="item"><div class="kicker" style="color:rgba(255,255,255,.55)">Следующий шаг</div><div style="margin-top:8px;">Выбери курс и займи место в листе ожидания.</div></div></div></div></div>`;
+        els.cabinetContent.innerHTML = `<div class="lux-panel" style="position:relative; overflow:hidden;"><div style="position:absolute; right:-30px; top:-30px; width:160px; height:160px; border-radius:50%; background:rgba(183,152,99,.10);"></div><div class="kicker">Обзор</div><div style="margin-top:10px; font-size:34px; letter-spacing:-0.05em; font-weight:700;">${state.currentUser.name || state.currentUser.email}</div><div style="margin-top:10px; color:var(--muted); line-height:1.7;">Кабинет показывает стабильные пользовательские слои: профиль, избранное, заявки, покупки, доступ и уведомления.</div><div class="metric-grid" style="margin-top:18px;"><div class="metric-card"><strong>${state.favorites.length}</strong><span>курсов в избранном</span></div><div class="metric-card"><strong>${waitlistMine.length}</strong><span>моих waitlist-заявок</span></div><div class="metric-card"><strong>${state.notifications.length}</strong><span>уведомлений</span></div></div></div>`;
       }
     }
 
     function renderAdmin() {
+      syncAccessFromOrders();
       const stats = [
         { label: 'Регистрации', value: state.profilesCount || 0 },
         { label: 'Waitlist-заявки', value: state.waitlistEntries.length || 0 },
-        { label: 'Логины', value: state.lastEvents.filter(x => (x.event_name || x.eventName) === 'login_completed').length || 0 },
         { label: 'Избранное', value: state.favorites.length || 0 },
+        { label: 'События', value: state.lastEvents.length || 0 },
+        { label: 'Доступы', value: state.accessItems.length || 0 }
       ];
-      els.adminStats.innerHTML = stats.map(item => `<div class="card" style="padding:20px;"><div class="kicker">${item.label}</div><div style="margin-top:10px; font-size:40px; letter-spacing:-0.05em; font-weight:700;">${item.value}</div></div>`).join('');
-      els.adminLeadsTable.innerHTML = state.waitlistEntries.length ? state.waitlistEntries.map(entry => `<div class="table-row"><div><div style="font-weight:700;">${entry.name}</div><div style="margin-top:4px; color:var(--muted-2);">${entry.email}</div></div><div>${entry.courseTitle || entry.course_title}</div><div><div>${entry.phone || '—'}</div><div style="margin-top:4px; color:var(--muted-2);">${entry.note || '—'}</div></div><div>${formatDate(entry.createdAt || entry.created_at)}</div></div>`).join('') : '<div class="table-row"><div>Пока заявок нет.</div><div></div><div></div><div></div></div>';
-      els.adminEventsList.innerHTML = state.lastEvents.length ? state.lastEvents.map(item => `<div class="card" style="padding:16px; box-shadow:none;"><div style="font-weight:700;">${item.event_name || item.eventName}</div><div class="muted" style="margin-top:8px; line-height:1.6;">${JSON.stringify(item.payload || {})}</div><div class="muted" style="margin-top:8px; font-size:13px;">${formatDate(item.created_at || item.createdAt)}</div></div>`).join('') : '<div class="notice">Пока событий нет.</div>';
+      els.adminStats.innerHTML = stats.map(item => `<div class="owner-stat"><strong>${item.value}</strong><span>${item.label}</span></div>`).join('');
+      els.adminLeadsTable.innerHTML = state.waitlistEntries.length ? state.waitlistEntries.map(entry => `<div class="table-row"><div><div style="font-weight:700;">${entry.name}</div><div style="margin-top:4px; color:var(--muted-2);">${entry.email}</div></div><div><div>${entry.course_title || entry.courseTitle}</div><div style="margin-top:4px;"><span class="pill ${entry.status === 'new' ? 'gold' : 'success'}">${entry.status || 'new'}</span></div></div><div><div>${entry.phone || '—'}</div><div style="margin-top:4px; color:var(--muted-2);">${entry.note || '—'}</div></div><div>${formatDate(entry.created_at || entry.createdAt)}</div></div>`).join('') : '<div class="table-row"><div>Пока заявок нет.</div><div></div><div></div><div></div></div>';
+      const orderCards = state.orders.length ? state.orders.map(order => {
+        const status = order.status || 'pending_payment';
+        const steps = ['pending_payment','awaiting_confirmation','paid','access_granted'];
+        const currentIndex = steps.indexOf(status);
+        return `
+        <div class="metric-card">
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:start;">
+            <div>
+              <div style="font-weight:700; font-size:18px;">${order.course_title || order.courseTitle}</div>
+              <div style="margin-top:6px; color:var(--muted);">${order.tariff_name || order.tariffName || 'Тариф'} · ${order.email || '—'}</div>
+            </div>
+            <span class="pill ${['paid','access_granted'].includes(status) ? 'success' : 'gold'}">${status}</span>
+          </div>
+          <div class="status-flow" style="margin-top:12px;">
+            ${steps.map((step, index) => `<span class="status-step ${index < currentIndex ? 'done' : index === currentIndex ? 'active' : ''}">${step}</span>`).join('')}
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+            <button class="btn secondary" data-order-status="awaiting_confirmation" data-order-id="${order.id}">awaiting_confirmation</button>
+            <button class="btn secondary" data-order-status="paid" data-order-id="${order.id}">paid</button>
+            <button class="btn primary" data-order-status="access_granted" data-order-id="${order.id}">access_granted</button>
+          </div>
+          <div style="margin-top:10px; color:var(--muted); font-size:13px;">${formatDate(order.created_at || order.createdAt)}</div>
+        </div>`;
+      }).join('') : '<div class="notice soft">Пока заказов нет.</div>';
+      els.adminEventsList.innerHTML = `
+        <div class="card glass" style="padding:18px; margin-bottom:12px;">
+          <div class="kicker">Order control</div>
+          <div style="margin-top:10px; font-size:22px; font-weight:700; letter-spacing:-.03em;">Управление статусами заказов</div>
+          <div style="margin-top:8px; color:var(--muted); line-height:1.6;">Owner может вручную переводить заказ к оплате и выдаче доступа.</div>
+        </div>
+        ${orderCards}
+        <div style="display:grid; gap:10px; margin-top:14px;">
+          ${state.lastEvents.length ? state.lastEvents.map(item => `<div class="metric-card"><div style="font-weight:700;">${item.event_name}</div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">${JSON.stringify(item.payload || {})}</div><div style="margin-top:8px; color:var(--muted); font-size:13px;">${formatDate(item.created_at || item.createdAt)}</div></div>`).join('') : '<div class="notice soft">Пока событий нет.</div>'}
+        </div>`;
+      els.adminEventsList.querySelectorAll('[data-order-status]').forEach(btn => btn.addEventListener('click', () => updateOrderStatus(btn.getAttribute('data-order-id'), btn.getAttribute('data-order-status'))));
     }
 
     function updateCounters() {
+      const waitlistMine = myWaitlist();
       els.heroWaitlistCount.textContent = String(state.waitlistEntries.length || 0);
       els.heroProfilesCount.textContent = String(state.profilesCount || 0);
       els.focusCourseTitle.textContent = state.selectedCourse.title;
-      els.focusCourseCount.textContent = String(state.waitlistEntries.filter(x => (x.courseId || x.course_id) === state.selectedCourse.id).length);
+      els.focusCourseCount.textContent = String(state.waitlistEntries.filter(x => (x.course_id || x.courseId) === state.selectedCourse.id).length);
+      els.topbarFavoritesCount.textContent = String(state.favorites.length || 0);
+      els.topbarWaitlistCount.textContent = String(waitlistMine.length || 0);
+      els.topbarGuestActions.classList.toggle('hidden', Boolean(state.currentUser));
+      els.topbarUserActions.classList.toggle('hidden', !state.currentUser);
+      const displayName = state.currentUser ? (state.currentUser.name || state.currentUser.email) : 'Пользователь';
+      els.topbarAvatar.textContent = initials(displayName);
+      els.topbarUserName.textContent = displayName;
+      els.topbarUserRole.textContent = state.currentUser?.role === 'admin' ? 'Owner' : 'Student';
+      els.openAdminBtn.classList.toggle('hidden', state.currentUser?.role !== 'admin');
+      els.cabinetAvatar.textContent = initials(displayName);
+      els.sidebarFavoritesCount.textContent = String(state.favorites.length || 0);
+      els.sidebarWaitlistCount.textContent = String(waitlistMine.length || 0);
+      els.cabinetMetricFavorites.textContent = String(state.favorites.length || 0);
+      els.cabinetMetricWaitlist.textContent = String(waitlistMine.length || 0);
+      els.cabinetMetricNotes.textContent = String(state.notifications.length || 0);
     }
 
-    function renderAll() {
-      renderCatalog();
-      renderLegal();
-      renderFaq();
-      renderCabinet();
-      renderAdmin();
-      updateCounters();
-      const dbText = state.dbReady ? 'База подключена. ' : 'База ещё донастраивается. ';
-      const webhookText = state.webhookReady ? 'Webhook подключён.' : 'Webhook пока не подключён.';
-      els.configBanner.textContent = dbText + webhookText;
+    function openWaitlistDrawer() { els.drawerBackdrop.classList.add('open'); els.waitlistDrawer.classList.add('open'); syncWaitlistDrawer(); }
+    function closeWaitlistDrawer() { els.drawerBackdrop.classList.remove('open'); els.waitlistDrawer.classList.remove('open'); setMessage(els.waitlistMessage, ''); }
+    function openCheckout(courseId) {
+      const course = courses.find(x => x.id === courseId) || courses[0];
+      const tariff = getTariffsForCourse(course.id)[0];
+      state.selectedCourse = course; state.selectedTariff = tariff;
+      els.checkoutTitle.textContent = `${course.title} · ${tariff.name}`;
+      els.checkoutSummary.innerHTML = `<div class="checkout-row"><div><div class="kicker">Курс</div><div style="margin-top:6px; font-weight:700; font-size:18px;">${course.title}</div></div><div class="pill dark">${tariff.name}</div></div><div class="checkout-row"><div><div class="kicker">Что входит</div><div style="margin-top:6px; color:var(--muted); line-height:1.6; max-width:320px;">${tariff.note}</div></div><div class="checkout-price">${formatPrice(tariff.price)}</div></div><div class="checkout-row"><div><div class="kicker">Статус заказа</div><div style="margin-top:6px; color:var(--muted);">После оформления заказ появится в кабинете как pending_payment.</div></div><span class="pill gold">pending_payment</span></div>`;
+      els.checkoutEmail.value = state.currentUser.email; els.checkoutComment.value = ''; setMessage(els.checkoutMessage, ''); els.drawerBackdrop.classList.add('open'); els.checkoutDrawer.classList.add('open'); document.body.classList.add('locked');
     }
-
-    async function initSupabase() {
-      if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) return;
-      try {
-        state.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        state.dbReady = true;
-        const { data: sessionData } = await state.supabase.auth.getSession();
-        if (sessionData?.session?.user) await hydrateUser(sessionData.session.user);
-        await loadPublicData();
-      } catch (e) {
-        console.error(e);
-        state.dbReady = false;
-      }
-      renderAll();
+    function closeCheckout() { els.checkoutDrawer.classList.remove('open'); if (!els.waitlistDrawer.classList.contains('open')) { els.drawerBackdrop.classList.remove('open'); document.body.classList.remove('locked'); } setMessage(els.checkoutMessage, ''); }
+    function syncWaitlistDrawer() {
+      els.drawerTitle.textContent = `Лист ожидания · ${state.selectedCourse.title}`;
+      els.drawerAuthGuard.classList.add('hidden'); els.drawerFormWrap.classList.remove('hidden');
+      els.waitlistName.value = state.currentUser.name || ''; els.waitlistEmail.value = state.currentUser.email || ''; els.waitlistPhone.value = state.currentUser.phone || '';
+      const alreadyJoined = getCurrentCourseWaitlistStatus(state.selectedCourse.id);
+      els.waitlistStatusBadges.innerHTML = alreadyJoined ? '<span class="pill success">Уже сохранён</span><span class="pill">Статус активен</span>' : '<span class="pill">Сохраним интерес</span><span class="pill gold">Без дублей</span>';
+      if (alreadyJoined) { setMessage(els.waitlistMessage, `Ты уже в листе ожидания по этому курсу. Статус: ${alreadyJoined}.`, 'success'); els.submitWaitlistBtn.textContent = 'Уже в листе ожидания'; els.submitWaitlistBtn.disabled = true; els.submitWaitlistBtn.style.opacity = '.72'; }
+      else { setMessage(els.waitlistMessage, ''); els.submitWaitlistBtn.textContent = 'Встать в лист ожидания'; els.submitWaitlistBtn.disabled = false; els.submitWaitlistBtn.style.opacity = '1'; }
     }
-
-    async function loadPublicData() {
-      if (!state.supabase) return;
-      try {
-        const [{ count: profilesCount }, { data: waitlistData }, { data: eventsData }] = await Promise.all([
-          state.supabase.from('profiles').select('id', { count: 'exact', head: true }),
-          state.supabase.from('waitlist_entries').select('*').order('created_at', { ascending: false }),
-          state.supabase.from('platform_events').select('*').order('created_at', { ascending: false }).limit(10),
-        ]);
-        state.profilesCount = profilesCount || 0;
-        state.waitlistEntries = waitlistData || [];
-        state.lastEvents = eventsData || [];
-      } catch (e) {
-        console.error(e);
-      }
+    function openCabinet() { els.cabinetScreen.classList.add('active'); els.adminScreen.classList.remove('active'); document.body.classList.add('locked'); renderCabinet(); }
+    function closeDashboards() { els.cabinetScreen.classList.remove('active'); els.adminScreen.classList.remove('active'); document.body.classList.remove('locked'); }
+    function setActiveAuth(mode) { const reg = mode === 'register'; els.tabRegister.classList.toggle('active', reg); els.tabLogin.classList.toggle('active', !reg); els.registerFields.classList.toggle('hidden', !reg); els.authSubmitBtn.textContent = reg ? 'Создать кабинет' : 'Войти'; }
+    function toggleFavorite(courseId) { const exists = state.favorites.includes(courseId); state.favorites = exists ? state.favorites.filter(x => x !== courseId) : [...new Set([...state.favorites, courseId])]; renderAll(); if (els.cabinetScreen.classList.contains('active')) renderCabinet(); }
+    function submitCheckout() {
+      const payload = { id: `local-order-${Date.now()}`, user_id: state.currentUser.id, email: els.checkoutEmail.value.trim() || state.currentUser.email, course_id: state.selectedCourse.id, course_title: state.selectedCourse.title, tariff_id: state.selectedTariff.id, tariff_name: state.selectedTariff.name, amount: state.selectedTariff.price, comment: els.checkoutComment.value.trim(), status: 'pending_payment', created_at: new Date().toISOString() };
+      state.orders = [payload, ...state.orders]; syncAccessFromOrders(); state.notifications = [{ title: 'Заказ создан', body: `Мы создали заказ на тариф «${state.selectedTariff.name}» по курсу «${state.selectedCourse.title}».`, created_at: new Date().toISOString() }, ...state.notifications]; state.lastEvents = [{ event_name: 'order_created', payload: { courseId: state.selectedCourse.id, tariffId: state.selectedTariff.id, amount: state.selectedTariff.price }, created_at: new Date().toISOString() }, ...state.lastEvents].slice(0, 10); setMessage(els.checkoutMessage, 'Заказ создан. Он уже отражён в кабинете и у owner.', 'success'); renderAll(); state.cabinetTab = 'orders'; setTimeout(() => { closeCheckout(); openCabinet(); }, 400);
     }
-
-    async function hydrateUser(user) {
-      if (!state.supabase || !user) return;
-      try {
-        const [{ data: profile }, { data: notes }, { data: favs }] = await Promise.all([
-          state.supabase.from('profiles').select('*').eq('id', user.id).single(),
-          state.supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-          state.supabase.from('user_favorites').select('course_id').eq('user_id', user.id),
-        ]);
-        state.currentUser = profile ? { id: profile.id, name: profile.name, email: profile.email, phone: profile.phone, city: profile.city, occupation: profile.occupation, role: profile.role } : { id: user.id, email: user.email, name: user.email, role: 'student' };
-        state.notifications = notes || [];
-        state.favorites = (favs || []).map(x => x.course_id);
-        if (profile?.role === 'admin') state.adminMode = true;
-        await loadPublicData();
-        renderAll();
-      } catch (e) {
-        console.error(e);
-      }
+    function updateOrderStatus(orderId, newStatus) {
+      const idx = state.orders.findIndex(order => String(order.id) === String(orderId)); if (idx === -1) return; const current = state.orders[idx]; state.orders[idx] = { ...current, status: newStatus }; syncAccessFromOrders(); state.notifications = [{ title: 'Статус заказа обновлён', body: `Статус заказа по курсу «${current.course_title || current.courseTitle}» изменён на ${newStatus}.`, created_at: new Date().toISOString() }, ...state.notifications]; state.lastEvents = [{ event_name: 'order_status_updated', payload: { orderId: current.id, status: newStatus, courseId: current.course_id || current.courseId }, created_at: new Date().toISOString() }, ...state.lastEvents].slice(0, 10); renderAll(); if (els.cabinetScreen.classList.contains('active')) renderCabinet();
     }
-
-    async function registerUser() {
-      if (!state.supabase) { setMessage(els.authMessage, 'База пока не подключена.'); return; }
-      const name = els.regName.value.trim();
-      const email = els.authEmail.value.trim().toLowerCase();
-      const password = els.authPassword.value.trim();
-      if (!name || !email || !password) { setMessage(els.authMessage, 'Заполни имя, email и пароль.'); return; }
-      try {
-        const { data, error } = await state.supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        const user = data.user;
-        if (!user) throw new Error('Не удалось создать пользователя.');
-        await state.supabase.from('profiles').upsert({ id: user.id, email, name, phone: els.regPhone.value.trim(), city: els.regCity.value.trim(), occupation: els.regOccupation.value.trim(), role: 'student' });
-        await state.supabase.from('notifications').insert({ user_id: user.id, title: 'Аккаунт создан', body: 'Кабинет активирован. Можно вставать в лист ожидания.' });
-        await state.supabase.from('platform_events').insert({ user_id: user.id, event_name: 'signup_completed', payload: { email } });
-        if (!data.session) {
-          const signInRes = await state.supabase.auth.signInWithPassword({ email, password });
-          if (signInRes.error) {
-            setMessage(els.authMessage, 'Аккаунт создан. Если сессия не открылась автоматически, попробуй войти вручную.');
-            await loadPublicData();
-            renderAll();
-            return;
-          }
-          await hydrateUser(signInRes.data.user);
-        } else {
-          await hydrateUser(user);
-        }
-        setMessage(els.authMessage, 'Аккаунт создан. Кабинет открыт.');
-        openCabinet();
-      } catch (e) {
-        setMessage(els.authMessage, e.message || 'Не удалось создать аккаунт.');
-      }
+    function submitWaitlist() {
+      const exists = state.waitlistEntries.some(x => (getEntryUserId(x) === state.currentUser.id || x.email === state.currentUser.email) && (getEntryCourseId(x) === state.selectedCourse.id));
+      if (exists) { setMessage(els.waitlistMessage, 'Ты уже в листе ожидания по этому курсу.', 'success'); return; }
+      const saved = { id: `local-${Date.now()}`, user_id: state.currentUser.id, course_id: state.selectedCourse.id, course_title: state.selectedCourse.title, name: state.currentUser.name, email: state.currentUser.email, phone: els.waitlistPhone.value.trim(), note: els.waitlistNote.value.trim(), status: 'new', created_at: new Date().toISOString() };
+      state.waitlistEntries = [saved, ...state.waitlistEntries]; rebuildWaitlistStatusMap(); state.notifications = [{ title: 'Ты в листе ожидания', body: `Мы сохранили заявку на курс «${state.selectedCourse.title}».`, created_at: new Date().toISOString() }, ...state.notifications]; state.lastEvents = [{ event_name: 'waitlist_joined', payload: { courseId: state.selectedCourse.id, courseTitle: state.selectedCourse.title, email: state.currentUser.email }, created_at: new Date().toISOString() }, ...state.lastEvents].slice(0, 10); setMessage(els.waitlistMessage, 'Готово. Ты в листе ожидания, а заявка уже появилась в кабинете.', 'success'); renderAll(); state.cabinetTab = 'waitlist'; if (els.cabinetScreen.classList.contains('active')) renderCabinet();
     }
-
-    async function loginUser() {
-      if (!state.supabase) { setMessage(els.authMessage, 'База пока не подключена.'); return; }
-      const email = els.authEmail.value.trim().toLowerCase();
-      const password = els.authPassword.value.trim();
-      if (!email || !password) { setMessage(els.authMessage, 'Заполни email и пароль.'); return; }
-      try {
-        const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        await state.supabase.from('platform_events').insert({ user_id: data.user.id, event_name: 'login_completed', payload: { email } });
-        await hydrateUser(data.user);
-        setMessage(els.authMessage, 'Вход выполнен.');
-        openCabinet();
-      } catch (e) {
-        setMessage(els.authMessage, e.message || 'Неверный email или пароль.');
-      }
-    }
-
-    async function toggleFavorite(courseId) {
-      if (!state.currentUser || !state.supabase) {
-        document.getElementById('auth').scrollIntoView({ behavior: 'smooth' });
-        return;
-      }
-      const exists = state.favorites.includes(courseId);
-      try {
-        if (exists) {
-          await state.supabase.from('user_favorites').delete().eq('user_id', state.currentUser.id).eq('course_id', courseId);
-          state.favorites = state.favorites.filter(x => x !== courseId);
-        } else {
-          await state.supabase.from('user_favorites').upsert({ user_id: state.currentUser.id, course_id: courseId });
-          state.favorites.push(courseId);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-      await loadPublicData();
-      renderAll();
-    }
-
-    async function submitWaitlist() {
-      if (!state.currentUser) { setMessage(els.waitlistMessage, 'Сначала войди или зарегистрируйся.'); return; }
-      const exists = state.waitlistEntries.some(x => (x.user_id === state.currentUser.id || x.userId === state.currentUser.id) && (x.course_id === state.selectedCourse.id || x.courseId === state.selectedCourse.id));
-      if (exists) { setMessage(els.waitlistMessage, 'Ты уже в листе ожидания по этому курсу.'); return; }
-      const payload = { user_id: state.currentUser.id, course_id: state.selectedCourse.id, course_title: state.selectedCourse.title, name: state.currentUser.name, email: state.currentUser.email, phone: els.waitlistPhone.value.trim(), note: els.waitlistNote.value.trim(), source: 'site', status: 'new', created_at: new Date().toISOString() };
-      let savedEntry = null;
-      let dbFailed = false;
-      if (state.supabase) {
-        try {
-          const { data, error } = await state.supabase.from('waitlist_entries').insert(payload).select('*').single();
-          if (error) throw error;
-          savedEntry = data;
-          await state.supabase.from('notifications').insert({ user_id: state.currentUser.id, title: 'Ты в листе ожидания', body: `Мы сохранили заявку на курс «${state.selectedCourse.title}».` });
-          await state.supabase.from('platform_events').insert({ user_id: state.currentUser.id, event_name: 'waitlist_joined', payload: { courseId: state.selectedCourse.id, courseTitle: state.selectedCourse.title } });
-        } catch (e) {
-          console.error(e);
-          dbFailed = true;
-        }
-      } else {
-        dbFailed = true;
-      }
-      if (!savedEntry) {
-        savedEntry = { id: `local-${Date.now()}`, userId: state.currentUser.id, courseId: state.selectedCourse.id, courseTitle: state.selectedCourse.title, name: state.currentUser.name, email: state.currentUser.email, phone: payload.phone, note: payload.note, source: 'site', status: 'new', createdAt: payload.created_at };
-      }
-      state.waitlistEntries.unshift(savedEntry);
-      state.notifications.unshift({ title: 'Ты в листе ожидания', body: `Мы сохранили заявку на курс «${state.selectedCourse.title}».`, created_at: new Date().toISOString() });
-      if (WAITLIST_WEBHOOK_URL) {
-        try {
-          await fetch(WAITLIST_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entry: savedEntry, ownerEmail: OWNER_NOTIFICATION_EMAIL }) });
-        } catch (e) { console.error(e); }
-      }
-      setMessage(els.waitlistMessage, dbFailed ? 'Заявка принята. База ещё донастраивается, но запрос сохранён и отправлен владельцу.' : 'Заявка сохранена.');
-      renderAll();
-    }
-
+    function renderPublicShell() { renderCatalog(); renderLegal(); renderFaq(); updateCounters(); }
+    function runCoreRegression() { return [{ name: 'catalog', ok: Boolean(els.coursesGrid && els.coursesGrid.children.length >= 1) }, { name: 'legal-list', ok: Boolean(els.legalList && els.legalList.children.length >= 1) }, { name: 'legal-text', ok: Boolean(els.legalText && String(els.legalText.textContent || '').trim().length > 50) }, { name: 'faq', ok: Boolean(els.faqList && els.faqList.children.length >= 1) }, { name: 'footer-legal', ok: Boolean(els.footerLegalLinks && els.footerLegalLinks.children.length >= 1) }, { name: 'cabinet-shell', ok: Boolean(els.cabinetContent) }, { name: 'owner-shell', ok: Boolean(els.adminStats && els.adminLeadsTable && els.adminEventsList) }, { name: 'waitlist-drawer', ok: Boolean(els.waitlistDrawer && els.submitWaitlistBtn) }, { name: 'checkout-drawer', ok: Boolean(els.checkoutDrawer && els.submitCheckoutBtn) }, { name: 'access-layer', ok: Array.isArray(state.accessItems) }]; }
+    function updateRegressionBanner() { const failed = runCoreRegression().filter(item => !item.ok).map(item => item.name); els.regressionBanner.classList.remove('hidden'); els.regressionBanner.textContent = failed.length === 0 ? 'Regression check: core стабилен. Каталог, legal, кабинет, owner-layer, waitlist, checkout и access проходят базовую проверку.' : `Regression warning: требуется проверка зон — ${failed.join(', ')}.`; }
+    function renderUserShell() { renderCabinet(); renderAdmin(); updateCounters(); }
+    function renderAll() { renderPublicShell(); renderUserShell(); updateRegressionBanner(); }
     function bindEvents() {
-      els.catalogSearch.addEventListener('input', renderCatalog);
+      els.catalogSearch.addEventListener('input', () => { renderCatalog(); updateRegressionBanner(); });
       els.openWaitlistBtn.addEventListener('click', openWaitlistDrawer);
+      els.openWaitlistLoggedBtn.addEventListener('click', () => { state.cabinetTab = 'waitlist'; openCabinet(); });
+      els.openCabinetBtn.addEventListener('click', openCabinet);
+      els.openFavoritesBtn.addEventListener('click', () => { state.cabinetTab = 'favorites'; openCabinet(); });
+      els.openAdminBtn.addEventListener('click', () => { els.adminScreen.classList.add('active'); els.cabinetScreen.classList.remove('active'); document.body.classList.add('locked'); renderAdmin(); });
       els.openAuthBtn.addEventListener('click', () => document.getElementById('auth').scrollIntoView({ behavior: 'smooth' }));
       els.closeDrawerBtn.addEventListener('click', closeWaitlistDrawer);
-      els.drawerBackdrop.addEventListener('click', closeWaitlistDrawer);
-      els.drawerRegisterBtn.addEventListener('click', () => { closeWaitlistDrawer(); setActiveAuth('register'); document.getElementById('auth').scrollIntoView({ behavior: 'smooth' }); });
-      els.drawerLoginBtn.addEventListener('click', () => { closeWaitlistDrawer(); setActiveAuth('login'); document.getElementById('auth').scrollIntoView({ behavior: 'smooth' }); });
+      els.drawerBackdrop.addEventListener('click', () => { closeWaitlistDrawer(); closeCheckout(); });
+      els.drawerRegisterBtn?.addEventListener('click', () => { closeWaitlistDrawer(); setActiveAuth('register'); document.getElementById('auth').scrollIntoView({ behavior: 'smooth' }); });
+      els.drawerLoginBtn?.addEventListener('click', () => { closeWaitlistDrawer(); setActiveAuth('login'); document.getElementById('auth').scrollIntoView({ behavior: 'smooth' }); });
       els.submitWaitlistBtn.addEventListener('click', submitWaitlist);
+      els.submitCheckoutBtn.addEventListener('click', submitCheckout);
+      els.closeCheckoutBtn.addEventListener('click', closeCheckout);
       els.tabRegister.addEventListener('click', () => setActiveAuth('register'));
       els.tabLogin.addEventListener('click', () => setActiveAuth('login'));
-      els.authSubmitBtn.addEventListener('click', () => state.authMode === 'register' ? registerUser() : loginUser());
+      els.authSubmitBtn.addEventListener('click', () => { setMessage(els.authMessage, 'В preview-режиме auth показывает только интерфейс. Для реальной работы используем боевой файл.', 'success'); openCabinet(); });
       els.cabinetBackBtn.addEventListener('click', closeDashboards);
       els.adminBackBtn.addEventListener('click', closeDashboards);
-      els.cabinetLogoutBtn.addEventListener('click', async () => {
-        if (state.supabase) await state.supabase.auth.signOut();
-        state.currentUser = null;
-        state.notifications = [];
-        state.favorites = [];
-        closeDashboards();
-        renderAll();
-      });
-      document.querySelectorAll('[data-cabinet-tab]').forEach(btn => btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-cabinet-tab]').forEach(x => x.classList.remove('active'));
-        btn.classList.add('active');
-        state.cabinetTab = btn.getAttribute('data-cabinet-tab');
-        renderCabinet();
-      }));
+      els.cabinetLogoutBtn.addEventListener('click', () => setMessage(els.authMessage, 'В preview logout не отключает демо-пользователя.')); 
+      document.querySelectorAll('[data-cabinet-tab]').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('[data-cabinet-tab]').forEach(x => x.classList.remove('active')); btn.classList.add('active'); state.cabinetTab = btn.getAttribute('data-cabinet-tab'); renderCabinet(); }));
     }
 
-    runChecks();
+    rebuildWaitlistStatusMap();
+    syncAccessFromOrders();
     bindEvents();
     setActiveAuth('register');
     renderAll();
-    initSupabase();
   </script>
 </body>
 </html>
-
