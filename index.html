@@ -245,7 +245,7 @@
                 <div class="item">Оформление заказа и статусы доступа</div>
                 <div class="item">Юридический контур сайта</div>
               </div>
-              <div id="supabaseStatusCard" class="notice warn" style="margin-top:16px;">Подключение к сервисам проверяется.</div>
+              <div id="supabaseStatusCard" class="notice warn hidden" style="margin-top:16px;"></div>
             </div>
           </div>
         </div>
@@ -292,7 +292,6 @@
           <div class="card glass" style="padding:18px 20px;">
             <div class="kicker">Курс в фокусе</div>
             <div id="focusCourseTitle" style="margin-top:10px; font-size:28px; letter-spacing:-0.04em; font-weight:700;">Архитекторы реальности</div>
-            <div style="color:var(--muted); margin-top:10px; line-height:1.6;">Заявок по этому курсу: <span id="focusCourseCount">0</span></div>
           </div>
         </div>
         <div class="catalog-controls">
@@ -375,7 +374,7 @@
             <h2>Юридический контур сайта</h2>
             <div class="section-desc">Все ключевые документы собраны в одном разделе и доступны из сайта и футера.</div>
           </div>
-          <div class="card glass"><div class="kicker">Продавец</div><div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">Дмитриев Михаил Александрович</div><div style="color:var(--muted); margin-top:8px; line-height:1.6;">Статус: самозанятый. ИНН: 772453231807. Контакт: mikhsan@yandex.ru.</div></div>
+          <div class="card glass"><div class="kicker">Продавец</div><div style="margin-top:10px; font-size:24px; letter-spacing:-0.03em; font-weight:700;">Дмитриев Михаил Александрович</div><div style="color:var(--muted); margin-top:8px; line-height:1.6;">Статус: самозанятый. ИНН: 772453231807. Контакт: ceo@manyfeed.ru.</div></div>
         </div>
         <div class="grid-2">
           <div class="card card-strong glass" style="padding:18px;" id="legalList"></div>
@@ -425,7 +424,7 @@
         <div class="legal-links" id="footerLegalLinks" style="margin-top:14px;"></div>
         <div class="card glass" style="margin-top:14px; padding:14px 16px;">
           <div class="kicker">Support</div>
-          <div style="margin-top:8px; color:var(--muted); line-height:1.6; font-size:14px;">По вопросам работы сайта, кабинета и доступа можно обращаться на mikhsan@yandex.ru.</div>
+          <div style="margin-top:8px; color:var(--muted); line-height:1.6; font-size:14px;">По вопросам работы сайта, кабинета и доступа можно обращаться на ceo@manyfeed.ru.</div>
         </div>
       </div>
     </div>
@@ -595,7 +594,7 @@
   <script>
     const SUPABASE_URL = 'https://vbomuwdabjtcnvvwfxtt.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_qMSROQdi856dh55hmv3lKg_DDeiY6Ib';
-    const OWNER_EMAIL = 'mikhsan@yandex.ru';
+    const OWNER_EMAIL = 'ceo@manyfeed.ru';
 
     const tariffMatrix = {
       'architectors-reality': [
@@ -616,16 +615,16 @@
     ];
 
     const legalPages = [
-      { id: 'offer', title: 'Пользовательское соглашение / оферта', text: 'Настоящий сайт lectaro.ru используется для информирования о проекте «Архитекторы реальности», регистрации пользователей, создания личных кабинетов и сбора заявок в лист ожидания. Владелец сайта: Дмитриев Михаил Александрович, статус: самозанятый, ИНН: 772453231807, email: mikhsan@yandex.ru. На текущем этапе сайт работает в режиме раннего доступа: карточки курсов и цены носят информационный характер, а доступ к учебным материалам будет предоставляться после официального запуска соответствующих продуктов.' },
-      { id: 'privacy', title: 'Политика конфиденциальности', text: 'Оператор обрабатывает имя, email, телефон, город, род занятий, сведения о выбранных курсах и историю заявок в лист ожидания для регистрации пользователя, ведения личного кабинета, обратной связи, уведомлений о запуске курсов и улучшения работы сайта. Пользователь вправе запросить сведения об обработке, уточнение или удаление данных по адресу mikhsan@yandex.ru.' },
+      { id: 'offer', title: 'Пользовательское соглашение / оферта', text: 'Настоящий сайт lectaro.ru используется для информирования о проекте «Архитекторы реальности», регистрации пользователей, создания личных кабинетов и сбора заявок в лист ожидания. Владелец сайта: Дмитриев Михаил Александрович, статус: самозанятый, ИНН: 772453231807, email: ceo@manyfeed.ru. На текущем этапе сайт работает в режиме раннего доступа: карточки курсов и цены носят информационный характер, а доступ к учебным материалам будет предоставляться после официального запуска соответствующих продуктов.' },
+      { id: 'privacy', title: 'Политика конфиденциальности', text: 'Оператор обрабатывает имя, email, телефон, город, род занятий, сведения о выбранных курсах и историю заявок в лист ожидания для регистрации пользователя, ведения личного кабинета, обратной связи, уведомлений о запуске курсов и улучшения работы сайта. Пользователь вправе запросить сведения об обработке, уточнение или удаление данных по адресу ceo@manyfeed.ru.' },
       { id: 'consent', title: 'Согласие на обработку персональных данных', text: 'Оставляя данные на сайте lectaro.ru, пользователь выражает согласие Дмитриеву Михаилу Александровичу на сбор, запись, хранение, использование, уточнение и удаление переданных персональных данных в целях регистрации, ведения кабинета, обработки заявок, обратной связи и направления технических уведомлений.' },
       { id: 'cookies', title: 'Политика использования cookie', text: 'Сайт может использовать cookie и иные аналогичные технологии для сохранения пользовательской сессии, улучшения работы интерфейса, аналитики и безопасности. Пользователь может ограничить cookie в настройках браузера, однако это может повлиять на корректность отдельных функций сайта.' },
-      { id: 'marketing', title: 'Согласие на информационные и рекламные сообщения', text: 'Пользователь может дать отдельное согласие на получение информационных и рекламных сообщений о запуске курсов, вебинарах, специальных предложениях и обновлениях проекта. От такого согласия можно отказаться в любой момент, написав на mikhsan@yandex.ru.' },
-      { id: 'seller', title: 'Сведения о продавце', text: 'Продавец / оператор сайта: Дмитриев Михаил Александрович. Статус: самозанятый. ИНН: 772453231807. Контактный email: mikhsan@yandex.ru.' },
+      { id: 'marketing', title: 'Согласие на информационные и рекламные сообщения', text: 'Пользователь может дать отдельное согласие на получение информационных и рекламных сообщений о запуске курсов, вебинарах, специальных предложениях и обновлениях проекта. От такого согласия можно отказаться в любой момент, написав на ceo@manyfeed.ru.' },
+      { id: 'seller', title: 'Сведения о продавце', text: 'Продавец / оператор сайта: Дмитриев Михаил Александрович. Статус: самозанятый. ИНН: 772453231807. Контактный email: ceo@manyfeed.ru.' },
       { id: 'payment', title: 'Условия оплаты', text: 'До запуска продаж сайт используется для информирования и сбора заявок. После запуска продаж на сайте будут размещены актуальные условия оплаты, порядок оформления заказа, способы оплаты и правила предоставления электронных чеков.' },
       { id: 'refund', title: 'Условия возврата', text: 'До запуска продаж сайт не формирует денежных обязательств пользователя в части образовательных продуктов. После запуска продаж на сайте будут размещены условия возврата и порядок рассмотрения обращений.' },
       { id: 'access', title: 'Порядок предоставления доступа', text: 'В режиме раннего доступа пользователю предоставляется доступ к информационным разделам сайта и личному кабинету. Доступ к учебным материалам будет открыт после официального запуска конкретного продукта и, при необходимости, после выполнения условий оплаты.' },
-      { id: 'support', title: 'Контакты поддержки', text: 'По вопросам регистрации, кабинета, удаления персональных данных, листа ожидания и правовых документов можно обращаться по адресу mikhsan@yandex.ru.' }
+      { id: 'support', title: 'Контакты поддержки', text: 'По вопросам регистрации, кабинета, удаления персональных данных, листа ожидания и правовых документов можно обращаться по адресу ceo@manyfeed.ru.' }
     ];
 
     const faqs = [
@@ -691,14 +690,15 @@
 
     function setSupabaseStatus() {
       if (state.dbReady) {
-        els.supabaseStatusCard.className = 'notice soft';
-        els.supabaseStatusCard.textContent = 'Подключение к Supabase активно. Регистрация, кабинет, waitlist и заказы работают через базу.';
+        els.supabaseStatusCard.classList.add('hidden');
+        els.supabaseStatusCard.textContent = '';
       } else if (state.dbError) {
+        els.supabaseStatusCard.classList.remove('hidden');
         els.supabaseStatusCard.className = 'notice warn';
-        els.supabaseStatusCard.textContent = `Supabase не подключён: ${state.dbError}`;
+        els.supabaseStatusCard.textContent = 'Временно недоступна часть функций сайта. Попробуйте позже.';
       } else {
-        els.supabaseStatusCard.className = 'notice warn';
-        els.supabaseStatusCard.textContent = 'Подключение к Supabase проверяется.';
+        els.supabaseStatusCard.classList.add('hidden');
+        els.supabaseStatusCard.textContent = '';
       }
     }
 
@@ -939,7 +939,7 @@
       els.heroWaitlistCount.textContent = String(state.waitlistEntries.length || 0);
       els.heroProfilesCount.textContent = String(state.profilesCount || 0);
       els.focusCourseTitle.textContent = state.selectedCourse.title;
-      els.focusCourseCount.textContent = String(state.waitlistEntries.filter(x => x.course_id === state.selectedCourse.id).length);
+      
       els.topbarFavoritesCount.textContent = String(state.favorites.length || 0);
       els.topbarWaitlistCount.textContent = String(waitlistMine.length || 0);
       els.topbarGuestActions.classList.toggle('hidden', Boolean(state.currentUser));
@@ -1099,7 +1099,7 @@
         renderAll();
         setTimeout(() => { closeCheckout(); openCabinet(); }, 350);
       } catch (e) {
-        setMessage(els.checkoutMessage, `Ошибка заказа: ${e.message || e}`, 'error');
+        setMessage(els.checkoutMessage, 'Не удалось сохранить заказ. Требуется корректировка доступа к базе данных.', 'error');
       }
     }
 
@@ -1154,7 +1154,7 @@
         setMessage(els.waitlistMessage, 'Готово. Заявка сохранена.', 'success');
         renderAll();
       } catch (e) {
-        setMessage(els.waitlistMessage, `Ошибка заявки: ${e.message || e}`, 'error');
+        setMessage(els.waitlistMessage, 'Не удалось сохранить заявку. Требуется корректировка доступа к базе данных.', 'error');
       }
     }
 
@@ -1203,7 +1203,7 @@
           renderAll();
           openCabinet();
         } catch (e) {
-          setMessage(els.authMessage, `Ошибка регистрации: ${e.message || e}`, 'error');
+          setMessage(els.authMessage, 'Не удалось завершить регистрацию. Проверьте данные или повторите попытку позже.', 'error');
         }
       } else {
         try {
@@ -1215,7 +1215,7 @@
           renderAll();
           openCabinet();
         } catch (e) {
-          setMessage(els.authMessage, `Ошибка входа: ${e.message || e}`, 'error');
+          setMessage(els.authMessage, 'Не удалось выполнить вход. Проверьте email и пароль.', 'error');
         }
       }
     }
@@ -1289,4 +1289,3 @@
   </script>
 </body>
 </html>
-
