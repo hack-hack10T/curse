@@ -713,6 +713,7 @@
       if (code === '23505') return 'Такая запись уже существует. Дубликат не сохранён.';
       if (code === '42501') return 'Нет прав на эту операцию. Нужно обновить политики доступа в Supabase.';
       if (code === '42P01') return 'В базе не найдена нужная таблица. Нужно применить SQL-схему проекта.';
+      if (code === '42P17' || /infinite recursion detected in policy/i.test(details)) return 'В Supabase зациклена RLS-политика. Нужно заменить policy для таблицы profiles.';
       return details ? `${fallback} ${details}` : fallback;
     }
 
