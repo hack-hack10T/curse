@@ -667,7 +667,7 @@
       <button class="icon-btn" id="closeCheckoutBtn">✕</button>
     </div>
     <div class="card card-strong glass" style="padding:20px;">
-      <div class="checkout-note">После оформления заказ появится в личном кабинете и будет обработан владельцем платформы.</div>
+      <div class="checkout-note" id="checkoutNote">Для клуба оплата проходит сразу через ЮKassa, а ссылка в Telegram открывается после подтверждения платежа.</div>
       <div style="margin-top:18px;" id="checkoutSummary"></div>
       <div class="form-grid" style="margin-top:18px;">
         <div class="field"><label>Email для заказа</label><input class="input" id="checkoutEmail" /></div>
@@ -709,6 +709,25 @@
     const SUPABASE_URL = 'https://vbomuwdabjtcnvvwfxtt.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_qMSROQdi856dh55hmv3lKg_DDeiY6Ib';
     const OWNER_EMAIL = 'ceo@manyfeed.ru';
+    const TELEGRAM_INVITE_LINK = 'https://t.me/+bwkhKuWv4L5kZGUy';
+    const YOOKASSA_CREATE_PAYMENT_URL = 'https://vbomuwdabjtcnvvwfxtt.supabase.co/functions/v1/yookassa-create-payment';
+    const YOOKASSA_PAYMENT_STATUS_URL = 'https://vbomuwdabjtcnvvwfxtt.supabase.co/functions/v1/yookassa-payment-status';
+    const CLUB_PRODUCT_ID = 'club-architectors-reality';
+    const CLUB_TARIFF_ID = 'club-30-days';
+    const clubProduct = {
+      id: CLUB_PRODUCT_ID,
+      kind: 'club',
+      title: 'Клуб архитекторов реальности',
+      subtitle: 'Доступ в закрытый Telegram-канал на 30 дней',
+      shortDescription: 'Закрытый Telegram-клуб с промптами, материалами проекта и практическими AI-разборами.',
+      badge: 'Доступ сразу после оплаты'
+    };
+    const clubTariff = {
+      id: CLUB_TARIFF_ID,
+      name: '30 дней',
+      price: 99,
+      note: 'Доступ в закрытый Telegram-канал на 30 календарных дней. После успешной оплаты откроется ссылка-приглашение.'
+    };
 
     const tariffMatrix = {
       'architectors-reality': [
@@ -735,9 +754,9 @@
       { id: 'cookies', title: 'Политика использования cookie', text: 'Сайт может использовать cookie и иные аналогичные технологии для сохранения пользовательской сессии, улучшения работы интерфейса, аналитики и безопасности. Пользователь может ограничить cookie в настройках браузера, однако это может повлиять на корректность отдельных функций сайта.' },
       { id: 'marketing', title: 'Согласие на информационные и рекламные сообщения', text: 'Пользователь может дать отдельное согласие на получение информационных и рекламных сообщений о запуске курсов, вебинарах, специальных предложениях и обновлениях проекта. От такого согласия можно отказаться в любой момент, написав на ceo@manyfeed.ru.' },
       { id: 'seller', title: 'Сведения о продавце', text: 'Продавец / оператор сайта: Дмитриев Михаил Александрович. Статус: самозанятый. ИНН: 772453231807. Контактный email: ceo@manyfeed.ru.' },
-      { id: 'payment', title: 'Условия оплаты', text: 'На сайте доступен цифровой продукт «Клуб архитекторов реальности» — доступ на 30 календарных дней в закрытый Telegram-канал с авторскими материалами. Оплата оформляется на сайте через подключённую платёжную систему. После получения оплаты покупателю направляется электронный чек в соответствии с режимом НПД.' },
+      { id: 'payment', title: 'Условия оплаты', text: 'На сайте доступен цифровой продукт «Клуб архитекторов реальности» — доступ на 30 календарных дней в закрытый Telegram-канал с авторскими материалами. Оплата оформляется на сайте через подключённую платёжную систему. После подтверждения оплаты покупателю открывается путь к закрытому Telegram-каналу, а чек формируется продавцом в соответствии с режимом НПД.' },
       { id: 'refund', title: 'Условия возврата', text: 'По продукту «Клуб архитекторов реальности» обращения по возврату рассматриваются индивидуально по адресу ceo@manyfeed.ru. Если оплаченный доступ фактически не был предоставлен, пользователь вправе обратиться за урегулированием и возвратом.' },
-      { id: 'access', title: 'Порядок предоставления доступа', text: 'После подтверждения оплаты продукта «Клуб архитекторов реальности» пользователю предоставляется доступ в закрытый Telegram-канал на оплаченный период. Доступ к основным курсам платформы по-прежнему открывается после официального запуска соответствующих программ.' },
+      { id: 'access', title: 'Порядок предоставления доступа', text: 'После подтверждения оплаты продукта «Клуб архитекторов реальности» пользователю предоставляется ссылка-приглашение в закрытый Telegram-канал на оплаченный период. Доступ к основным курсам платформы по-прежнему открывается после официального запуска соответствующих программ.' },
       { id: 'support', title: 'Контакты поддержки', text: 'По вопросам регистрации, кабинета, удаления персональных данных, листа ожидания и правовых документов можно обращаться по адресу ceo@manyfeed.ru.' }
     ];
 
@@ -745,7 +764,7 @@
       { q: 'Что такое клуб архитекторов реальности?', a: 'Это закрытый Telegram-клуб с промптами, короткими полезными материалами, практическими AI-разборами и ранним доступом к идеям проекта.' },
       { q: 'Когда откроется доступ к курсам?', a: 'Сейчас курсы собирают лист ожидания. После релиза участники waitlist получат письмо первыми.' },
       { q: 'Какие документы уже размещены на сайте?', a: 'На сайте размещены пользовательское соглашение, политика конфиденциальности, согласие на обработку персональных данных, политика cookie, сведения о продавце, условия оплаты, возврата, доступа и контакты поддержки.' },
-      { q: 'Что работает уже сейчас?', a: 'Работают витрина, каталог, регистрация, вход, отдельный кабинет, лист ожидания и предварительное оформление доступа.' },
+      { q: 'Что работает уже сейчас?', a: 'Работают витрина, каталог, регистрация, вход, отдельный кабинет, лист ожидания и оформление доступа в клуб через ЮKassa.' },
       { q: 'Будут ли мне писать после релиза?', a: 'Технические уведомления о выбранном курсе возможны в рамках работы с листом ожидания, заказа и статусов доступа.' }
     ];
 
@@ -766,7 +785,8 @@
       lastEvents: [],
       supabase: null,
       dbReady: false,
-      dbError: ''
+      dbError: '',
+      paymentReturnHandled: false
     };
 
     const els = {};
@@ -800,8 +820,100 @@
         course_title: order.course_title,
         tariff_name: order.tariff_name,
         status: order.status === 'paid' ? 'ready_for_access' : 'access_granted',
+        access_url: order.access_url || (order.course_id === CLUB_PRODUCT_ID ? TELEGRAM_INVITE_LINK : ''),
+        access_expires_at: order.access_expires_at || '',
         created_at: order.created_at
       }));
+    }
+
+
+    function isClubOffer(product = state.selectedCourse, tariff = state.selectedTariff) {
+      return product?.id === CLUB_PRODUCT_ID || product?.kind === 'club' || tariff?.id === CLUB_TARIFF_ID;
+    }
+
+    function getClubAccessUrl(order) {
+      return order?.access_url || TELEGRAM_INVITE_LINK;
+    }
+
+    function updateCheckoutUi() {
+      const isClub = isClubOffer();
+      if (els.checkoutNote) {
+        els.checkoutNote.textContent = isClub
+          ? 'Оплата проходит через ЮKassa. После успешного платежа вы сразу получите ссылку в закрытый Telegram-канал.'
+          : 'После оформления заказ появится в личном кабинете и будет обработан владельцем платформы.';
+      }
+      if (els.submitCheckoutBtn) {
+        els.submitCheckoutBtn.textContent = isClub ? 'Перейти к оплате через ЮKassa' : 'Оформить заказ';
+      }
+      if (els.checkoutComment) {
+        els.checkoutComment.placeholder = isClub
+          ? 'Например: дублировать доступ на этот email'
+          : 'Например: нужен самый полный тариф';
+      }
+    }
+
+    function buildClubReturnBanner(link, statusText = 'Оплата подтверждена') {
+      return `<div class="card card-strong glass" style="padding:20px; margin-bottom:18px; border-color:rgba(10,127,57,.20); background:linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(246,255,250,.92) 100%);"><div class="kicker">Оплата клуба</div><div style="margin-top:8px; font-size:26px; letter-spacing:-0.04em; font-weight:700;">${statusText}</div><div style="margin-top:10px; color:var(--muted); line-height:1.7;">Доступ активирован. Можно сразу перейти в закрытый Telegram-канал.</div><div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;"><a class="btn gold" href="${link}" target="_blank" rel="noopener noreferrer">Открыть Telegram</a><a class="btn secondary" href="#club">Вернуться к блоку клуба</a></div></div>`;
+    }
+
+    async function fetchPaymentStatus(orderId, paymentId = '') {
+      const queryValue = paymentId || orderId;
+      const queryKey = paymentId ? 'paymentId' : 'orderId';
+      const response = await fetch(`${YOOKASSA_PAYMENT_STATUS_URL}?${queryKey}=${encodeURIComponent(queryValue)}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.error || 'Не удалось проверить статус оплаты');
+      }
+      return data;
+    }
+
+    async function handleClubReturnFromUrl() {
+      if (state.paymentReturnHandled) return;
+      const url = new URL(window.location.href);
+      const paymentState = url.searchParams.get('payment');
+      const storedPaymentId = localStorage.getItem('lectaroClubPendingPaymentId') || '';
+      const paymentId = url.searchParams.get('paymentId') || url.searchParams.get('payment_id') || storedPaymentId;
+      const orderId = url.searchParams.get('orderId') || url.searchParams.get('order_id') || paymentId;
+      if (!paymentState || (!orderId && !paymentId)) return;
+      state.paymentReturnHandled = true;
+      const mount = document.querySelector('.club-launch .container');
+      if (!mount) return;
+      let banner = document.getElementById('clubPaymentBanner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'clubPaymentBanner';
+        mount.prepend(banner);
+      }
+      banner.innerHTML = buildClubReturnBanner(TELEGRAM_INVITE_LINK, 'Проверяем оплату');
+      try {
+        let statusData = null;
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          statusData = await fetchPaymentStatus(orderId, paymentId || '');
+          if (statusData?.status === 'access_granted' || statusData?.status === 'paid') break;
+          await new Promise(resolve => setTimeout(resolve, 1200));
+        }
+        const link = statusData?.accessUrl || TELEGRAM_INVITE_LINK;
+        if (statusData?.status === 'access_granted' || statusData?.status === 'paid') {
+          localStorage.removeItem('lectaroClubPendingPaymentId');
+          banner.innerHTML = buildClubReturnBanner(link, 'Оплата подтверждена');
+          if (state.currentUser) {
+            await hydrateUser({ id: state.currentUser.id });
+            renderAll();
+          }
+        } else {
+          banner.innerHTML = `<div class="card card-strong glass" style="padding:20px; margin-bottom:18px;"><div class="kicker">Оплата клуба</div><div style="margin-top:8px; font-size:24px; letter-spacing:-0.04em; font-weight:700;">Платёж принят, доступ обновляется</div><div style="margin-top:10px; color:var(--muted); line-height:1.7;">Если статус не обновился сразу, откройте кабинет позже или напишите на ${OWNER_EMAIL}.</div><div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;"><button class="btn secondary" id="retryClubPaymentStatusBtn">Проверить ещё раз</button><a class="btn ghost" href="mailto:${OWNER_EMAIL}">Написать в поддержку</a></div></div>`;
+          document.getElementById('retryClubPaymentStatusBtn')?.addEventListener('click', async () => {
+            state.paymentReturnHandled = false;
+            await handleClubReturnFromUrl();
+          });
+        }
+      } catch (error) {
+        banner.innerHTML = `<div class="card card-strong glass" style="padding:20px; margin-bottom:18px;"><div class="kicker">Оплата клуба</div><div style="margin-top:8px; font-size:24px; letter-spacing:-0.04em; font-weight:700;">Не удалось проверить статус автоматически</div><div style="margin-top:10px; color:var(--muted); line-height:1.7;">Платёж мог пройти успешно. Откройте кабинет или напишите на ${OWNER_EMAIL}.</div><div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;"><button class="btn secondary" id="retryClubPaymentErrorBtn">Повторить проверку</button><a class="btn ghost" href="mailto:${OWNER_EMAIL}">Написать в поддержку</a></div></div>`;
+        document.getElementById('retryClubPaymentErrorBtn')?.addEventListener('click', async () => {
+          state.paymentReturnHandled = false;
+          await handleClubReturnFromUrl();
+        });
+      }
     }
 
     function setSupabaseStatus() {
@@ -864,6 +976,7 @@
       }
       setSupabaseStatus();
       renderAll();
+      handleClubReturnFromUrl();
     }
 
     async function loadPublicData() {
@@ -1025,10 +1138,43 @@
         els.cabinetContent.querySelectorAll('[data-remove-fav]').forEach(btn => btn.addEventListener('click', () => toggleFavorite(btn.getAttribute('data-remove-fav'))));
       } else if (activeTab === 'orders') {
         const myOrders = getOrdersForCurrentUser();
-        els.cabinetContent.innerHTML = `<div class="lux-panel"><div class="kicker">Покупки</div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">Здесь отображаются все оформленные заявки на доступ.</div><div style="display:grid; gap:12px; margin-top:16px;">${myOrders.length ? myOrders.map(order => `<div class="metric-card"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700; font-size:18px;">${order.course_title}</div><div style="margin-top:6px; color:var(--muted);">${order.tariff_name} · ${formatPrice(order.amount || 0)}</div></div><span class="pill gold">${order.status || 'pending_payment'}</span></div><div class="status-flow" style="margin-top:12px;"><span class="status-step ${['pending_payment','awaiting_confirmation','paid','access_granted'].includes(order.status) ? 'done' : ''}">pending_payment</span><span class="status-step ${order.status === 'awaiting_confirmation' ? 'active' : ['paid','access_granted'].includes(order.status) ? 'done' : ''}">awaiting_confirmation</span><span class="status-step ${order.status === 'paid' ? 'active' : order.status === 'access_granted' ? 'done' : ''}">paid</span><span class="status-step ${order.status === 'access_granted' ? 'active' : ''}">access_granted</span></div><div style="margin-top:10px; color:var(--muted); font-size:13px;">${formatDate(order.created_at)}</div></div>`).join('') : '<div class="notice soft">Пока заказов нет.</div>'}</div></div>`;
+        els.cabinetContent.innerHTML = `<div class="lux-panel"><div class="kicker">Покупки</div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">Здесь отображаются все оформленные заявки на доступ и их текущий статус.</div><div style="display:grid; gap:12px; margin-top:16px;">${myOrders.length ? myOrders.map(order => {
+          const isClub = order.course_id === CLUB_PRODUCT_ID;
+          const accessUrl = getClubAccessUrl(order);
+          const actionHtml = isClub && ['paid','access_granted'].includes(order.status)
+            ? `<a class="btn gold" href="${accessUrl}" target="_blank" rel="noopener noreferrer">Открыть Telegram</a>`
+            : isClub && ['pending_payment','awaiting_confirmation'].includes(order.status)
+              ? `<button class="btn secondary" data-refresh-club-order="${order.id}">Проверить оплату</button>`
+              : '';
+          return `<div class="metric-card"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700; font-size:18px;">${order.course_title}</div><div style="margin-top:6px; color:var(--muted);">${order.tariff_name} · ${formatPrice(order.amount || 0)}</div></div><span class="pill ${['paid','access_granted'].includes(order.status) ? 'success' : 'gold'}">${order.status || 'pending_payment'}</span></div><div class="status-flow" style="margin-top:12px;"><span class="status-step ${['pending_payment','awaiting_confirmation','paid','access_granted'].includes(order.status) ? 'done' : ''}">pending_payment</span><span class="status-step ${order.status === 'awaiting_confirmation' ? 'active' : ['paid','access_granted'].includes(order.status) ? 'done' : ''}">awaiting_confirmation</span><span class="status-step ${order.status === 'paid' ? 'active' : order.status === 'access_granted' ? 'done' : ''}">paid</span><span class="status-step ${order.status === 'access_granted' ? 'active' : ''}">access_granted</span></div>${actionHtml ? `<div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">${actionHtml}</div>` : ''}<div style="margin-top:10px; color:var(--muted); font-size:13px;">${formatDate(order.created_at)}</div></div>`;
+        }).join('') : '<div class="notice soft">Пока заказов нет.</div>'}</div></div>`;
+        els.cabinetContent.querySelectorAll('[data-refresh-club-order]').forEach(btn => btn.addEventListener('click', async () => {
+          try {
+            const orderId = btn.getAttribute('data-refresh-club-order');
+            const status = await fetchPaymentStatus(orderId);
+            if (status?.status === 'access_granted' || status?.status === 'paid') {
+              await loadPublicData();
+              if (state.currentUser?.id) {
+                await hydrateUser({ id: state.currentUser.id });
+              }
+              renderAll();
+            } else {
+              alert('Платёж ещё обрабатывается. Попробуйте через несколько секунд.');
+            }
+          } catch (error) {
+            alert(error.message || 'Не удалось обновить статус оплаты');
+          }
+        }));
       } else if (activeTab === 'access') {
         const myAccess = getAccessForCurrentUser();
-        els.cabinetContent.innerHTML = `<div class="lux-panel" style="position:relative; overflow:hidden;"><div style="position:absolute; right:-30px; top:-30px; width:160px; height:160px; border-radius:50%; background:rgba(10,127,57,.08);"></div><div class="kicker">Доступ</div><div style="margin-top:10px;" class="status-flow"><span class="status-step done">paid</span><span class="status-step active">access_granted</span><span class="status-step">course_entry</span></div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">После подтверждения оплаты и выдачи доступа курс появится здесь как активный продукт.</div><div style="display:grid; gap:12px; margin-top:16px;">${myAccess.length ? myAccess.map(item => `<div class="metric-card"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700; font-size:18px;">${item.course_title}</div><div style="margin-top:6px; color:var(--muted);">${item.tariff_name || 'Тариф'}</div></div><span class="pill success">${item.status}</span></div><div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;"><button class="btn secondary" ${item.status === 'access_granted' ? '' : 'disabled style="cursor:default; opacity:.85;"'}>${item.status === 'access_granted' ? 'Открыть курс' : 'Вход в курс скоро'}</button></div><div style="margin-top:10px; color:var(--muted); font-size:13px;">${formatDate(item.created_at)}</div></div>`).join('') : '<div class="notice soft">Пока доступы не выданы.</div>'}</div></div>`;
+        els.cabinetContent.innerHTML = `<div class="lux-panel" style="position:relative; overflow:hidden;"><div style="position:absolute; right:-30px; top:-30px; width:160px; height:160px; border-radius:50%; background:rgba(10,127,57,.08);"></div><div class="kicker">Доступ</div><div style="margin-top:10px;" class="status-flow"><span class="status-step done">paid</span><span class="status-step active">access_granted</span><span class="status-step">course_entry</span></div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">После подтверждения оплаты и выдачи доступа активный продукт появляется здесь.</div><div style="display:grid; gap:12px; margin-top:16px;">${myAccess.length ? myAccess.map(item => {
+          const isClub = item.course_id === CLUB_PRODUCT_ID;
+          const action = isClub
+            ? `<a class="btn gold" href="${getClubAccessUrl(item)}" target="_blank" rel="noopener noreferrer">Открыть Telegram</a>`
+            : `<button class="btn secondary" ${item.status === 'access_granted' ? '' : 'disabled style="cursor:default; opacity:.85;"'}>${item.status === 'access_granted' ? 'Открыть курс' : 'Вход в курс скоро'}</button>`;
+          const expires = item.access_expires_at ? `<div style="margin-top:8px; color:var(--muted); font-size:13px;">Доступ активен до ${formatDate(item.access_expires_at)}</div>` : '';
+          return `<div class="metric-card"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700; font-size:18px;">${item.course_title}</div><div style="margin-top:6px; color:var(--muted);">${item.tariff_name || 'Тариф'}</div></div><span class="pill success">${item.status}</span></div><div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">${action}</div>${expires}<div style="margin-top:10px; color:var(--muted); font-size:13px;">${formatDate(item.created_at)}</div></div>`;
+        }).join('') : '<div class="notice soft">Пока доступы не выданы.</div>'}</div></div>`;
       } else if (activeTab === 'notifications') {
         els.cabinetContent.innerHTML = `<div class="lux-panel"><div class="kicker">Уведомления</div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">Здесь отображаются важные изменения по вашему кабинету.</div><div style="display:grid; gap:12px; margin-top:16px;">${state.notifications.length ? state.notifications.map(note => `<div class="metric-card"><div style="font-weight:700; font-size:18px;">${note.title}</div><div style="margin-top:8px; color:var(--muted); line-height:1.7;">${note.body}</div><div style="margin-top:8px; color:var(--muted); font-size:13px;">${formatDate(note.created_at)}</div></div>`).join('') : '<div class="notice soft">Пока уведомлений нет.</div>'}</div></div>`;
       } else {
@@ -1137,14 +1283,18 @@
       state.selectedCourse = product;
       state.selectedTariff = tariff;
       els.checkoutTitle.textContent = `${product.title} · ${tariff.name}`;
-      els.checkoutSummary.innerHTML = `<div class="checkout-row"><div><div class="kicker">${getOfferKindLabel(product)}</div><div style="margin-top:6px; font-weight:700; font-size:18px;">${product.title}</div></div><div class="pill dark">${tariff.name}</div></div><div class="checkout-row"><div><div class="kicker">Что входит</div><div style="margin-top:6px; color:var(--muted); line-height:1.6; max-width:320px;">${tariff.note}</div></div><div class="checkout-price">${formatPrice(tariff.price)}</div></div><div class="checkout-row"><div><div class="kicker">Статус</div><div style="margin-top:6px; color:var(--muted);">После оформления заказ появится в кабинете.</div></div><span class="pill gold">pending_payment</span></div>`;
+      const statusText = isClubOffer(product, tariff)
+        ? 'После успешной оплаты откроется ссылка-приглашение в Telegram.'
+        : 'После оформления заказ появится в кабинете.';
+      els.checkoutSummary.innerHTML = `<div class="checkout-row"><div><div class="kicker">${getOfferKindLabel(product)}</div><div style="margin-top:6px; font-weight:700; font-size:18px;">${product.title}</div></div><div class="pill dark">${tariff.name}</div></div><div class="checkout-row"><div><div class="kicker">Что входит</div><div style="margin-top:6px; color:var(--muted); line-height:1.6; max-width:320px;">${tariff.note}</div></div><div class="checkout-price">${formatPrice(tariff.price)}</div></div><div class="checkout-row"><div><div class="kicker">Статус</div><div style="margin-top:6px; color:var(--muted);">${statusText}</div></div><span class="pill gold">pending_payment</span></div>`;
       els.checkoutEmail.value = state.currentUser?.email || '';
       els.checkoutComment.value = '';
       setMessage(els.checkoutMessage, '');
+      updateCheckoutUi();
       els.drawerBackdrop.classList.add('open');
       els.checkoutDrawer.classList.add('open');
       document.body.classList.add('locked');
-      if (!state.currentUser) {
+      if (!state.currentUser && !isClubOffer(product, tariff)) {
         document.getElementById('auth').scrollIntoView({ behavior: 'smooth' });
         setMessage(els.authMessage, 'Сначала войдите или зарегистрируйтесь, чтобы оформить доступ.', 'error');
       }
@@ -1229,7 +1379,54 @@
       }
     }
 
+    async function createClubPayment() {
+      const email = els.checkoutEmail.value.trim() || state.currentUser?.email || '';
+      if (!email) {
+        setMessage(els.checkoutMessage, 'Укажите email для оформления доступа.', 'error');
+        return;
+      }
+      try {
+        els.submitCheckoutBtn.disabled = true;
+        setMessage(els.checkoutMessage, 'Готовим безопасный переход в ЮKassa…');
+        const response = await fetch(YOOKASSA_CREATE_PAYMENT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: state.currentUser?.id || null,
+            email,
+            name: state.currentUser?.name || '',
+            comment: els.checkoutComment.value.trim(),
+            returnUrl: window.location.origin + window.location.pathname
+          })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data?.error || 'Не удалось создать платёж в ЮKassa');
+        }
+        if (data?.order) {
+          state.orders = [data.order, ...state.orders.filter(order => order.id !== data.order.id)];
+          syncAccessFromOrders();
+          renderAll();
+        }
+        if (data?.paymentId) {
+          localStorage.setItem('lectaroClubPendingPaymentId', data.paymentId);
+        }
+        if (!data?.confirmationUrl) {
+          throw new Error('ЮKassa не вернула ссылку на оплату');
+        }
+        window.location.href = data.confirmationUrl;
+      } catch (error) {
+        setMessage(els.checkoutMessage, error.message || 'Не удалось создать платёж.', 'error');
+      } finally {
+        els.submitCheckoutBtn.disabled = false;
+      }
+    }
+
     async function submitCheckout() {
+      if (isClubOffer()) {
+        await createClubPayment();
+        return;
+      }
       if (!state.currentUser) { setMessage(els.checkoutMessage, 'Сначала войдите или зарегистрируйтесь, чтобы оформить доступ.', 'error'); return; }
       if (!state.selectedCourse || !state.selectedTariff) return;
       if (!state.dbReady || !state.supabase) {
