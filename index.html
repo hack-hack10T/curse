@@ -859,7 +859,12 @@
     async function fetchPaymentStatus(orderId, paymentId = '') {
       const queryValue = paymentId || orderId;
       const queryKey = paymentId ? 'paymentId' : 'orderId';
-      const response = await fetch(`${YOOKASSA_PAYMENT_STATUS_URL}?${queryKey}=${encodeURIComponent(queryValue)}`);
+      const response = await fetch(`${YOOKASSA_PAYMENT_STATUS_URL}?${queryKey}=${encodeURIComponent(queryValue)}`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(data?.error || 'Не удалось проверить статус оплаты');
@@ -1390,7 +1395,11 @@
         setMessage(els.checkoutMessage, 'Готовим безопасный переход в ЮKassa…');
         const response = await fetch(YOOKASSA_CREATE_PAYMENT_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
           body: JSON.stringify({
             userId: state.currentUser?.id || null,
             email,
