@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=1280, initial-scale=1, viewport-fit=cover" />
   <title>Lectaro — Архитекторы реальности</title>
   <meta name="description" content="Lectaro — платформа курсов по нейросетям: каталог, ранняя регистрация, личный кабинет, лист ожидания и оформление доступа." />
   <style>
@@ -26,6 +26,8 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text); background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%); }
     body.locked { overflow: hidden; }
+
+    html, body { min-width: 1280px; }
     a { color: inherit; text-decoration: none; }
     button, input, textarea { font: inherit; }
     .container { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 22px; }
@@ -1174,9 +1176,9 @@
         const myAccess = getAccessForCurrentUser();
         els.cabinetContent.innerHTML = `<div class="lux-panel" style="position:relative; overflow:hidden;"><div style="position:absolute; right:-30px; top:-30px; width:160px; height:160px; border-radius:50%; background:rgba(10,127,57,.08);"></div><div class="kicker">Доступ</div><div style="margin-top:10px;" class="status-flow"><span class="status-step done">paid</span><span class="status-step active">access_granted</span><span class="status-step">course_entry</span></div><div style="margin-top:8px; color:var(--muted); line-height:1.6;">После подтверждения оплаты и выдачи доступа активный продукт появляется здесь.</div><div style="display:grid; gap:12px; margin-top:16px;">${myAccess.length ? myAccess.map(item => {
           const isClub = item.course_id === CLUB_PRODUCT_ID;
-          const action = isClub
-            ? `<a class="btn gold" href="${getClubAccessUrl(item)}" target="_blank" rel="noopener noreferrer">Открыть Telegram</a>`
-            : `<button class="btn secondary" ${item.status === 'access_granted' ? '' : 'disabled style="cursor:default; opacity:.85;"'}>${item.status === 'access_granted' ? 'Открыть курс' : 'Вход в курс скоро'}</button>`;
+          const action = item.status === 'access_granted'
+            ? `<a class="btn ${isClub ? 'gold' : 'secondary'}" href="${item.access_url || (isClub ? TELEGRAM_INVITE_LINK : '#')}" ${item.access_url || isClub ? 'target="_blank" rel="noopener noreferrer"' : ''}>${isClub ? 'Открыть Telegram' : 'Открыть доступ'}</a>`
+            : `<button class="btn secondary" disabled style="cursor:default; opacity:.85;">Вход в курс скоро</button>`;
           const expires = item.access_expires_at ? `<div style="margin-top:8px; color:var(--muted); font-size:13px;">Доступ активен до ${formatDate(item.access_expires_at)}</div>` : '';
           return `<div class="metric-card"><div style="display:flex; justify-content:space-between; gap:12px; align-items:start;"><div><div style="font-weight:700; font-size:18px;">${item.course_title}</div><div style="margin-top:6px; color:var(--muted);">${item.tariff_name || 'Тариф'}</div></div><span class="pill success">${item.status}</span></div><div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">${action}</div>${expires}<div style="margin-top:10px; color:var(--muted); font-size:13px;">${formatDate(item.created_at)}</div></div>`;
         }).join('') : '<div class="notice soft">Пока доступы не выданы.</div>'}</div></div>`;
